@@ -261,6 +261,14 @@ keeping incomplete copies.
 | `examples/` | Process-focused workflow examples |
 | `ci/` | Workflow contract validation and fixture tests |
 
+### Product code (Numbat)
+
+| Path | Purpose |
+|---|---|
+| `pyproject.toml` | Python packaging and tool configuration |
+| `src/` | Application source (`src/numbat/`) |
+| `tests/` | Product test suite |
+
 ### `.ai/` working system
 
 | Path | Purpose |

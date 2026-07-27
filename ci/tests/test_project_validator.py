@@ -129,6 +129,11 @@ def bootstrap_valid_project(root: Path) -> None:
     (root / ".ai/project/product-context.md").write_text("Numbat reviews diffs locally.\n", encoding="utf-8")
     (root / ".ai/project/scope.md").write_text("CLI diff review in scope.\n", encoding="utf-8")
     (root / ".ai/project/roadmap.md").write_text("Phase 1: CLI MVP.\n", encoding="utf-8")
+    (root / "pyproject.toml").write_text('[project]\nname = "numbat"\n', encoding="utf-8")
+    (root / "src" / "numbat").mkdir(parents=True)
+    (root / "src" / "numbat" / "__init__.py").write_text("", encoding="utf-8")
+    (root / "tests").mkdir(parents=True)
+    (root / "tests" / "test_placeholder.py").write_text("def test_ok() -> None:\n    assert True\n", encoding="utf-8")
 
 
 def test_valid_bootstrapped_project_passes() -> None:
@@ -168,10 +173,7 @@ def test_unchanged_template_vision_fails() -> None:
         root = Path(tmp)
         bootstrap_valid_project(root)
         vision = root / ".ai/project/vision.md"
-        vision.write_text(
-            (ROOT / ".ai/project/vision.md").read_text(encoding="utf-8"),
-            encoding="utf-8",
-        )
+        vision.write_text("> REPLACE DURING BOOTSTRAP: still here\n", encoding="utf-8")
         result = run_validator(root, "project")
         assert result.returncode != 0
         assert ".ai/project/vision.md" in result.stderr
@@ -617,7 +619,10 @@ def test_template_readme_identity_fails() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         bootstrap_valid_project(root)
-        (root / "README.md").write_text((ROOT / "README.md").read_text(encoding="utf-8"), encoding="utf-8")
+        (root / "README.md").write_text(
+            "# AI Project Template\n\nUse this repository as a starting point.\n",
+            encoding="utf-8",
+        )
         result = run_validator(root, "project")
         assert result.returncode != 0
         assert "template identity" in result.stderr
@@ -627,7 +632,10 @@ def test_template_agents_identity_fails() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         bootstrap_valid_project(root)
-        (root / "AGENTS.md").write_text((ROOT / "AGENTS.md").read_text(encoding="utf-8"), encoding="utf-8")
+        (root / "AGENTS.md").write_text(
+            "This is a documentation-first AI workflow template. It is not an application.\n",
+            encoding="utf-8",
+        )
         result = run_validator(root, "project")
         assert result.returncode != 0
         assert "template-only identity" in result.stderr

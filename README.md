@@ -1,119 +1,76 @@
-# AI Project Template
+# Numbat
 
-A documentation-first GitHub template for building software with explicit
-context, scoped changes, and human-controlled review.
+Local CLI for developers and reviewers who want structured assistance when
+assessing pull-request diffs using git context.
 
-Use this repository as a starting point, then replace template content with
-your product documentation during bootstrap.
+## Purpose
 
-## Start here
+Numbat reads a bounded git diff (not the whole repository) and produces a
+review-oriented report: change summary, focus areas, and git metadata. It runs
+locally without a web UI. Terminal output is the default; use `--json` when
+scripting (planned for the first feature goal after bootstrap).
 
-Read [`.ai/docs/template-flow.md`](.ai/docs/template-flow.md) for the full
-working guide and [canonical folder map](.ai/docs/template-flow.md#complete-folder-map).
+## Status
 
-## Who this is for
+documentation first — bootstrap complete; product commands are scaffold-only
 
-- developers starting a new product with assisted implementation
-- teams that want project context, scope, and review rules in files instead of chat
-- repositories that use AGENTS, Claude Code, Copilot, or Cursor adapters
+## Current capabilities
 
-## Core principle
+- Installable Python package with `numbat` CLI entry point
+- `--help` and `--version`
+- Dev tooling: pytest, ruff, mypy
 
-```txt
-Template defines the working system.
-Project defines the product.
+Diff ingestion and review reports are not implemented yet.
+
+## Setup
+
+Requires Python 3.11+ and git on PATH (for future diff commands).
+
+```bash
+pip install -e ".[dev]"
 ```
 
-## Default operating model
+## Run
 
-Prefer `/execute-goal` for one meaningful outcome. Agents never merge.
-
-Canonical rules:
-
-- [`.ai/policies/autonomy-and-authorization.md`](.ai/policies/autonomy-and-authorization.md)
-- Full lifecycle: [`.ai/docs/full-workflow.md`](.ai/docs/full-workflow.md)
-
-## Define the project
-
-Choose exactly one mode:
-
-| Mode | Use when |
-|---|---|
-| `/project-intake` | You want guided questions in short rounds |
-| `/define-project` | You already have a rough description to organize |
-
-Both modes produce the same project context, requirements, and decision-status
-table. See [`.ai/contracts/project-definition-contract.md`](.ai/contracts/project-definition-contract.md).
-
-## Bootstrap flow
-
-```txt
-create repo
-  -> choose intake mode
-  -> complete definition coverage
-  -> customize template for the product
-  -> pass project readiness gate
-  -> start first product task
+```bash
+numbat --help
+python -m numbat --help
 ```
 
-Project readiness means no blockers remain, stack and real commands are
-recorded, bootstrap markers are removed, and repository identity describes the
-product. See [`.ai/onboarding/bootstrap-checklist.md`](.ai/onboarding/bootstrap-checklist.md).
+## Tests and quality
 
-## Feature and task flow
+```bash
+pytest
+ruff check .
+mypy .
+```
 
-Prefer `/execute-goal` for one scoped outcome. Full lifecycle order:
-[`.ai/docs/full-workflow.md`](.ai/docs/full-workflow.md). Autonomy and question
-timing: [`.ai/policies/autonomy-and-authorization.md`](.ai/policies/autonomy-and-authorization.md).
+## Configuration and environment variables
 
-Independent review is preferred; self-review is the fallback. Agents never merge.
+No configuration required for the bootstrap scaffold. Optional LLM credentials
+will be documented when that layer is added (Phase 3).
 
-## Task routes
+## Architecture and context
 
-| Task type | Primary workflow | Required preparation |
-|---|---|---|
-| Feature | [`.ai/workflows/feature.md`](.ai/workflows/feature.md) | Task packet and plan |
-| Bugfix | [`.ai/workflows/bugfix.md`](.ai/workflows/bugfix.md) | Task packet and plan |
-| Refactor | [`.ai/workflows/refactor.md`](.ai/workflows/refactor.md) | Task packet and plan; approval when high-risk or architectural |
-| Tests | [`.ai/workflows/test-writing.md`](.ai/workflows/test-writing.md) | Brief or packet; plan when required |
-| Documentation | [`.ai/workflows/documentation-update.md`](.ai/workflows/documentation-update.md) | Brief or packet; plan when required |
+- `.ai/project/product-context.md` — product identity and workflows
+- `.ai/project/scope.md` — in-scope and deferred work
+- `.ai/docs/architecture-direction.md` — CLI component boundaries
 
-Preparation rules: [`.ai/quality/definition-of-ready.md`](.ai/quality/definition-of-ready.md)
+## Working system
 
-## Supported adapters
+This repository uses `.ai/` as its AI working system. See
+[`.ai/docs/template-flow.md`](.ai/docs/template-flow.md) for workflow rules.
 
-| Adapter | Location |
-|---|---|
-| Root agents | [`AGENTS.md`](AGENTS.md) |
-| Claude Code | [`CLAUDE.md`](CLAUDE.md) |
-| GitHub Copilot | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) |
-| Cursor | [`.cursor/rules/`](.cursor/rules/) |
+## Limitations
 
-Canonical workflow lives in [`.ai/`](.ai/). Adapters stay thin.
-
-## Review and control boundaries
-
-- meaningful work gets self-review and a review handoff
-- human review is required before merge when using the GitHub PR workflow
-- controlled or high-risk actions require explicit human approval first
-- agents create branches and PRs; humans merge manually
-
-## After bootstrap
-
-Replace this README with product-facing documentation. Use
-[`.ai/templates/project-readme.md`](.ai/templates/project-readme.md) as the
-starting point for setup, run, tests, configuration, limitations, and license.
-
-## Where details live
-
-| Topic | Document |
-|---|---|
-| AI working system and canonical AI entrypoint | [`.ai/README.md`](.ai/README.md) |
-| Goal Executor production setup | [`.ai/automation/goal-executor-production-setup.md`](.ai/automation/goal-executor-production-setup.md) |
-| Bootstrap checklist | [`.ai/onboarding/bootstrap-checklist.md`](.ai/onboarding/bootstrap-checklist.md) |
-| Root README contract | [`.ai/contracts/readme-contract.md`](.ai/contracts/readme-contract.md) |
+- No diff analysis commands yet
+- No CI integration or GitHub App
+- Optional LLM analysis deferred to a later phase
 
 ## License
 
-See [`LICENSE`](LICENSE). Confirm license and ownership for your project during
-bootstrap.
+MIT — see [`LICENSE`](LICENSE).
+
+## Contact and contributions
+
+Maintained by Szymon Iwacz. Contributions via pull request; agents never merge.

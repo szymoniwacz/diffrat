@@ -14,10 +14,11 @@ from test_project_validator import bootstrap_valid_project  # noqa: E402
 from test_validator import run_validator  # noqa: E402
 
 
-def test_template_repository_ci_uses_template_mode() -> None:
+def test_bootstrapped_repository_ci_uses_project_mode() -> None:
     text = CI_WORKFLOW.read_text(encoding="utf-8")
-    assert "python ci/validate-workflow-contracts.py --mode template" in text
-    result = run_validator(ROOT, "template")
+    assert "python ci/validate-workflow-contracts.py --mode project" in text
+    assert "python ci/validate-workflow-contracts.py --mode template" not in text
+    result = run_validator(ROOT, "project")
     assert result.returncode == 0, result.stderr
 
 
@@ -89,7 +90,7 @@ def test_project_mode_fails_when_ci_has_no_explicit_validation_mode() -> None:
 
 def main() -> int:
     tests = [
-        test_template_repository_ci_uses_template_mode,
+        test_bootstrapped_repository_ci_uses_project_mode,
         test_bootstrapped_project_ci_uses_project_mode,
         test_project_mode_accepts_typical_product_directories,
         test_project_mode_fails_when_ci_still_uses_template_mode,

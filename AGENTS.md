@@ -4,13 +4,9 @@ Root-level adapter for AI coding agents.
 
 ## Repository role
 
-This is a documentation-first AI workflow template. It is not an application. It provides a structured working system for building real projects with AI assistance in a controlled, reviewable way.
-
-Template defines the working system. Project defines the product.
-
-After bootstrap, update this file so it describes the actual product repository.
-See `.ai/onboarding/bootstrap-checklist.md` and
-`.ai/onboarding/template-customization-guide.md`.
+This repository contains **Numbat**, a local Python CLI for diff and PR review
+assistance. Product code lives under `src/numbat/`. The `.ai/` folder holds the
+AI working system inherited from `ai-project-template`.
 
 ## Source of truth
 
@@ -21,6 +17,7 @@ Do not duplicate workflow content here. Follow the documents in `.ai/`.
 ## Read first
 
 - Start at `.ai/README.md`.
+- Product context: `.ai/project/product-context.md`.
 - For an end-to-end goal, follow `.ai/skills/execute-goal.md`.
 - Never merge pull requests.
 
