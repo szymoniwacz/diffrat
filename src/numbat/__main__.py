@@ -50,6 +50,14 @@ def build_parser() -> argparse.ArgumentParser:
             "without a value). Mutually exclusive with --staged."
         ),
     )
+    review_parser.add_argument(
+        "--json",
+        action="store_true",
+        help=(
+            "Write a structured JSON document to stdout instead of the human-readable "
+            "report (schema_version field documents the output format)"
+        ),
+    )
 
     return parser
 
@@ -63,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(parsed)
     if args.command == "review":
-        return run_review(staged=args.staged, base=args.base)
+        return run_review(staged=args.staged, base=args.base, json_output=args.json)
 
     parser.print_help()
     return 0
