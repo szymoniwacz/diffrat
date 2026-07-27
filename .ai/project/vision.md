@@ -1,42 +1,25 @@
 # Project Vision
 
-> REPLACE DURING BOOTSTRAP: replace this template with the project's actual vision.
+## One-sentence vision
 
-## Purpose
+Numbat is a local CLI for developers and reviewers that helps assess pull-request
+diffs with git context and actionable review guidance.
 
-Describe what the project is meant to become.
+## Problem
 
-This file should answer:
+Reviewing diffs is repetitive and easy to get wrong under time pressure. Reviewers
+and authors miss risky changes, lack consistent focus areas, and spend time
+reconstructing context that git already has (commits, branches, file history).
 
-- what problem the project solves
-- who it is for
-- what kind of system it should become
-- why it is worth building
+## Desired outcome
 
-## Template guidance
+After Numbat exists, a developer or reviewer should be able to run one command
+in a repository and get a concise, trustworthy read on what changed, what deserves
+attention, and why — without opening a web UI or scanning the entire codebase.
 
-Keep the vision short.
+## Non-goals
 
-A good project vision should fit on one screen.
-
-Avoid hype.
-Avoid vague ambition.
-Avoid implementation details.
-
-## Recommended structure
-
-### One-sentence vision
-
-`[Project name] is a [type of system] for [target user] that helps with [main outcome].`
-
-### Problem
-
-What repeated problem does this project address?
-
-### Desired outcome
-
-What should be easier, safer, clearer, or more repeatable after this project exists?
-
-### Non-goals
-
-What should this project explicitly avoid?
+- Full-project static analysis or architecture scanning
+- Hosted review platform or web dashboard
+- Automatic merge or approval decisions
+- CI integration in the first version

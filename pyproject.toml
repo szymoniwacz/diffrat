@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "numbat"
+version = "0.1.0"
+description = "Local CLI for diff and PR review assistance"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Szymon Iwacz" }]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "mypy>=1.8", "ruff>=0.4"]
+
+[project.scripts]
+numbat = "numbat.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["ci"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["numbat"]
+exclude = ["ci/"]

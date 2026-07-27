@@ -18,8 +18,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Validate template workflow contracts
-        run: python ci/validate-workflow-contracts.py --mode template
+      - name: Validate project workflow contracts
+        run: python ci/validate-workflow-contracts.py --mode project
 
       - name: Run validator fixture tests
         run: python ci/tests/test_validator.py
