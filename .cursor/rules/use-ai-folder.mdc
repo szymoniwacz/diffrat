@@ -1,0 +1,11 @@
+---
+description: Points Cursor to the canonical .ai/ working system
+alwaysApply: false
+---
+
+# Use AI Folder
+
+This repository stores the working system in `.ai/`.
+
+Start at `.ai/README.md`. Do not duplicate prompts, skills, or workflow rules
+inside `.cursor/`.

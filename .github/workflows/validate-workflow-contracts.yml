@@ -1,0 +1,34 @@
+name: Validate workflow contracts
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Validate template workflow contracts
+        run: python ci/validate-workflow-contracts.py --mode template
+
+      - name: Run validator fixture tests
+        run: python ci/tests/test_validator.py
+
+      - name: Run project validator fixture tests
+        run: python ci/tests/test_project_validator.py
+
+      - name: Run folder map validation tests
+        run: python ci/tests/test_folder_map_validation.py
+
+      - name: Run CI validation mode tests
+        run: python ci/tests/test_ci_validation_mode.py
