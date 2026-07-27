@@ -8,7 +8,7 @@ assessing pull-request diffs using git context.
 Numbat reads a bounded git diff (not the whole repository) and produces a
 review-oriented report: change summary, focus areas, and git metadata. It runs
 locally without a web UI. Terminal output is the default; use `--json` when
-scripting (planned for the first feature goal after bootstrap).
+scripting.
 
 ## Status
 
@@ -20,6 +20,7 @@ Phase 2 in progress — `numbat review` for unstaged/staged and branch-vs-base d
 - `--help` and `--version`
 - `numbat review` — analyze unstaged or staged local git diffs and print a
   human-readable report (file list, per-file +/- counts, summary)
+- `numbat review --json` — same analysis as structured JSON on stdout for scripting
 - `numbat review --base <ref>` — compare the current branch to a base ref and
   include git context (branch, base, commits since base)
 - Dev tooling: pytest, ruff, mypy
@@ -57,9 +58,26 @@ numbat review --base
 numbat review --help
 ```
 
-The report is written to stdout. Git errors and missing repository context are
-reported on stderr with a non-zero exit code. An empty selected diff exits with
-code `2` and a short message on stderr.
+### JSON output for scripting
+
+Use `--json` to write a structured document to stdout instead of the
+human-readable report. The `schema_version` field identifies the output format;
+breaking changes require bumping that version.
+
+```bash
+# Unstaged diff as JSON
+numbat review --json
+
+# Staged or branch-vs-base JSON
+numbat review --staged --json
+numbat review --base main --json
+
+# Example: file count from a branch review
+numbat review --base main --json | python -c "import sys,json; print(json.load(sys.stdin)['summary']['file_count'])"
+```
+
+Errors and empty-diff messages still go to stderr with the same exit codes as
+the default report.
 
 ## Tests and quality
 
@@ -87,7 +105,6 @@ This repository uses `.ai/` as its AI working system. See
 
 ## Limitations
 
-- No `--json` output yet
 - No CI integration or GitHub App
 - Optional LLM analysis deferred to a later phase
 
