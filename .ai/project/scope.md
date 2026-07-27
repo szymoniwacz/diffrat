@@ -8,18 +8,25 @@ This file protects the project from uncontrolled expansion.
 
 ## In scope now
 
-> REPLACE DURING BOOTSTRAP: list what this project is currently allowed to work on.
-
-- [in-scope area]
-- [in-scope area]
+- Bootstrap and project definition (vision, requirements, readiness)
+- Python CLI packaging scaffold (`pyproject.toml`, `src/numbat/`, dev tooling)
+- Local git diff ingestion (working tree, staged, branch vs base, commit range)
+- Structured review report: change summary, risk/focus hints, git metadata context
+- Human-readable terminal output with optional `--json` flag
+- Unit and CLI tests for new commands and flags
+- Documentation updates alongside behavior changes
 
 ## Out of scope by default
 
-- work that does not satisfy the required preparation for its change type
-- large rewrites without explicit approval
-- new frameworks without a decision record
-- hidden architecture changes
-- undocumented generated files
+- Web UI, GitHub App, or hosted review service
+- CI/CD integration and PR comment bots (deferred to post-v1)
+- Full-repository or cross-repo analysis
+- Automatic merge, approval, or policy enforcement
+- LLM provider lock-in before the analysis-engine goal (provider choice deferred)
+- Large rewrites without explicit approval
+- New frameworks without a decision record
+- Hidden architecture changes
+- Undocumented generated files
 
 Required preparation by change type lives in
 `.ai/quality/definition-of-ready.md` and `.ai/policies/no-blind-coding.md`.

@@ -45,6 +45,9 @@ def bootstrap_template(root: Path) -> None:
             dst = root / rel
             dst.parent.mkdir(parents=True, exist_ok=True)
             dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    (root / "pyproject.toml").write_text('[project]\nname = "fixture"\n', encoding="utf-8")
+    (root / "src").mkdir()
+    (root / "tests").mkdir()
 
 
 def test_valid_repository_passes_folder_map_validation() -> None:
