@@ -1,0 +1,52 @@
+name: Project Execution
+description: Authorize sequential AI-assisted delivery of a product through small pull requests and manual merges.
+title: "[Project Execution]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the product outcome once. The Project Executor will select and execute one small goal at a time.
+
+        When the brief is complete, comment exactly `/execute-project`.
+
+        You still review and manually merge every pull request. Agents never merge.
+
+  - type: textarea
+    id: product_outcome
+    attributes:
+      label: Product outcome
+      description: What complete product or milestone should exist?
+      placeholder: Describe the observable end result, not an implementation plan.
+    validations:
+      required: true
+
+  - type: textarea
+    id: completion_criteria
+    attributes:
+      label: Completion criteria
+      description: What measurable evidence proves the product outcome is complete?
+      placeholder: Bullet list of observable product, quality, and documentation outcomes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: Non-negotiable product, technical, security, privacy, cost, or delivery limits.
+      placeholder: Optional.
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Outcomes the Project Executor must not pursue.
+      placeholder: Optional.
+
+  - type: textarea
+    id: relevant_context
+    attributes:
+      label: Relevant context
+      description: Additional context not already recorded in the repository, such as external references or instructions specific to this execution.
+      placeholder: Optional.

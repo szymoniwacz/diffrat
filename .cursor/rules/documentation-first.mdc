@@ -1,0 +1,12 @@
+---
+description: Points Cursor to documentation rules in .ai/
+alwaysApply: false
+---
+
+# Documentation First
+
+Cursor adapter for documentation discipline before implementation.
+
+Follow `.ai/policies/no-blind-coding.md` and `.ai/conventions/documentation-rules.md`.
+
+Do not duplicate documentation workflow from `.ai/` in Cursor rules.

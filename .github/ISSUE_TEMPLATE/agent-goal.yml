@@ -1,0 +1,52 @@
+name: Agent Goal
+description: Authorize scoped AI-assisted work from a structured goal through a review-ready pull request.
+title: "[Agent Goal]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the outcome you want. Do not provide file names, architecture, or an implementation plan.
+
+        When you are ready to authorize work, comment exactly `/execute-goal` on this issue.
+
+        That comment authorizes branch creation, scoped repository changes, validation, commits, push, pull request creation, CI stabilization, and review-ready handoff. Merge is never authorized.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What outcome should this work achieve?
+      placeholder: One clear goal statement.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: How will you know the work is done?
+      placeholder: Bullet list of observable outcomes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: Boundaries, dependencies, or non-negotiable limits.
+      placeholder: Optional.
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Work that must not be included in this goal.
+      placeholder: Optional.
+
+  - type: textarea
+    id: relevant_context
+    attributes:
+      label: Relevant context
+      description: Links, prior decisions, or background the agent should read.
+      placeholder: Optional.
