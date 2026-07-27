@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from numbat.diff_parser import DiffSummary, FileChange
+from numbat.git_adapter import GitCommitInfo, GitContext
 from numbat.report import render_review_report
 
 
@@ -23,3 +24,26 @@ def test_render_review_report_includes_summary_and_files() -> None:
     assert "Total lines changed: 5" in report
     assert "src/a.py  +4 -1" in report
     assert "bin.dat  (binary)" in report
+
+
+def test_render_review_report_includes_git_context() -> None:
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+    git_context = GitContext(
+        branch="feature",
+        base_ref="main",
+        commit_count=2,
+        commits=(
+            GitCommitInfo(short_hash="abc1234", subject="second commit"),
+            GitCommitInfo(short_hash="def5678", subject="first commit"),
+        ),
+    )
+
+    report = render_review_report(summary, git_context=git_context)
+
+    assert "Git context" in report
+    assert "Branch: feature" in report
+    assert "Base: main" in report
+    assert "Commits since base: 2" in report
+    assert "abc1234 second commit" in report
