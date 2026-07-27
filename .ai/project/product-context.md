@@ -8,48 +8,60 @@ Before planning or changing anything, an AI assistant should read this file.
 
 ## Project identity
 
-> REPLACE DURING BOOTSTRAP: describe the specific project created from this template.
-
-Include:
-
-- project name
-- project type
-- target user
-- core problem
-- current phase
-- important constraints
+- **Project name:** Numbat
+- **Project type:** Local Python CLI for diff and PR review assistance
+- **Target users:** Developers doing self-review before push/PR; reviewers assessing
+  someone else's diff
+- **Core problem:** Diff review is slow, inconsistent, and context-poor without
+  structured assistance grounded in git changes
+- **Current phase:** documentation first (bootstrap / definition coverage)
+- **Important constraints:** Local-first; diff-scoped analysis only; no web UI in v1;
+  humans merge; agents never merge
 
 ## Current phase
 
-Choose one:
+documentation first
 
-- planning only
-- documentation first
-- prototype
-- MVP implementation
-- hardening
-- maintenance
+Bootstrap and project definition are in progress. Product code has not started.
 
-## Working assumptions
+## What exists today
 
-List assumptions that should guide all future work.
+- AI workflow working system (`.ai/`) from `ai-project-template`
+- Project definition and requirements documentation (this bootstrap)
+- No CLI package or commands yet
 
-Examples:
+## What does not exist yet
 
-- documentation comes before implementation
-- changes should be small and reviewable
-- AI output must be reviewed by a human
-- generated code must follow existing conventions
+- `numbat` CLI entry point
+- Diff ingestion and report generation
+- Optional LLM-backed analysis layer
 
-## Out of scope
+## Core workflows (intended)
 
-List what should not be done yet.
+### Self-review before push
 
-This helps prevent AI tools from jumping too far ahead.
+1. Developer finishes changes on a feature branch
+2. Runs Numbat against the diff vs base branch (or staged/unstaged changes)
+3. Reads terminal report (or `--json` for scripting)
+4. Addresses flagged risks and focus areas before opening a PR
 
-## Links to important files
+### Reviewer triage
 
-- `.ai/project/scope.md`
-- `.ai/project/roadmap.md`
-- `.ai/project/decisions.md`
-- `.ai/conventions/ai-working-mode.md`
+1. Reviewer checks out branch or receives diff context locally
+2. Runs Numbat with branch/range arguments
+3. Uses summary and risk signals to prioritize review time
+4. Cross-checks findings manually — Numbat assists, does not approve
+
+## Constraints for AI work
+
+- Respect scope in `.ai/project/scope.md`
+- Prefer small, reviewable changes; one Agent Goal at a time
+- Do not invent stack commands — record real commands when scaffold exists
+- Local git data only in v1; no sending repo contents to external services unless
+  explicitly configured for optional LLM analysis
+
+## References
+
+- Requirements: `.ai/docs/project-requirements.md`
+- Scope: `.ai/project/scope.md`
+- Architecture direction: `.ai/docs/architecture-direction.md`
