@@ -12,14 +12,16 @@ scripting.
 
 ## Status
 
-Phase 2 in progress — `numbat review` for unstaged/staged and branch-vs-base diffs
+Phase 2 in progress — `numbat review` with modes, JSON, git context, categories,
+and deterministic Focus/Risk hints
 
 ## Current capabilities
 
 - Installable Python package with `numbat` CLI entry point
 - `--help` and `--version`
 - `numbat review` — analyze unstaged or staged local git diffs and print a
-  human-readable report (file list, per-file +/- counts, summary)
+  human-readable report (file list with coarse categories, per-file +/- counts,
+  summary, deterministic Focus/Risk hints)
 - `numbat review --json` — same analysis as structured JSON on stdout for scripting
 - `numbat review --base <ref>` — compare the current branch to a base ref and
   include git context (branch, base, commits since base)
@@ -78,6 +80,18 @@ numbat review --base main --json | python -c "import sys,json; print(json.load(s
 
 Errors and empty-diff messages still go to stderr with the same exit codes as
 the default report.
+
+### Focus / Risk hints and file categories
+
+Every successful review assigns each changed file a coarse category:
+
+`source`, `tests`, `config`, `docs`, or `other`.
+
+The report also includes deterministic Focus/Risk hints derived from paths and
+diff size (for example large diffs, tests touched, config/dependency changes,
+and security-sensitive path names). No network or API key is required. JSON
+output includes additive `category` fields on each file and a top-level
+`focus_risk` array while keeping `schema_version` at `"1"`.
 
 ## Tests and quality
 

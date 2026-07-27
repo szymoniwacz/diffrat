@@ -22,8 +22,26 @@ def test_render_review_report_includes_summary_and_files() -> None:
     assert "Lines added: 4" in report
     assert "Lines deleted: 1" in report
     assert "Total lines changed: 5" in report
-    assert "src/a.py  +4 -1" in report
-    assert "bin.dat  (binary)" in report
+    assert "src/a.py  [source]  +4 -1" in report
+    assert "bin.dat  [other]  (binary)" in report
+    assert "Focus / Risk" in report
+    assert "(none)" in report
+
+
+def test_render_review_report_includes_categories_and_hints() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="tests/test_a.py", additions=2, deletions=0, binary=False),
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    report = render_review_report(summary)
+
+    assert "tests/test_a.py  [tests]  +2 -0" in report
+    assert "pyproject.toml  [config]  +1 -0" in report
+    assert "[tests_touched]" in report
+    assert "[config_or_deps]" in report
 
 
 def test_render_review_report_includes_git_context() -> None:

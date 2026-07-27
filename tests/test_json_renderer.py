@@ -24,7 +24,34 @@ def test_render_review_json_unstaged_mode() -> None:
         "total_additions": 4,
         "total_deletions": 1,
     }
-    assert payload["files"] == [{"path": "src/a.py", "additions": 4, "deletions": 1}]
+    assert payload["files"] == [
+        {
+            "path": "src/a.py",
+            "additions": 4,
+            "deletions": 1,
+            "category": "source",
+        }
+    ]
+    assert payload["focus_risk"] == []
+    assert "git_context" not in payload
+
+
+def test_render_review_json_includes_categories_and_focus_risk() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="tests/test_a.py", additions=2, deletions=0, binary=False),
+            FileChange(path=".env", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    payload = json.loads(render_review_json(summary, mode="unstaged"))
+
+    assert payload["files"][0]["category"] == "tests"
+    assert payload["files"][1]["category"] == "config"
+    codes = [item["code"] for item in payload["focus_risk"]]
+    assert "tests_touched" in codes
+    assert "config_or_deps" in codes
+    assert "security_sensitive_paths" in codes
     assert "git_context" not in payload
 
 
