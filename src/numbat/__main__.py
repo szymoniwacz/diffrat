@@ -28,7 +28,8 @@ def build_parser() -> argparse.ArgumentParser:
         description=(
             "Read a local git diff and print a human-readable review report to stdout.\n"
             "By default analyzes unstaged changes (working tree vs index).\n"
-            "Use --staged for staged changes (index vs HEAD)."
+            "Use --staged for staged changes (index vs HEAD).\n"
+            "Use --base to compare the current branch to a base ref (default: main)."
         ),
         epilog="Exit codes: 0 success, 1 git error, 2 empty diff.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -37,6 +38,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--staged",
         action="store_true",
         help="Analyze staged changes (index vs HEAD) instead of unstaged changes",
+    )
+    review_parser.add_argument(
+        "--base",
+        nargs="?",
+        const="main",
+        default=None,
+        metavar="REF",
+        help=(
+            "Compare HEAD to merge-base with REF (default: main when flag is given "
+            "without a value). Mutually exclusive with --staged."
+        ),
     )
 
     return parser
@@ -51,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(parsed)
     if args.command == "review":
-        return run_review(staged=args.staged)
+        return run_review(staged=args.staged, base=args.base)
 
     parser.print_help()
     return 0

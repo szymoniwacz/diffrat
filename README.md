@@ -12,7 +12,7 @@ scripting (planned for the first feature goal after bootstrap).
 
 ## Status
 
-Phase 2 in progress — `numbat review` for unstaged/staged diffs
+Phase 2 in progress — `numbat review` for unstaged/staged and branch-vs-base diffs
 
 ## Current capabilities
 
@@ -20,6 +20,8 @@ Phase 2 in progress — `numbat review` for unstaged/staged diffs
 - `--help` and `--version`
 - `numbat review` — analyze unstaged or staged local git diffs and print a
   human-readable report (file list, per-file +/- counts, summary)
+- `numbat review --base <ref>` — compare the current branch to a base ref and
+  include git context (branch, base, commits since base)
 - Dev tooling: pytest, ruff, mypy
 
 ## Setup
@@ -47,6 +49,10 @@ numbat review
 
 # Staged changes (index vs HEAD)
 numbat review --staged
+
+# Branch vs base (merge-base with ref through HEAD; default base is main)
+numbat review --base main
+numbat review --base
 
 numbat review --help
 ```
@@ -81,7 +87,6 @@ This repository uses `.ai/` as its AI working system. See
 
 ## Limitations
 
-- Branch vs base and commit-range diff targets are not implemented yet
 - No `--json` output yet
 - No CI integration or GitHub App
 - Optional LLM analysis deferred to a later phase
