@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 
+from numbat.analysis import analyze_diff
 from numbat.diff_parser import DiffSummary, parse_numstat
 from numbat.git_adapter import (
     GitContext,
@@ -53,11 +54,21 @@ def run_review(
             print(f"no {scope} changes to review", file=sys.stderr)
         return EXIT_EMPTY_DIFF
 
+    analysis = analyze_diff(summary)
     if json_output:
         mode = "branch" if base is not None else ("staged" if staged else "unstaged")
-        output = render_review_json(summary, mode=mode, git_context=git_context)
+        output = render_review_json(
+            summary,
+            mode=mode,
+            git_context=git_context,
+            analysis=analysis,
+        )
     else:
-        output = render_review_report(summary, git_context=git_context)
+        output = render_review_report(
+            summary,
+            git_context=git_context,
+            analysis=analysis,
+        )
 
     sys.stdout.write(output)
     return EXIT_SUCCESS

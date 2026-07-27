@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from numbat.analysis import AnalysisResult, analyze_diff
 from numbat.diff_parser import DiffSummary
 from numbat.git_adapter import GitContext
 
@@ -10,8 +11,11 @@ def render_review_report(
     summary: DiffSummary,
     *,
     git_context: GitContext | None = None,
+    analysis: AnalysisResult | None = None,
 ) -> str:
     """Render a review-oriented text report for stdout."""
+    result = analysis if analysis is not None else analyze_diff(summary)
+
     lines = [
         "Review Report",
         "=============",
@@ -39,13 +43,21 @@ def render_review_report(
     if not summary.files:
         lines.append("(no files changed)")
     else:
-        for file_change in summary.files:
+        for file_change, category in zip(summary.files, result.categories, strict=True):
             if file_change.binary:
-                lines.append(f"{file_change.path}  (binary)")
+                lines.append(f"{file_change.path}  [{category}]  (binary)")
             else:
                 lines.append(
-                    f"{file_change.path}  +{file_change.additions} -{file_change.deletions}"
+                    f"{file_change.path}  [{category}]  "
+                    f"+{file_change.additions} -{file_change.deletions}"
                 )
+
+    lines.extend(["", "Focus / Risk", "------------"])
+    if not result.hints:
+        lines.append("(none)")
+    else:
+        for hint in result.hints:
+            lines.append(f"- [{hint.code}] {hint.message}")
 
     return "\n".join(lines) + "\n"
 

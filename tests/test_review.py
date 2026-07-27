@@ -32,7 +32,8 @@ def test_run_review_staged(
 
     captured = capsys.readouterr()
     assert exit_code == EXIT_SUCCESS
-    assert "staged.txt  +1 -0" in captured.out
+    assert "staged.txt  [other]  +1 -0" in captured.out
+    assert "Focus / Risk" in captured.out
 
 
 def test_run_review_empty_diff(git_repo_clean: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -120,6 +121,8 @@ def test_run_review_json_unstaged(
     assert payload["mode"] == "unstaged"
     assert payload["summary"]["file_count"] == 1
     assert payload["files"][0]["path"] == "README.md"
+    assert payload["files"][0]["category"] == "docs"
+    assert "focus_risk" in payload
     assert "git_context" not in payload
 
 
@@ -134,7 +137,15 @@ def test_run_review_json_staged(
 
     payload = json.loads(captured.out)
     assert payload["mode"] == "staged"
-    assert payload["files"] == [{"path": "staged.txt", "additions": 1, "deletions": 0}]
+    assert payload["files"] == [
+        {
+            "path": "staged.txt",
+            "additions": 1,
+            "deletions": 0,
+            "category": "other",
+        }
+    ]
+    assert payload["focus_risk"] == []
 
 
 def test_run_review_json_base(
