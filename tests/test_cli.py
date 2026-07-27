@@ -39,3 +39,4 @@ def test_review_help_documents_empty_diff_exit(
 
     captured = capsys.readouterr()
     assert "Exit codes: 0 success, 1 git error, 2 empty diff." in captured.out
+    assert "--base" in captured.out
