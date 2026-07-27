@@ -1,0 +1,10 @@
+---
+description: Points Cursor to canonical workflow instructions in .ai/
+alwaysApply: false
+---
+
+# AI Workflow
+
+Start at `.ai/README.md`. Prefer `/execute-goal`.
+
+Do not duplicate `.ai/` workflow content in Cursor rules.

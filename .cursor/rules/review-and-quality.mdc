@@ -1,0 +1,18 @@
+---
+description: Points Cursor to canonical review and quality rules in .ai/
+alwaysApply: false
+---
+
+# Review and Quality
+
+Cursor adapter for review and validation expectations.
+
+Follow:
+
+- `.ai/quality/quality-gates.md`
+- `.ai/quality/definition-of-done.md`
+- `.ai/review/README.md`
+
+When using the GitHub PR workflow, also follow `.ai/git/branch-and-pr-workflow.md`.
+
+Do not duplicate review, gate, or Git rules from `.ai/` in Cursor rules.

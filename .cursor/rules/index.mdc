@@ -1,0 +1,28 @@
+---
+description: Entry point for Cursor rules; points to canonical .ai/ instructions
+alwaysApply: true
+---
+
+# Cursor Rules Index
+
+Thin adapter index for Cursor. `.ai/` is the source of truth.
+
+## Start here
+
+- `.ai/README.md` — canonical AI instruction entrypoint
+- `.ai/instructions/workflow.md` — operational workflow rules
+
+## Cursor rules in this folder
+
+These files are thin pointers to canonical documents in `.ai/`. They do not
+define workflow, quality, review, or Git rules locally.
+
+| Rule | Canonical reference |
+|---|---|
+| `use-ai-folder.mdc` | `.ai/README.md` |
+| `documentation-first.mdc` | `.ai/conventions/documentation-rules.md` |
+| `small-steps.mdc` | `.ai/policies/no-blind-coding.md` |
+| `ai-workflow.mdc` | `.ai/instructions/workflow.md` |
+| `review-and-quality.mdc` | `.ai/review/README.md`, `.ai/quality/` |
+
+Do not duplicate `.ai/` workflow content in Cursor rules. Point to it.

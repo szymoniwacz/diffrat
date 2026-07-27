@@ -1,0 +1,12 @@
+---
+description: Points Cursor to scoped-change policies in .ai/
+alwaysApply: false
+---
+
+# Small Steps
+
+Cursor adapter for scoped, reviewable changes.
+
+Follow `.ai/policies/no-blind-coding.md` and `.ai/conventions/ai-working-mode.md`.
+
+Do not duplicate scoped-change rules from `.ai/` in Cursor rules.

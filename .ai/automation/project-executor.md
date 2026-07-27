@@ -1,0 +1,131 @@
+# Project Executor — Cursor Automation Instructions
+
+Project Executor is a scheduled orchestrator around the existing Goal Executor.
+It selects at most one goal, invokes Goal Executor, and then waits for human
+review and merge. It does not copy the goal lifecycle or merge pull requests.
+
+## Authorization
+
+An active project is one open **Project Execution** issue that:
+
+- starts with `[Project Execution]:`;
+- contains Product outcome and Completion criteria;
+- has an exact `/execute-project` comment by the authorized repository owner
+  posted after the most recent edit to its title or any structured field.
+
+The issue fields are the project boundary. If there is no active project, stop
+as a no-op. If more than one exists, list them and stop without writing. Any
+later field or title edit invalidates the authorization until the owner comments
+exactly `/execute-project` again. If edit ordering cannot be verified, treat the
+project as unauthorized and make no write.
+
+Before any write, verify that the live loader read this file and
+`.ai/automation/goal-executor.md` from the current default branch. Otherwise
+fail closed.
+
+## Read current evidence
+
+Read the active project issue and comments, the current default branch,
+`.ai/project/`, `.ai/docs/project-requirements.md`,
+`.ai/docs/architecture-direction.md`, every ADR linked from
+`.ai/project/decisions.md`, and `.ai/automation/goal-executor.md`. Never resume
+from chat history or a stale working branch.
+
+Use this exact marker in every delegated Agent Goal issue:
+
+```text
+<!-- project-executor:goal project=OWNER/REPOSITORY#PROJECT_NUMBER -->
+```
+
+Resolve the exact GitHub login of the authenticated automation identity. The
+marker is discovery evidence only: treat an issue as delegated only when its
+author login exactly matches that identity. A marker-bearing issue with another
+or unverifiable author is conflicting evidence; enter `CONFLICT` and make no
+write. Never infer identity from a display name.
+
+Trust a completed-without-PR or project completion marker only when its exact
+remote comment has been read from GitHub, its author login exactly matches the
+authenticated automation identity, and its repository and issue reference
+matches the expected goal or project. Any other or unverifiable marker is
+conflicting evidence; enter `CONFLICT` and make no write.
+
+Resolve state before any repository mutation and again immediately before the
+first remote write. Find every goal with that exact marker and its pull request
+through the Goal Executor's required `Closes #<goal-number>` reference.
+
+Apply the first matching state:
+
+| State | Evidence | Action |
+|---|---|---|
+| `CONFLICT` | More than one delegated goal is non-terminal, completion evidence coexists with active work, or evidence is contradictory. | List exact conflicts and make no write. |
+| `WAIT` | One delegated pull request is open, or applicable CI for the latest merged delegated pull request or current default-branch tip is pending. | Stop until the pull request or CI reaches a terminal state. |
+| `BLOCKED` | The current pull request was closed without merge, its goal was closed without successful terminal evidence, or applicable CI failed or cannot be inspected. | Report the blocker; do not replace the goal or repair CI. |
+| `RESUME` | One delegated goal has no merged pull request and no trusted Goal Executor completion marker. | Invoke Goal Executor only for that issue. |
+| `FINALIZE` | The project issue has the trusted exact completion marker below. | Reverify all completion criteria, close the project as completed, and stop. |
+| `NEXT` | All delegated goals are terminal, the project has no trusted completion marker, and applicable CI for the latest merged delegated pull request and current default-branch tip passed. | Re-read the default branch, check completion, then select at most one next goal. |
+
+A delegated goal is terminal only when its pull request was merged or its issue
+has Goal Executor's trusted exact completed-without-PR marker. Previous terminal
+goals are normal history. A branch belonging to a pull request is not a second
+goal.
+
+Before `NEXT`, inspect applicable CI using
+`.ai/git/branch-and-pr-workflow.md`. No configured applicable CI is not a
+failure. Pending CI means `WAIT`; failed, cancelled, or unavailable CI status
+means `BLOCKED`. Only passed CI, or no applicable CI, permits `NEXT`.
+
+These rules prevent ordinary duplicate work and support interrupted runs. They
+do not claim an atomic lock or transactional exactly-once execution.
+
+## Complete the project
+
+In `NEXT`, evaluate every Completion criterion against evidence on the current
+default branch. A roadmap checkbox or closed issue alone is insufficient.
+
+When all criteria are proven and no delegated work is active, comment with the
+evidence and:
+
+```text
+<!-- project-executor:completed project=OWNER/REPOSITORY#NUMBER -->
+```
+
+Read the comment back. If correct, close the Project Execution issue as
+completed. If a later run finds the trusted marker on an open issue, reverify
+the criteria. If all remain proven and the marker is correct, finish only the
+close. If any criterion is no longer proven or the evidence is contradictory,
+enter `CONFLICT`, report the exact gap, and make no write. Do not close the
+project, select another goal, or remove or replace the marker.
+
+## Select and execute one goal
+
+If completion is not proven:
+
+1. Compare the project issue, current roadmap, requirements, and default-branch
+   evidence.
+2. If project readiness or the roadmap is insufficient, select one
+   planning/readiness goal before product implementation.
+3. Otherwise select the smallest remaining observable outcome that fits one
+   reviewable pull request.
+4. Exclude completed work, unrelated cleanup, speculative infrastructure, and
+   work overlapping another open pull request.
+5. If a material decision blocks the next safe goal, ask one grouped batch on
+   the project issue and stop. Do not repeat unanswered questions.
+
+Create one Agent Goal issue as the authenticated automation identity, containing
+Goal, Acceptance criteria, Constraints, Out of scope, Relevant context, and the
+exact project marker. Read it back and verify its author login, marker, and scope
+before continuing.
+
+Repeat state resolution. Only if that exact issue is the sole `RESUME` goal,
+invoke `.ai/automation/goal-executor.md` for it in the same run. The verified
+project authorization replaces a separate `/execute-goal` comment only for this
+delegated issue.
+
+Goal Executor retains ownership of planning, implementation, validation,
+branches, commits, pull requests, idempotency, and its Slice 2 stopping point
+before merge.
+After it stops, Project Executor also stops. A later scheduled run may continue
+only after human review and merge.
+
+Never merge, enable auto-merge, force push, rewrite published history, or push
+directly to the protected default branch.
