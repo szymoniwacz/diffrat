@@ -12,6 +12,7 @@ from numbat.git_adapter import (
     get_diff_numstat_vs_base,
     get_git_context,
 )
+from numbat.json_renderer import render_review_json
 from numbat.report import render_review_report
 
 EXIT_SUCCESS = 0
@@ -23,6 +24,7 @@ def run_review(
     *,
     staged: bool = False,
     base: str | None = None,
+    json_output: bool = False,
     cwd: str | None = None,
 ) -> int:
     """Analyze a git diff and print a review report to stdout."""
@@ -51,7 +53,13 @@ def run_review(
             print(f"no {scope} changes to review", file=sys.stderr)
         return EXIT_EMPTY_DIFF
 
-    sys.stdout.write(render_review_report(summary, git_context=git_context))
+    if json_output:
+        mode = "branch" if base is not None else ("staged" if staged else "unstaged")
+        output = render_review_json(summary, mode=mode, git_context=git_context)
+    else:
+        output = render_review_report(summary, git_context=git_context)
+
+    sys.stdout.write(output)
     return EXIT_SUCCESS
 
 
