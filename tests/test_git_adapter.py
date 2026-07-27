@@ -47,3 +47,23 @@ def test_get_diff_numstat_git_failure(monkeypatch: pytest.MonkeyPatch, tmp_path:
 
     with pytest.raises(GitError, match="fatal: bad revision"):
         get_diff_numstat(staged=False, cwd=str(tmp_path))
+
+
+def test_verify_ref_rejects_invalid(git_repo_clean: Path) -> None:
+    from numbat.git_adapter import verify_ref
+
+    with pytest.raises(GitError, match="Needed a single revision"):
+        verify_ref("invalid-ref", cwd=str(git_repo_clean))
+
+
+def test_get_diff_numstat_vs_base(git_repo_with_feature_branch: Path) -> None:
+    from numbat.git_adapter import get_diff_numstat_vs_base, get_git_context
+
+    result = get_diff_numstat_vs_base("main", cwd=str(git_repo_with_feature_branch))
+    assert "feature.txt" in result.numstat
+
+    context = get_git_context("main", cwd=str(git_repo_with_feature_branch))
+    assert context.branch == "feature"
+    assert context.base_ref == "main"
+    assert context.commit_count == 2
+    assert len(context.commits) == 2
