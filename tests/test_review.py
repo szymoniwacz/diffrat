@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
+from numbat.json_renderer import JSON_SCHEMA_VERSION
 from numbat.review import EXIT_EMPTY_DIFF, EXIT_ERROR, EXIT_SUCCESS, run_review
 
 
@@ -101,3 +103,65 @@ def test_run_review_staged_and_base_conflict(
     captured = capsys.readouterr()
     assert exit_code == EXIT_ERROR
     assert "cannot use --staged with --base" in captured.err
+
+
+def test_run_review_json_unstaged(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(staged=False, json_output=True, cwd=str(git_repo_with_changes))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+    assert captured.err == ""
+
+    payload = json.loads(captured.out)
+    assert payload["schema_version"] == JSON_SCHEMA_VERSION
+    assert payload["mode"] == "unstaged"
+    assert payload["summary"]["file_count"] == 1
+    assert payload["files"][0]["path"] == "README.md"
+    assert "git_context" not in payload
+
+
+def test_run_review_json_staged(
+    git_repo_with_staged_change: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(staged=True, json_output=True, cwd=str(git_repo_with_staged_change))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+
+    payload = json.loads(captured.out)
+    assert payload["mode"] == "staged"
+    assert payload["files"] == [{"path": "staged.txt", "additions": 1, "deletions": 0}]
+
+
+def test_run_review_json_base(
+    git_repo_with_feature_branch: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(base="main", json_output=True, cwd=str(git_repo_with_feature_branch))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+
+    payload = json.loads(captured.out)
+    assert payload["mode"] == "branch"
+    assert payload["git_context"]["branch"] == "feature"
+    assert payload["git_context"]["base"] == "main"
+    assert payload["git_context"]["commit_count"] == 2
+    assert payload["git_context"]["commits"][0]["subject"] == "extend feature file"
+    assert any(file_entry["path"] == "feature.txt" for file_entry in payload["files"])
+
+
+def test_run_review_json_empty_diff_no_stdout(
+    git_repo_clean: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(staged=False, json_output=True, cwd=str(git_repo_clean))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_EMPTY_DIFF
+    assert captured.out == ""
+    assert "no unstaged changes to review" in captured.err
