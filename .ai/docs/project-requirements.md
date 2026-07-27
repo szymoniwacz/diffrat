@@ -109,11 +109,11 @@ optional `--json` flag for scripting. There is no web UI and no CI integration i
 - Diff-scoped only; no whole-repo scan in v1
 - Agents never merge PRs; humans merge manually
 - Small PRs; one bounded Agent Goal at a time
-- Python 3.11+ (assumption — confirm at scaffold)
+- Python 3.11+ (confirmed in `pyproject.toml`)
 
 ## Technical preferences
 
-- Python CLI per `.ai/stack-profiles/python-cli.md`
+- Python CLI per `.ai/stack-profiles/numbat-cli.md`
 - `pyproject.toml` packaging with `src/numbat/` layout
 - pytest, ruff, mypy for quality (commands recorded at scaffold)
 - Prefer stdlib + minimal dependencies for v1 git interaction
@@ -122,10 +122,7 @@ optional `--json` flag for scripting. There is no web UI and no CI integration i
 
 | Active profile | Applies to | Notes |
 |---|---|---|
-| `.ai/stack-profiles/python-cli.md` | CLI, tests, packaging | Selected at intake |
-
-Project-specific commands will be recorded in root `README.md` when bootstrap
-scaffold lands. Do not invent commands until files exist.
+| .ai/stack-profiles/numbat-cli.md | CLI, tests, packaging | Project-specific profile; bootstrap 2026-07-27 |
 
 ## Quality requirements
 
@@ -157,17 +154,17 @@ Record assumptions separately from confirmed requirements.
 
 | Assumption | Why it matters | Confirm by |
 |---|---|---|
-| Python 3.11+ acceptable for developers | Toolchain choice | Bootstrap scaffold |
-| `git` available on PATH | Core input source | Document in README |
+| Python 3.11+ acceptable for developers | Toolchain choice | Confirmed in `pyproject.toml` |
+| `git` available on PATH | Core input source | Documented in README |
 | Users run CLI inside a git repo | Diff resolution | FR-006 error handling |
 | Heuristic analysis sufficient for v1 value | Scope Phase 2 vs 3 | User feedback after v1 |
-| MIT license matches distribution intent | Legal | Already in LICENSE |
-| macOS and Linux primary; Windows best-effort | Platform support | Test matrix at scaffold |
+| MIT license matches distribution intent | Legal | `LICENSE` |
+| macOS and Linux primary; Windows best-effort | Platform support | Confirmed at bootstrap |
 
 ## Open questions
 
-- [ ] Exact CLI command tree and flag names (resolve at scaffold goal)
-- [ ] GitPython vs subprocess for git interaction (resolve at scaffold goal)
+- [x] CLI entry point and `--help` (bootstrap scaffold)
+- [ ] GitPython vs subprocess for git interaction (resolve at diff-ingestion goal)
 - [ ] LLM provider and data-handling policy (Phase 3 goal)
 - [ ] stdin/patch-file diff input needed in v1? (likely no — confirm if requested)
 
@@ -209,16 +206,16 @@ Record the status of every area from
 | Integrations and failure handling | decided | Local git required; clear errors; LLM deferred | FR-006; Phase 3 |
 | Authentication and authorization | not-applicable | Local CLI; no multi-user access control | v1 |
 | Secrets, privacy, and sensitive data | decided | No default network; Phase 3 keys via env only | Security section |
-| Language, framework, and dependencies | decided | Python CLI; pytest/ruff/mypy | D-002; stack profile |
+| Language, framework, and dependencies | decided | Python CLI; pytest/ruff/mypy | D-002; `.ai/stack-profiles/numbat-cli.md` |
 | Environments and deployment | decided | Local dev install only; PyPI deferred | Roadmap Phase 4 |
 | Configuration | decided | CLI flags + env for future LLM | Architecture doc |
 | Logging, monitoring, and errors | decided | stderr + exit codes; no remote telemetry v1 | FR-006 |
-| Tests, lint, typecheck, performance | default-accepted | pytest, ruff, mypy per python-cli profile | Confirm at bootstrap scaffold |
+| Tests, lint, typecheck, performance | default-accepted | pytest, ruff, mypy per numbat-cli profile | Confirmed at bootstrap 2026-07-27 |
 | Scale, reliability, and cost | decided | Single-user local; no SLA; offline OK | v1 scope |
-| Supported platforms and compatibility | default-accepted | macOS/Linux primary; Windows best-effort | Confirm at scaffold |
+| Supported platforms and compatibility | default-accepted | macOS/Linux primary; Windows best-effort | Confirmed at bootstrap 2026-07-27 |
 | Accessibility and localization | not-applicable | Terminal CLI; English output v1 | — |
 | Compliance, backup, and recovery | not-applicable | No persistent data | v1 |
-| Branching, CI, release, and rollback | default-accepted | `main` + PR workflow; CI project mode after bootstrap; manual merge | `.ai/git/branch-and-pr-workflow.md` |
+| Branching, CI, release, and rollback | default-accepted | `main` + PR; CI `--mode project`; manual merge | Confirmed at bootstrap 2026-07-27 |
 | License, ownership, and documentation expectations | decided | MIT; Szymon Iwacz 2026; README + `.ai/` docs | D-004; `LICENSE` |
 
 ## Project readiness
@@ -232,14 +229,14 @@ Record the result after completing `.ai/onboarding/bootstrap-checklist.md`.
 | Definition coverage complete | yes | Intake 2026-07-27 |
 | No `blocking-question` remains | yes | LLM deferred, not blocking |
 | All `deferred` items have reason and return trigger | yes | LLM → Phase 3 goal |
-| Template customization complete | pending | README, AGENTS, CI mode, scaffold |
-| Stack profile selected or marked N/A | yes | python-cli selected |
-| Real project commands recorded | pending | Awaiting bootstrap scaffold |
-| Root README describes the product | pending | Still template README |
-| `AGENTS.md` describes repository role | pending | Still template text |
+| Template customization complete | yes | README, AGENTS, CI, scaffold |
+| Stack profile selected or marked N/A | yes | `.ai/stack-profiles/numbat-cli.md` |
+| Real project commands recorded | yes | `README.md` and `.ai/stack-profiles/numbat-cli.md` |
+| Root README describes the product | yes | Product README replaces template |
+| `AGENTS.md` describes repository role | yes | Describes Numbat CLI repository |
 | Bootstrap markers removed | yes | Removed from `.ai/project/*` during intake |
-| License and ownership decided | yes | MIT confirmed |
-| CI, branch rules, and approvals decided | pending | Switch to `--mode project` at bootstrap |
-| Project ready for first product task | pending | Complete bootstrap checklist first |
+| License and ownership decided | yes | MIT; Szymon Iwacz 2026 |
+| CI, branch rules, and approvals decided | yes | `--mode project`; manual merge on `main` |
+| Project ready for first product task | yes | Bootstrap PR; next goal: diff ingestion |
 
 Product implementation may start only when the final row is confirmed.

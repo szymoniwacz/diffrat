@@ -1,0 +1,46 @@
+# Numbat CLI Stack Profile
+
+Stack-specific guidance for the Numbat product. Global workflow rules still apply.
+
+## Layout
+
+```txt
+src/numbat/
+tests/
+pyproject.toml
+README.md
+```
+
+## Commands
+
+```bash
+pip install -e ".[dev]"
+pytest
+ruff check .
+mypy .
+python -m numbat --help
+numbat --help
+```
+
+## Testing expectations
+
+- Unit tests for changed modules under `tests/`
+- CLI tests for new flags or subcommands
+- Run full suite before opening a PR
+
+## Documentation expectations
+
+- Update CLI help text and README when commands change
+- Record architecture changes in `.ai/docs/architecture-direction.md`
+
+## AI-specific risks
+
+- Packaging and entry-point misconfiguration
+- Breaking stdout/stderr contracts used by scripts
+- Adding dependencies without updating `pyproject.toml`
+- Path and filesystem assumptions across OS environments
+
+## References
+
+- `.ai/stack-profiles/python-cli.md` — generic Python CLI guidance
+- `.ai/docs/architecture-direction.md`

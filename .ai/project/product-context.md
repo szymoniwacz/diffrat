@@ -14,7 +14,7 @@ Before planning or changing anything, an AI assistant should read this file.
   someone else's diff
 - **Core problem:** Diff review is slow, inconsistent, and context-poor without
   structured assistance grounded in git changes
-- **Current phase:** documentation first (bootstrap / definition coverage)
+- **Current phase:** documentation first (bootstrap complete; scaffold only)
 - **Important constraints:** Local-first; diff-scoped analysis only; no web UI in v1;
   humans merge; agents never merge
 
@@ -22,13 +22,14 @@ Before planning or changing anything, an AI assistant should read this file.
 
 documentation first
 
-Bootstrap and project definition are in progress. Product code has not started.
+Bootstrap complete. Minimal CLI scaffold exists; diff ingestion not started.
 
 ## What exists today
 
 - AI workflow working system (`.ai/`) from `ai-project-template`
-- Project definition and requirements documentation (this bootstrap)
-- No CLI package or commands yet
+- Project definition and requirements documentation
+- Python package scaffold (`src/numbat/`, `pyproject.toml`, tests)
+- `numbat --help` and `--version` only
 
 ## What does not exist yet
 
