@@ -24,7 +24,7 @@ Phase 2 in progress — `numbat review` for unstaged/staged diffs
 
 ## Setup
 
-Requires Python 3.11+ and git on PATH (for future diff commands).
+Requires Python 3.11+ and git on PATH.
 
 ```bash
 pip install -e ".[dev]"
