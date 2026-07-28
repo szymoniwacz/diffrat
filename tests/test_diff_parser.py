@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from numbat.diff_parser import parse_numstat, parse_unified_diff
+from numbat.diff_parser import parse_name_status, parse_numstat, parse_unified_diff
 
 SAMPLE_PATCH = """diff --git a/README.md b/README.md
 index 1234567..abcdef0 100644
@@ -81,3 +81,44 @@ def test_parse_numstat_empty() -> None:
     summary = parse_numstat("")
     assert summary.file_count == 0
     assert summary.total_lines_changed == 0
+
+
+def test_parse_name_status_modify_add_delete() -> None:
+    name_status = "M\tsrc/foo.py\nA\tnew.py\nD\tremoved.py\n"
+    mapping = parse_name_status(name_status)
+
+    assert mapping == {
+        "src/foo.py": "M",
+        "new.py": "A",
+        "removed.py": "D",
+    }
+
+
+def test_parse_name_status_rename_and_copy() -> None:
+    name_status = "R100\told.py\tnew.py\nC90\tcopy_src.py\tcopy_dst.py\n"
+    mapping = parse_name_status(name_status)
+
+    assert mapping["old.py"] == "R"
+    assert mapping["new.py"] == "R"
+    assert mapping["old.py => new.py"] == "R"
+    assert mapping["copy_src.py"] == "C"
+    assert mapping["copy_dst.py"] == "C"
+    assert mapping["copy_src.py => copy_dst.py"] == "C"
+
+
+def test_parse_numstat_merges_name_status() -> None:
+    numstat = "10\t5\told.py => new.py\n3\t0\tREADME.md\n"
+    name_status = "R100\told.py\tnew.py\nM\tREADME.md\n"
+    summary = parse_numstat(numstat, name_status=name_status)
+
+    assert summary.files[0].path == "old.py => new.py"
+    assert summary.files[0].change_type == "R"
+    assert summary.files[1].path == "README.md"
+    assert summary.files[1].change_type == "M"
+
+
+def test_parse_numstat_defaults_change_type_to_modify() -> None:
+    numstat = "1\t0\tsrc/foo.py\n"
+    summary = parse_numstat(numstat)
+
+    assert summary.files[0].change_type == "M"

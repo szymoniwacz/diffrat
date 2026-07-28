@@ -9,6 +9,9 @@ MAX_CHANGE_FILES = 20
 MAX_LINES_PER_FILE = 100
 
 
+ChangeType = str  # M | A | D | R | C
+
+
 @dataclass(frozen=True)
 class FileChange:
     """Per-file diff statistics."""
@@ -17,6 +20,7 @@ class FileChange:
     additions: int
     deletions: int
     binary: bool
+    change_type: ChangeType = "M"
 
 
 @dataclass(frozen=True)
@@ -68,8 +72,42 @@ class DiffContent:
     truncated_files: bool
 
 
-def parse_numstat(numstat: str) -> DiffSummary:
+def parse_name_status(name_status: str) -> dict[str, ChangeType]:
+    """Parse ``git diff --name-status`` into a path -> change-type map."""
+    mapping: dict[str, ChangeType] = {}
+
+    for line in name_status.splitlines():
+        if not line.strip():
+            continue
+
+        parts = line.split("\t")
+        if len(parts) < 2:
+            continue
+
+        status_token = parts[0]
+        change_type = status_token[0] if status_token else "M"
+        if change_type not in {"M", "A", "D", "R", "C"}:
+            change_type = "M"
+
+        if change_type in {"R", "C"} and len(parts) >= 3:
+            old_path, new_path = parts[1], parts[2]
+            mapping[old_path] = change_type
+            mapping[new_path] = change_type
+            mapping[f"{old_path} => {new_path}"] = change_type
+            continue
+
+        mapping[parts[1]] = change_type
+
+    return mapping
+
+
+def parse_numstat(
+    numstat: str,
+    *,
+    name_status: str | None = None,
+) -> DiffSummary:
     """Parse ``git diff --numstat`` output into a diff summary."""
+    change_types = parse_name_status(name_status) if name_status else {}
     files: list[FileChange] = []
 
     for line in numstat.splitlines():
@@ -81,8 +119,17 @@ def parse_numstat(numstat: str) -> DiffSummary:
             continue
 
         additions_raw, deletions_raw, path = parts
+        change_type = change_types.get(path, "M")
         if additions_raw == "-" and deletions_raw == "-":
-            files.append(FileChange(path=path, additions=0, deletions=0, binary=True))
+            files.append(
+                FileChange(
+                    path=path,
+                    additions=0,
+                    deletions=0,
+                    binary=True,
+                    change_type=change_type,
+                )
+            )
             continue
 
         files.append(
@@ -91,6 +138,7 @@ def parse_numstat(numstat: str) -> DiffSummary:
                 additions=int(additions_raw),
                 deletions=int(deletions_raw),
                 binary=False,
+                change_type=change_type,
             )
         )
 
