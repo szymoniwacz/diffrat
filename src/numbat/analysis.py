@@ -7,7 +7,7 @@ from pathlib import PurePosixPath
 
 from numbat.diff_parser import DiffSummary, FileChange
 
-FileCategory = str  # source | tests | config | docs | other
+FileCategory = str  # source | tests | config | docs | ci | other
 
 LARGE_DIFF_LINE_THRESHOLD = 300
 LARGE_DIFF_FILE_THRESHOLD = 20
@@ -156,6 +156,8 @@ def categorize_path(path: str) -> FileCategory:
         return "config"
     if _is_docs_path(name_lower, suffix, parts_lower):
         return "docs"
+    if _is_ci_path(parts_lower):
+        return "ci"
     if suffix in _SOURCE_EXTENSIONS or "src" in parts_lower:
         return "source"
     return "other"
@@ -271,6 +273,10 @@ def _is_config_path(
     if suffix == ".json" and ("config" in parts_lower or "configs" in parts_lower):
         return True
     return False
+
+
+def _is_ci_path(parts_lower: tuple[str, ...]) -> bool:
+    return bool(parts_lower and parts_lower[0] == "ci")
 
 
 def _is_docs_path(
