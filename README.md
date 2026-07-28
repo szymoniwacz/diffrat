@@ -97,7 +97,7 @@ Every successful review assigns each changed file a coarse category:
 
 The report also includes deterministic Focus/Risk hints derived from paths and
 diff size (for example large diffs, tests touched, config/dependency changes,
-CI/workflow path changes with suggested validator commands, and
+docs-only changes, CI/workflow path changes with suggested validator commands, and
 security-sensitive path names). No network or API key is required. JSON
 output includes additive `category` fields on each file and a top-level
 `focus_risk` array while keeping `schema_version` at `"1"`.

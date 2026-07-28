@@ -203,6 +203,14 @@ def _build_hints(
             )
         )
 
+    if categories and all(category == "docs" for category in categories):
+        hints.append(
+            FocusRiskHint(
+                code="docs_touched",
+                message="Documentation changed — confirm product/code docs stay aligned",
+            )
+        )
+
     security_paths = [
         file_change.path
         for file_change in summary.files
