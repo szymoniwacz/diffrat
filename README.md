@@ -12,8 +12,9 @@ scripting.
 
 ## Status
 
-Phase 2 in progress — `numbat review` with modes, JSON, git context, categories,
-and deterministic Focus/Risk hints
+Phase 2 complete — v1 static core: `numbat review` with modes, JSON, git
+context, categories, and deterministic Focus/Risk hints. Optional LLM (Phase 3)
+is deferred / out of v1 (D-005).
 
 ## Current capabilities
 
@@ -103,8 +104,8 @@ mypy .
 
 ## Configuration and environment variables
 
-No configuration required for the bootstrap scaffold. Optional LLM credentials
-will be documented when that layer is added (Phase 3).
+No configuration or API keys required. v1 is offline and deterministic. Optional
+LLM credentials are out of scope for this project (Phase 3 deferred; D-005).
 
 ## Architecture and context
 
@@ -120,7 +121,7 @@ This repository uses `.ai/` as its AI working system. See
 ## Limitations
 
 - No CI integration or GitHub App
-- Optional LLM analysis deferred to a later phase
+- Optional LLM analysis is out of v1 (deferred; D-005)
 
 ## License
 
