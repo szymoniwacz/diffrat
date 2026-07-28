@@ -7,13 +7,18 @@ import sys
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-from numbat.analysis import is_ci_workflow_validator_path, is_python_source_or_test_path
+from numbat.analysis import (
+    is_ci_workflow_validator_path,
+    is_pyproject_path,
+    is_python_source_or_test_path,
+)
 from numbat.diff_parser import DiffSummary
 
 _CI_VALIDATOR_COMMAND = (
     "python ci/validate-workflow-contracts.py --mode project"
 )
 _PYTEST_COMMAND = "pytest"
+_RUFF_COMMAND = "ruff check ."
 
 
 @dataclass(frozen=True)
@@ -100,6 +105,17 @@ def plan_checks(summary: DiffSummary) -> list[CheckSpec]:
                     code="pytest",
                     argv=(sys.executable, "-m", "pytest", *pytest_targets),
                     display_command=display_command,
+                )
+            )
+
+    if any(is_pyproject_path(path) for path in paths):
+        if "ruff" not in seen:
+            seen.add("ruff")
+            specs.append(
+                CheckSpec(
+                    code="ruff",
+                    argv=(sys.executable, "-m", "ruff", "check", "."),
+                    display_command=_RUFF_COMMAND,
                 )
             )
 

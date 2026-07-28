@@ -5,9 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-from numbat.diff_parser import DiffSummary, FileChange
+from numbat.diff_parser import DiffContent, DiffSummary, FileChange
 
-FileCategory = str  # source | tests | config | docs | other
+FileCategory = str  # source | tests | config | docs | ci | other
 
 LARGE_DIFF_LINE_THRESHOLD = 300
 LARGE_DIFF_FILE_THRESHOLD = 20
@@ -99,6 +99,8 @@ _SOURCE_EXTENSIONS = frozenset(
 _CI_WORKFLOW_VALIDATOR_COMMAND = (
     "python ci/validate-workflow-contracts.py --mode project"
 )
+_PYPROJECT_DEV_INSTALL_COMMAND = 'pip install -e ".[dev]"'
+_RUFF_CHECK_COMMAND = "ruff check ."
 
 _SECURITY_NAME_TOKENS = frozenset(
     {
@@ -156,15 +158,26 @@ def categorize_path(path: str) -> FileCategory:
         return "config"
     if _is_docs_path(name_lower, suffix, parts_lower):
         return "docs"
+    if _is_ci_path(parts_lower):
+        return "ci"
     if suffix in _SOURCE_EXTENSIONS or "src" in parts_lower:
         return "source"
     return "other"
 
 
-def analyze_diff(summary: DiffSummary) -> AnalysisResult:
+def analyze_diff(
+    summary: DiffSummary,
+    *,
+    diff_content: DiffContent | None = None,
+) -> AnalysisResult:
     """Compute per-file categories and focus/risk hints for a diff."""
     categories = tuple(categorize_path(file_change.path) for file_change in summary.files)
-    return AnalysisResult(categories=categories, hints=tuple(_build_hints(summary, categories)))
+    hints = _build_hints(summary, categories)
+    if diff_content is not None:
+        from numbat.content_hints import content_focus_risk_hints
+
+        hints.extend(content_focus_risk_hints(diff_content))
+    return AnalysisResult(categories=categories, hints=tuple(hints))
 
 
 def _build_hints(
@@ -196,10 +209,32 @@ def _build_hints(
         )
 
     if any(category == "config" for category in categories):
+        if any(is_pyproject_path(file_change.path) for file_change in summary.files):
+            hints.append(
+                FocusRiskHint(
+                    code="config_or_deps",
+                    message=(
+                        "pyproject.toml changed — run: "
+                        f"{_PYPROJECT_DEV_INSTALL_COMMAND} ; {_RUFF_CHECK_COMMAND}"
+                    ),
+                )
+            )
+        else:
+            hints.append(
+                FocusRiskHint(
+                    code="config_or_deps",
+                    message=(
+                        "Config or dependency files changed — "
+                        "review install and runtime impact"
+                    ),
+                )
+            )
+
+    if categories and all(category == "docs" for category in categories):
         hints.append(
             FocusRiskHint(
-                code="config_or_deps",
-                message="Config or dependency files changed — review install and runtime impact",
+                code="docs_touched",
+                message="Documentation changed — confirm product/code docs stay aligned",
             )
         )
 
@@ -273,6 +308,10 @@ def _is_config_path(
     return False
 
 
+def _is_ci_path(parts_lower: tuple[str, ...]) -> bool:
+    return bool(parts_lower and parts_lower[0] == "ci")
+
+
 def _is_docs_path(
     name_lower: str,
     suffix: str,
@@ -287,6 +326,12 @@ def _is_docs_path(
     if suffix in _DOC_EXTENSIONS:
         return True
     return False
+
+
+def is_pyproject_path(path: str) -> bool:
+    """Return True when a changed path is pyproject.toml."""
+    posix = PurePosixPath(path.replace("\\", "/"))
+    return posix.name.lower() == "pyproject.toml"
 
 
 def is_ci_workflow_validator_path(path: str) -> bool:

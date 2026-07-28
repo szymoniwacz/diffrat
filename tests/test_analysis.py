@@ -20,6 +20,7 @@ def test_categorize_path_assigns_expected_buckets() -> None:
     assert categorize_path(".env.local") == "config"
     assert categorize_path("README.md") == "docs"
     assert categorize_path("docs/guide.md") == "docs"
+    assert categorize_path("ci/validate-workflow-contracts.py") == "ci"
     assert categorize_path("assets/logo.png") == "other"
 
 
@@ -111,3 +112,33 @@ def test_analyze_diff_no_ci_workflow_hint_for_source_only() -> None:
     result = analyze_diff(summary)
 
     assert not any(hint.code == "ci_workflow_paths" for hint in result.hints)
+
+
+def test_analyze_diff_docs_touched_hint_for_docs_only() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="README.md", additions=3, deletions=1, binary=False),
+            FileChange(path="docs/guide.md", additions=10, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    docs_hints = [hint for hint in result.hints if hint.code == "docs_touched"]
+    assert len(docs_hints) == 1
+    assert docs_hints[0].message == (
+        "Documentation changed — confirm product/code docs stay aligned"
+    )
+
+
+def test_analyze_diff_no_docs_touched_when_mixed_with_source() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="docs/guide.md", additions=5, deletions=0, binary=False),
+            FileChange(path="src/numbat/review.py", additions=2, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "docs_touched" for hint in result.hints)

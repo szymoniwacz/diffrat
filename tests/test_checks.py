@@ -5,7 +5,11 @@ from __future__ import annotations
 import sys
 from unittest.mock import MagicMock, patch
 
-from numbat.analysis import is_ci_workflow_validator_path, is_python_source_or_test_path
+from numbat.analysis import (
+    is_ci_workflow_validator_path,
+    is_pyproject_path,
+    is_python_source_or_test_path,
+)
 from numbat.checks import CheckSpec, plan_checks, pytest_targets_for_paths, run_checks
 from numbat.diff_parser import DiffSummary, FileChange
 
@@ -48,6 +52,13 @@ def test_pytest_targets_supports_multiple_modules() -> None:
 
 def test_pytest_targets_maps_conftest_to_tests_directory() -> None:
     assert pytest_targets_for_paths(["tests/conftest.py"]) == ["tests"]
+
+
+def test_is_pyproject_path() -> None:
+    assert is_pyproject_path("pyproject.toml")
+    assert is_pyproject_path("subdir/pyproject.toml")
+    assert not is_pyproject_path("requirements.txt")
+    assert not is_pyproject_path("README.md")
 
 
 def test_plan_checks_selects_ci_validator() -> None:
@@ -130,6 +141,42 @@ def test_plan_checks_ci_validator_unchanged_with_python_paths() -> None:
     assert specs[0].display_command == (
         "python ci/validate-workflow-contracts.py --mode project"
     )
+
+
+def test_plan_checks_selects_ruff_for_pyproject() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    specs = plan_checks(summary)
+
+    assert [spec.code for spec in specs] == ["ruff"]
+    assert specs[0].display_command == "ruff check ."
+
+
+def test_plan_checks_skips_ruff_for_other_config() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="requirements.txt", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    assert plan_checks(summary) == []
+
+
+def test_plan_checks_pyproject_and_source() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    specs = plan_checks(summary)
+
+    assert [spec.code for spec in specs] == ["pytest", "ruff"]
 
 
 def test_run_checks_records_pass_and_fail() -> None:
