@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from unittest.mock import MagicMock, patch
 
 from numbat.analysis import (
@@ -9,7 +10,7 @@ from numbat.analysis import (
     is_pyproject_path,
     is_python_source_or_test_path,
 )
-from numbat.checks import CheckSpec, plan_checks, run_checks
+from numbat.checks import CheckSpec, plan_checks, pytest_targets_for_paths, run_checks
 from numbat.diff_parser import DiffSummary, FileChange
 
 
@@ -24,6 +25,33 @@ def test_is_ci_workflow_validator_path() -> None:
     assert is_ci_workflow_validator_path("ci/validate-workflow-contracts.py")
     assert is_ci_workflow_validator_path(".github/workflows/validate.yml")
     assert not is_ci_workflow_validator_path("README.md")
+
+
+def test_pytest_targets_maps_source_to_test_module() -> None:
+    assert pytest_targets_for_paths(["src/numbat/review.py"]) == ["tests/test_review.py"]
+
+
+def test_pytest_targets_uses_test_module_directly() -> None:
+    assert pytest_targets_for_paths(["tests/test_review.py"]) == ["tests/test_review.py"]
+
+
+def test_pytest_targets_deduplicates_source_and_test_paths() -> None:
+    paths = ["src/numbat/review.py", "tests/test_review.py"]
+
+    assert pytest_targets_for_paths(paths) == ["tests/test_review.py"]
+
+
+def test_pytest_targets_supports_multiple_modules() -> None:
+    paths = ["src/numbat/review.py", "tests/test_checks.py"]
+
+    assert pytest_targets_for_paths(paths) == [
+        "tests/test_checks.py",
+        "tests/test_review.py",
+    ]
+
+
+def test_pytest_targets_maps_conftest_to_tests_directory() -> None:
+    assert pytest_targets_for_paths(["tests/conftest.py"]) == ["tests"]
 
 
 def test_is_pyproject_path() -> None:
@@ -63,6 +91,13 @@ def test_plan_checks_selects_pytest_for_source_paths() -> None:
     specs = plan_checks(summary)
 
     assert [spec.code for spec in specs] == ["pytest"]
+    assert specs[0].argv == (
+        sys.executable,
+        "-m",
+        "pytest",
+        "tests/test_review.py",
+    )
+    assert specs[0].display_command == "pytest tests/test_review.py"
 
 
 def test_plan_checks_deduplicates_checks() -> None:
@@ -76,6 +111,7 @@ def test_plan_checks_deduplicates_checks() -> None:
     specs = plan_checks(summary)
 
     assert [spec.code for spec in specs] == ["pytest"]
+    assert specs[0].argv[-1] == "tests/test_review.py"
 
 
 def test_plan_checks_returns_empty_for_unrelated_paths() -> None:
@@ -84,6 +120,27 @@ def test_plan_checks_returns_empty_for_unrelated_paths() -> None:
     )
 
     assert plan_checks(summary) == []
+
+
+def test_plan_checks_ci_validator_unchanged_with_python_paths() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="ci/validate-workflow-contracts.py",
+                additions=1,
+                deletions=0,
+                binary=False,
+            ),
+            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    specs = plan_checks(summary)
+
+    assert [spec.code for spec in specs] == ["ci_validator", "pytest"]
+    assert specs[0].display_command == (
+        "python ci/validate-workflow-contracts.py --mode project"
+    )
 
 
 def test_plan_checks_selects_ruff_for_pyproject() -> None:
