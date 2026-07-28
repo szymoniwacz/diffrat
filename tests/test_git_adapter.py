@@ -18,6 +18,7 @@ def test_get_diff_numstat_unstaged(git_repo_with_changes: Path) -> None:
     result = get_diff_numstat(staged=False, cwd=str(git_repo_with_changes))
 
     assert "README.md" in result.numstat
+    assert "README.md" in result.name_status
     assert "README.md" in result.patch
     assert "+extra line" in result.patch
 

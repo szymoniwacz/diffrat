@@ -15,6 +15,7 @@ class GitDiffResult:
     """Raw diff output from git."""
 
     numstat: str
+    name_status: str
     patch: str
 
 
@@ -69,12 +70,21 @@ def _get_diff_outputs(
         message = numstat_result.stderr.strip() or "git diff failed"
         raise GitError(message)
 
+    name_status_result = _run_git(["diff", "--name-status", *diff_args], cwd=cwd)
+    if name_status_result.returncode != 0:
+        message = name_status_result.stderr.strip() or "git diff failed"
+        raise GitError(message)
+
     patch_result = _run_git(["diff", *diff_args], cwd=cwd)
     if patch_result.returncode != 0:
         message = patch_result.stderr.strip() or "git diff failed"
         raise GitError(message)
 
-    return GitDiffResult(numstat=numstat_result.stdout, patch=patch_result.stdout)
+    return GitDiffResult(
+        numstat=numstat_result.stdout,
+        name_status=name_status_result.stdout,
+        patch=patch_result.stdout,
+    )
 
 
 def get_diff_numstat(*, staged: bool, cwd: str | None = None) -> GitDiffResult:

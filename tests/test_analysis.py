@@ -116,6 +116,45 @@ def test_analyze_diff_no_ci_workflow_hint_for_source_only() -> None:
     assert not any(hint.code == "ci_workflow_paths" for hint in result.hints)
 
 
+def test_analyze_diff_rename_or_move_hint() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="old.py => new.py",
+                additions=0,
+                deletions=0,
+                binary=False,
+                change_type="R",
+            ),
+            FileChange(
+                path="src/numbat/review.py",
+                additions=2,
+                deletions=0,
+                binary=False,
+                change_type="M",
+            ),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    rename_hints = [hint for hint in result.hints if hint.code == "rename_or_move"]
+    assert len(rename_hints) == 1
+    assert "old.py => new.py" in rename_hints[0].message
+
+
+def test_analyze_diff_no_rename_or_move_hint_for_modify_only() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/foo.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "rename_or_move" for hint in result.hints)
+
+
 def test_analyze_diff_docs_touched_hint_for_docs_only() -> None:
     summary = DiffSummary(
         files=(
