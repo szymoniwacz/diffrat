@@ -20,6 +20,25 @@ _FILTER_TYPO = (
 )
 
 
+def _single_file_content(path: str, added_line: str) -> DiffContent:
+    return DiffContent(
+        files=(
+            FileDiffContent(
+                path=path,
+                hunks=(
+                    DiffHunk(
+                        header="@@ -1 +1 @@",
+                        lines=(f"+{added_line}",),
+                    ),
+                ),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+
 def _validator_typo_content() -> DiffContent:
     return DiffContent(
         files=(
@@ -70,25 +89,152 @@ def test_content_hints_ignore_correct_constant() -> None:
     assert content_focus_risk_hints(content) == []
 
 
-def test_content_hints_ignore_non_validator_paths() -> None:
-    content = DiffContent(
-        files=(
-            FileDiffContent(
-                path="src/numbat/review.py",
-                hunks=(
-                    DiffHunk(
-                        header="@@ -1 +1 @@",
-                        lines=('+token = "continue-projec"',),
-                    ),
-                ),
-                binary=False,
-                truncated=False,
-            ),
-        ),
-        truncated_files=False,
+def test_content_hints_skip_tests_paths() -> None:
+    content = _single_file_content("tests/test_foo.py", 'api_key = "sk-abcdefghijklmnopqrstuvwxyz"')
+
+    assert content_focus_risk_hints(content) == []
+
+
+def test_content_hints_skip_docs_paths() -> None:
+    content = _single_file_content("docs/guide.md", "http://example.com")
+
+    assert content_focus_risk_hints(content) == []
+
+
+def test_content_hints_possible_secret_positive() -> None:
+    content = _single_file_content(
+        "src/numbat/auth.py",
+        'api_key = "sk-abcdefghijklmnopqrstuvwxyz"',
+    )
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "possible_secret"
+    assert "src/numbat/auth.py" in hints[0].message
+
+
+def test_content_hints_possible_secret_private_key() -> None:
+    content = _single_file_content(
+        "src/numbat/crypto.py",
+        "-----BEGIN PRIVATE KEY-----",
+    )
+
+    hints = content_focus_risk_hints(content)
+    assert any(hint.code == "possible_secret" for hint in hints)
+
+
+def test_content_hints_possible_secret_negative() -> None:
+    content = _single_file_content("src/numbat/auth.py", 'name = "short"')
+
+    assert content_focus_risk_hints(content) == []
+
+
+def test_content_hints_debug_leftover_positive() -> None:
+    content = _single_file_content("src/numbat/review.py", "print(result)")
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "debug_leftover"
+
+
+def test_content_hints_debug_leftover_todo_remove_case_insensitive() -> None:
+    content = _single_file_content("src/numbat/review.py", "# todo: remove before merge")
+
+    hints = content_focus_risk_hints(content)
+    assert any(hint.code == "debug_leftover" for hint in hints)
+
+
+def test_content_hints_debug_leftover_negative() -> None:
+    content = _single_file_content("src/numbat/review.py", "logger.info('done')")
+
+    assert content_focus_risk_hints(content) == []
+
+
+def test_content_hints_dangerous_call_positive() -> None:
+    content = _single_file_content("src/numbat/shell.py", "subprocess.run(cmd, shell=True)")
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "dangerous_call"
+
+
+def test_content_hints_dangerous_call_eval() -> None:
+    content = _single_file_content("src/numbat/shell.py", "result = eval(user_input)")
+
+    hints = content_focus_risk_hints(content)
+    assert any(hint.code == "dangerous_call" for hint in hints)
+
+
+def test_content_hints_dangerous_call_negative() -> None:
+    content = _single_file_content("src/numbat/shell.py", "subprocess.run(cmd, check=True)")
+
+    assert content_focus_risk_hints(content) == []
+
+
+def test_content_hints_broad_exception_positive() -> None:
+    content = _single_file_content("src/numbat/review.py", "    except Exception:")
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "broad_exception"
+
+
+def test_content_hints_broad_exception_bare_except() -> None:
+    content = _single_file_content("src/numbat/review.py", "    except:")
+
+    hints = content_focus_risk_hints(content)
+    assert any(hint.code == "broad_exception" for hint in hints)
+
+
+def test_content_hints_broad_exception_negative_with_raise() -> None:
+    content = _single_file_content(
+        "src/numbat/review.py",
+        "    except Exception: raise",
     )
 
     assert content_focus_risk_hints(content) == []
+
+
+def test_content_hints_hardcoded_url_positive() -> None:
+    content = _single_file_content(
+        "src/numbat/client.py",
+        'endpoint = "https://api.example.com/v1"',
+    )
+
+    hints = content_focus_risk_hints(content)
+    assert any(hint.code == "hardcoded_url_or_ip" for hint in hints)
+
+
+def test_content_hints_hardcoded_ip_positive() -> None:
+    content = _single_file_content("src/numbat/client.py", 'host = "192.168.1.100"')
+
+    hints = content_focus_risk_hints(content)
+    assert any(hint.code == "hardcoded_url_or_ip" for hint in hints)
+
+
+def test_content_hints_hardcoded_url_negative() -> None:
+    content = _single_file_content("src/numbat/client.py", 'version = "1.0.0"')
+
+    assert content_focus_risk_hints(content) == []
+
+
+def test_content_hints_one_hint_per_code_per_line() -> None:
+    content = _single_file_content(
+        "src/numbat/debug.py",
+        "print(eval('x'))",
+    )
+
+    hints = content_focus_risk_hints(content)
+    codes = [hint.code for hint in hints]
+    assert codes.count("debug_leftover") == 1
+    assert codes.count("dangerous_call") == 1
+
+
+def test_content_hints_applies_to_ci_paths() -> None:
+    content = _single_file_content("ci/deploy.sh", "curl http://internal.local")
+
+    hints = content_focus_risk_hints(content)
+    assert any(hint.code == "hardcoded_url_or_ip" for hint in hints)
 
 
 def test_analyze_diff_merges_content_hints() -> None:

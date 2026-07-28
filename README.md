@@ -99,8 +99,11 @@ Every successful review assigns each changed file a coarse category:
 The report also includes deterministic Focus/Risk hints derived from paths and
 diff size (for example large diffs, tests touched, config/dependency changes,
 docs-only changes, CI/workflow path changes with suggested validator commands,
-security-sensitive path names, and content-based typo hints for known CI validator
-patterns such as `PROJECT_EXECUTOR_COMMENT_FILTER`). No network or API key is
+security-sensitive path names, and content-based hints from added hunk lines on
+`source` and `ci` paths). Content-based codes include `possible_secret`,
+`debug_leftover`, `dangerous_call`, `broad_exception`, and `hardcoded_url_or_ip`,
+plus validator-specific typo hints for known CI patterns such as
+`PROJECT_EXECUTOR_COMMENT_FILTER`. No network or API key is
 required. JSON
 output includes additive `category` fields on each file and a top-level
 `focus_risk` array while keeping `schema_version` at `"1"`.
