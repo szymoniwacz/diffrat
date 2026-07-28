@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from numbat.analysis import AnalysisResult, analyze_diff
+from numbat.checks import CheckResult
 from numbat.diff_parser import DiffContent, DiffSummary
 from numbat.git_adapter import GitContext
 
@@ -13,6 +14,7 @@ def render_review_report(
     git_context: GitContext | None = None,
     analysis: AnalysisResult | None = None,
     diff_content: DiffContent | None = None,
+    check_results: list[CheckResult] | None = None,
 ) -> str:
     """Render a review-oriented text report for stdout."""
     result = analysis if analysis is not None else analyze_diff(summary)
@@ -62,6 +64,18 @@ def render_review_report(
     else:
         for hint in result.hints:
             lines.append(f"- [{hint.code}] {hint.message}")
+
+    if check_results is not None:
+        lines.extend(["", "Local checks", "------------"])
+        if not check_results:
+            lines.append("(none applicable)")
+        else:
+            for check in check_results:
+                status = "passed" if check.passed else "failed"
+                lines.append(f"- [{check.code}] {status}: {check.command}")
+                if not check.passed and check.output:
+                    for output_line in check.output.splitlines():
+                        lines.append(f"  {output_line}")
 
     return "\n".join(lines) + "\n"
 

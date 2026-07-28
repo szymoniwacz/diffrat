@@ -289,6 +289,20 @@ def _is_docs_path(
     return False
 
 
+def is_ci_workflow_validator_path(path: str) -> bool:
+    """Return True when a changed path should trigger CI/workflow validator checks."""
+    return _is_ci_workflow_validator_path(path)
+
+
+def is_python_source_or_test_path(path: str) -> bool:
+    """Return True when a changed path should trigger pytest checks."""
+    posix = PurePosixPath(path.replace("\\", "/"))
+    parts = posix.parts
+    if len(parts) >= 2 and parts[0] == "src" and parts[1] == "numbat":
+        return True
+    return bool(parts and parts[0] == "tests")
+
+
 def _is_ci_workflow_validator_path(path: str) -> bool:
     posix = PurePosixPath(path.replace("\\", "/"))
     parts_lower = tuple(part.lower() for part in posix.parts)

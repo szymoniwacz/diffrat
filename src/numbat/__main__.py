@@ -33,7 +33,7 @@ def build_parser() -> argparse.ArgumentParser:
             "Use --base to compare the current branch to a base ref (default: main)."
         ),
         epilog=(
-            "Exit codes: 0 success, 1 git error, 2 empty diff.\n"
+            "Exit codes: 0 success, 1 git error, 2 empty diff, 3 check failure.\n"
             f"Changes sections show up to {MAX_CHANGE_FILES} files and "
             f"{MAX_LINES_PER_FILE} diff lines per file."
         ),
@@ -63,6 +63,14 @@ def build_parser() -> argparse.ArgumentParser:
             "report (schema_version field documents the output format)"
         ),
     )
+    review_parser.add_argument(
+        "--check",
+        action="store_true",
+        help=(
+            "Run applicable local validators/tests for touched paths and include "
+            "results in the report (exit code 3 when a check fails)"
+        ),
+    )
 
     return parser
 
@@ -76,7 +84,12 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(parsed)
     if args.command == "review":
-        return run_review(staged=args.staged, base=args.base, json_output=args.json)
+        return run_review(
+            staged=args.staged,
+            base=args.base,
+            json_output=args.json,
+            run_checks_flag=args.check,
+        )
 
     parser.print_help()
     return 0

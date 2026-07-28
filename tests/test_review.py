@@ -8,7 +8,13 @@ from pathlib import Path
 import pytest
 
 from numbat.json_renderer import JSON_SCHEMA_VERSION
-from numbat.review import EXIT_EMPTY_DIFF, EXIT_ERROR, EXIT_SUCCESS, run_review
+from numbat.review import (
+    EXIT_CHECK_FAILED,
+    EXIT_EMPTY_DIFF,
+    EXIT_ERROR,
+    EXIT_SUCCESS,
+    run_review,
+)
 
 
 def test_run_review_unstaged(
@@ -178,3 +184,95 @@ def test_run_review_json_empty_diff_no_stdout(
     assert exit_code == EXIT_EMPTY_DIFF
     assert captured.out == ""
     assert "no unstaged changes to review" in captured.err
+
+
+def test_run_review_check_no_applicable_checks(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        run_checks_flag=True,
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+    assert "Local checks" in captured.out
+    assert "(none applicable)" in captured.out
+    assert captured.err == ""
+
+
+def test_run_review_check_reports_failure(
+    git_repo_with_staged_change: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from numbat.checks import CheckResult, CheckSpec
+
+    monkeypatch.setattr(
+        "numbat.review.plan_checks",
+        lambda summary: [
+            CheckSpec(
+                code="ci_validator",
+                argv=("python",),
+                display_command=(
+                    "python ci/validate-workflow-contracts.py --mode project"
+                ),
+            )
+        ],
+    )
+    monkeypatch.setattr(
+        "numbat.review.run_checks",
+        lambda specs, *, cwd=None: [
+            CheckResult(
+                code="ci_validator",
+                command="python ci/validate-workflow-contracts.py --mode project",
+                passed=False,
+                output="validator failed",
+            )
+        ],
+    )
+
+    exit_code = run_review(staged=True, run_checks_flag=True, cwd=str(git_repo_with_staged_change))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_CHECK_FAILED
+    assert "[ci_validator] failed" in captured.out
+    assert "validator failed" in captured.out
+    assert "check failed: ci_validator" in captured.err
+
+
+def test_run_review_check_json_includes_checks(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from numbat.checks import CheckResult
+
+    monkeypatch.setattr(
+        "numbat.review.run_checks",
+        lambda specs, *, cwd=None: [
+            CheckResult(code="pytest", command="pytest", passed=True, output="")
+        ],
+    )
+
+    exit_code = run_review(
+        staged=False,
+        json_output=True,
+        run_checks_flag=True,
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+
+    payload = json.loads(captured.out)
+    assert payload["checks"] == [
+        {
+            "code": "pytest",
+            "command": "pytest",
+            "passed": True,
+            "output": "",
+        }
+    ]
