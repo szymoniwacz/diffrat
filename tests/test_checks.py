@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from numbat.analysis import is_ci_workflow_validator_path, is_python_source_or_test_path
+from numbat.analysis import (
+    is_ci_workflow_validator_path,
+    is_pyproject_path,
+    is_python_source_or_test_path,
+)
 from numbat.checks import CheckSpec, plan_checks, run_checks
 from numbat.diff_parser import DiffSummary, FileChange
 
@@ -20,6 +24,13 @@ def test_is_ci_workflow_validator_path() -> None:
     assert is_ci_workflow_validator_path("ci/validate-workflow-contracts.py")
     assert is_ci_workflow_validator_path(".github/workflows/validate.yml")
     assert not is_ci_workflow_validator_path("README.md")
+
+
+def test_is_pyproject_path() -> None:
+    assert is_pyproject_path("pyproject.toml")
+    assert is_pyproject_path("subdir/pyproject.toml")
+    assert not is_pyproject_path("requirements.txt")
+    assert not is_pyproject_path("README.md")
 
 
 def test_plan_checks_selects_ci_validator() -> None:
@@ -73,6 +84,42 @@ def test_plan_checks_returns_empty_for_unrelated_paths() -> None:
     )
 
     assert plan_checks(summary) == []
+
+
+def test_plan_checks_selects_ruff_for_pyproject() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    specs = plan_checks(summary)
+
+    assert [spec.code for spec in specs] == ["ruff"]
+    assert specs[0].display_command == "ruff check ."
+
+
+def test_plan_checks_skips_ruff_for_other_config() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="requirements.txt", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    assert plan_checks(summary) == []
+
+
+def test_plan_checks_pyproject_and_source() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    specs = plan_checks(summary)
+
+    assert [spec.code for spec in specs] == ["pytest", "ruff"]
 
 
 def test_run_checks_records_pass_and_fail() -> None:

@@ -99,6 +99,8 @@ _SOURCE_EXTENSIONS = frozenset(
 _CI_WORKFLOW_VALIDATOR_COMMAND = (
     "python ci/validate-workflow-contracts.py --mode project"
 )
+_PYPROJECT_DEV_INSTALL_COMMAND = 'pip install -e ".[dev]"'
+_RUFF_CHECK_COMMAND = "ruff check ."
 
 _SECURITY_NAME_TOKENS = frozenset(
     {
@@ -196,12 +198,26 @@ def _build_hints(
         )
 
     if any(category == "config" for category in categories):
-        hints.append(
-            FocusRiskHint(
-                code="config_or_deps",
-                message="Config or dependency files changed — review install and runtime impact",
+        if any(is_pyproject_path(file_change.path) for file_change in summary.files):
+            hints.append(
+                FocusRiskHint(
+                    code="config_or_deps",
+                    message=(
+                        "pyproject.toml changed — run: "
+                        f"{_PYPROJECT_DEV_INSTALL_COMMAND} ; {_RUFF_CHECK_COMMAND}"
+                    ),
+                )
             )
-        )
+        else:
+            hints.append(
+                FocusRiskHint(
+                    code="config_or_deps",
+                    message=(
+                        "Config or dependency files changed — "
+                        "review install and runtime impact"
+                    ),
+                )
+            )
 
     security_paths = [
         file_change.path
@@ -287,6 +303,12 @@ def _is_docs_path(
     if suffix in _DOC_EXTENSIONS:
         return True
     return False
+
+
+def is_pyproject_path(path: str) -> bool:
+    """Return True when a changed path is pyproject.toml."""
+    posix = PurePosixPath(path.replace("\\", "/"))
+    return posix.name.lower() == "pyproject.toml"
 
 
 def is_ci_workflow_validator_path(path: str) -> bool:
