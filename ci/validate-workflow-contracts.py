@@ -360,12 +360,15 @@ PROJECT_EXECUTOR_PROMPT = ".ai/automation/project-executor.md"
 PROJECT_EXECUTOR_PRODUCTION_SETUP = ".ai/automation/project-executor-production-setup.md"
 PROJECT_EXECUTOR_LIVE_LOADER_HEADING = "Live automation prompt"
 PROJECT_EXECUTOR_AUTOMATION_NAME = "Project Executor"
+PROJECT_EXECUTOR_COMMENT_FILTER = "^/(execute-project|continue-project)$"
 PROJECT_EXECUTOR_MATERIAL_DECISION_REQUIRED_PHRASES = (
     "Material decision questions on GitHub",
     "lettered options",
     "Other",
     "reply with",
     "reply with option letters",
+    "/continue-project",
+    "Trigger commands",
 )
 PROJECT_EXECUTOR_EXPECTED_LOADER = """You are running the Project Executor automation.
 
@@ -919,14 +922,52 @@ class Validator:
         if normalized_loader != normalized_expected:
             self.add_error(PROJECT_EXECUTOR_PRODUCTION_SETUP, EXACT_LOADER_MATCH_ERROR)
 
-        if not re.search(
-            rf"^-\s*Name:\s*`{re.escape(PROJECT_EXECUTOR_AUTOMATION_NAME)}`",
-            setup_text,
-            re.M,
-        ):
+        config_rows = parse_markdown_table(setup_text, "| Parameter | Required value |")
+        config_map = {
+            row.get("Parameter", "").strip(): row.get("Required value", "").strip()
+            for row in config_rows
+            if row.get("Parameter", "").strip()
+        }
+        automation_name = config_map.get("Automation name", "")
+        if not automation_name:
             self.add_error(
                 PROJECT_EXECUTOR_PRODUCTION_SETUP,
-                f"production setup must name the automation '{PROJECT_EXECUTOR_AUTOMATION_NAME}'",
+                "configuration table is missing required row: Automation name",
+            )
+        elif PROJECT_EXECUTOR_AUTOMATION_NAME not in automation_name:
+            self.add_error(
+                PROJECT_EXECUTOR_PRODUCTION_SETUP,
+                f"configuration table row 'Automation name' must include required value '{PROJECT_EXECUTOR_AUTOMATION_NAME}'",
+            )
+
+        trigger_event = config_map.get("Trigger event", "")
+        if not trigger_event:
+            self.add_error(
+                PROJECT_EXECUTOR_PRODUCTION_SETUP,
+                "configuration table is missing required row: Trigger event",
+            )
+        elif "issue comment" not in trigger_event.lower():
+            self.add_error(
+                PROJECT_EXECUTOR_PRODUCTION_SETUP,
+                "configuration table row 'Trigger event' must require GitHub issue comment",
+            )
+
+        comment_filter = config_map.get("Comment filter regex", "")
+        if not comment_filter:
+            self.add_error(
+                PROJECT_EXECUTOR_PRODUCTION_SETUP,
+                "configuration table is missing required row: Comment filter regex",
+            )
+        elif PROJECT_EXECUTOR_COMMENT_FILTER not in setup_text:
+            self.add_error(
+                PROJECT_EXECUTOR_PRODUCTION_SETUP,
+                f"production setup must document comment filter '{PROJECT_EXECUTOR_COMMENT_FILTER}'",
+            )
+
+        if re.search(r"\bschedule\b", setup_text, re.I):
+            self.add_error(
+                PROJECT_EXECUTOR_PRODUCTION_SETUP,
+                "production setup must not use a schedule trigger",
             )
 
     def check_project_executor_material_decision_contract(self) -> None:

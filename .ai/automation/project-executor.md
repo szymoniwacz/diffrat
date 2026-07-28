@@ -1,8 +1,24 @@
 # Project Executor — Cursor Automation Instructions
 
-Project Executor is a scheduled orchestrator around the existing Goal Executor.
-It selects at most one goal, invokes Goal Executor, and then waits for human
-review and merge. It does not copy the goal lifecycle or merge pull requests.
+Project Executor is an event-driven orchestrator around the existing Goal
+Executor. It selects at most one goal, invokes Goal Executor, and then waits
+for human review and merge. It does not copy the goal lifecycle or merge pull
+requests.
+
+## Trigger commands
+
+Project Executor runs when the authorized repository owner comments exactly
+`/execute-project` or `/continue-project` on a **Project Execution** issue.
+Production trigger configuration:
+`.ai/automation/project-executor-production-setup.md`.
+
+- `/execute-project` authorizes the project (initially or after the most recent
+  edit to its title or structured fields) and starts or resumes when state
+  permits.
+- `/continue-project` resumes an already authorized project after the owner
+  answers a material-decision batch or after human review and merge. It does
+  not replace re-authorization after issue edits. If no valid authorization
+  exists, stop as a no-op without writing.
 
 ## Authorization
 
@@ -126,6 +142,8 @@ where the human replies in comments):
 5. Do not use open-ended-only questions when alternatives can be enumerated.
 6. Do not repeat the same batch until the owner replies or edits the project
    issue.
+7. After the owner replies with option letters in a separate comment, they must
+   comment exactly `/continue-project` to resume.
 
 Example shape:
 
@@ -157,8 +175,10 @@ delegated issue.
 Goal Executor retains ownership of planning, implementation, validation,
 branches, commits, pull requests, idempotency, and its Slice 2 stopping point
 before merge.
-After it stops, Project Executor also stops. A later scheduled run may continue
-only after human review and merge.
+After it stops, Project Executor also stops. The owner may comment
+`/continue-project` when ready for the next step. If applicable CI is still
+pending, state resolution enters `WAIT` and the owner may comment
+`/continue-project` again later.
 
 Never merge, enable auto-merge, force push, rewrite published history, or push
 directly to the protected default branch.
