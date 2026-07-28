@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 from numbat.analysis import AnalysisResult, analyze_diff
+from numbat.checks import CheckResult
 from numbat.diff_parser import (
     MAX_CHANGE_FILES,
     MAX_LINES_PER_FILE,
@@ -23,6 +24,7 @@ def render_review_json(
     git_context: GitContext | None = None,
     analysis: AnalysisResult | None = None,
     diff_content: DiffContent | None = None,
+    check_results: list[CheckResult] | None = None,
 ) -> str:
     """Render a review report as a JSON document for stdout."""
     result = analysis if analysis is not None else analyze_diff(summary)
@@ -49,6 +51,17 @@ def render_review_json(
         ],
         "changes": _serialize_changes(diff_content),
     }
+
+    if check_results is not None:
+        payload["checks"] = [
+            {
+                "code": check.code,
+                "command": check.command,
+                "passed": check.passed,
+                "output": check.output,
+            }
+            for check in check_results
+        ]
 
     if git_context is not None:
         payload["git_context"] = {

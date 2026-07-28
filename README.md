@@ -24,6 +24,7 @@ is deferred / out of v1 (D-005).
   human-readable report (file list with coarse categories, per-file +/- counts,
   summary, deterministic Focus/Risk hints)
 - `numbat review --json` — same analysis as structured JSON on stdout for scripting
+- `numbat review --check` — run applicable local validators/tests for touched paths
 - `numbat review --base <ref>` — compare the current branch to a base ref and
   include git context (branch, base, commits since base)
 - Dev tooling: pytest, ruff, mypy
@@ -111,6 +112,28 @@ Output is bounded to keep reports readable:
 
 When limits apply, the report notes truncation. Limits are documented in
 `numbat review --help` and echoed in JSON under `changes.limits`.
+
+### Optional local checks (`--check`)
+
+Use `--check` to run applicable repo validators/tests for touched paths and
+include results in the report:
+
+| Touched path pattern | Command run |
+|---|---|
+| `ci/`, `.github/workflows/`, or `validate-workflow-contracts.py` | `python ci/validate-workflow-contracts.py --mode project` |
+| `src/numbat/` or `tests/` | `pytest` (full suite) |
+
+Text reports add a **Local checks** section. JSON output includes an additive
+top-level `checks` array with `code`, `command`, `passed`, and `output` fields.
+
+Failed checks are echoed to stderr with the command and output. Exit code `3`
+means at least one check failed (distinct from git errors and empty diffs).
+
+```bash
+numbat review --check
+numbat review --staged --check
+numbat review --base main --check --json
+```
 
 ## Tests and quality
 
