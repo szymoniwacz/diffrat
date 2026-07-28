@@ -100,7 +100,8 @@ The report also includes deterministic Focus/Risk hints derived from paths and
 diff size (for example large diffs, tests touched, config/dependency changes,
 docs-only changes, CI/workflow path changes with suggested validator commands,
 security-sensitive path names, missing mapped test files for changed
-`src/numbat` modules, and content-based hints from added hunk lines on
+`src/numbat` modules, lockfile/manifest consistency hints (`lockfile_without_manifest`,
+`manifest_without_lockfile`), and content-based hints from added hunk lines on
 `source` and `ci` paths). Content-based codes include `possible_secret`,
 `debug_leftover`, `dangerous_call`, `broad_exception`, and `hardcoded_url_or_ip`,
 plus validator-specific typo hints for known CI patterns such as

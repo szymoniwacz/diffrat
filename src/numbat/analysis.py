@@ -102,6 +102,34 @@ _CI_WORKFLOW_VALIDATOR_COMMAND = (
 _PYPROJECT_DEV_INSTALL_COMMAND = 'pip install -e ".[dev]"'
 _RUFF_CHECK_COMMAND = "ruff check ."
 
+_LOCKFILE_BASENAMES = frozenset(
+    {
+        "poetry.lock",
+        "uv.lock",
+        "pipfile.lock",
+        "package-lock.json",
+        "yarn.lock",
+        "pnpm-lock.yaml",
+        "go.sum",
+        "cargo.lock",
+        "gemfile.lock",
+        "composer.lock",
+    }
+)
+
+_MANIFEST_BASENAMES = frozenset(
+    {
+        "pyproject.toml",
+        "setup.py",
+        "setup.cfg",
+        "pipfile",
+        "go.mod",
+        "cargo.toml",
+        "gemfile",
+        "composer.json",
+    }
+)
+
 _SECURITY_NAME_TOKENS = frozenset(
     {
         "auth",
@@ -277,6 +305,7 @@ def _build_hints(
         )
 
     hints.extend(_missing_test_file_hints(summary, cwd=cwd))
+    hints.extend(_lockfile_consistency_hints(summary, cwd=cwd))
 
     return hints
 
@@ -312,6 +341,66 @@ def _missing_test_file_hints(
                         ),
                     )
                 )
+
+    return hints
+
+
+def _lockfile_consistency_hints(
+    summary: DiffSummary,
+    *,
+    cwd: str | None,
+) -> list[FocusRiskHint]:
+    """Emit hints when lockfile and manifest changes are inconsistent."""
+    changed_lockfiles = [
+        file_change.path
+        for file_change in summary.files
+        if is_lockfile_path(file_change.path)
+    ]
+    changed_manifests = [
+        file_change.path
+        for file_change in summary.files
+        if is_dependency_manifest_path(file_change.path)
+    ]
+
+    hints: list[FocusRiskHint] = []
+
+    if changed_lockfiles and not changed_manifests:
+        preview = ", ".join(changed_lockfiles[:3])
+        if len(changed_lockfiles) > 3:
+            preview = f"{preview}, +{len(changed_lockfiles) - 3} more"
+        hints.append(
+            FocusRiskHint(
+                code="lockfile_without_manifest",
+                message=(
+                    f"Lockfile changed without manifest ({preview}) — "
+                    "verify dependency manifest is updated"
+                ),
+            )
+        )
+
+    if changed_manifests and not changed_lockfiles and cwd is not None:
+        root = Path(cwd)
+        lockfiles_on_disk = [
+            name for name in sorted(_LOCKFILE_BASENAMES) if (root / name).exists()
+        ]
+        if lockfiles_on_disk:
+            preview = ", ".join(changed_manifests[:3])
+            if len(changed_manifests) > 3:
+                preview = f"{preview}, +{len(changed_manifests) - 3} more"
+            lockfile_preview = ", ".join(lockfiles_on_disk[:3])
+            if len(lockfiles_on_disk) > 3:
+                lockfile_preview = (
+                    f"{lockfile_preview}, +{len(lockfiles_on_disk) - 3} more"
+                )
+            hints.append(
+                FocusRiskHint(
+                    code="manifest_without_lockfile",
+                    message=(
+                        f"Manifest changed without lockfile ({preview}) — "
+                        f"lockfile on disk: {lockfile_preview}"
+                    ),
+                )
+            )
 
     return hints
 
@@ -372,6 +461,21 @@ def is_pyproject_path(path: str) -> bool:
     """Return True when a changed path is pyproject.toml."""
     posix = PurePosixPath(path.replace("\\", "/"))
     return posix.name.lower() == "pyproject.toml"
+
+
+def is_lockfile_path(path: str) -> bool:
+    """Return True when a changed path is a recognized dependency lockfile."""
+    posix = PurePosixPath(path.replace("\\", "/"))
+    return posix.name.lower() in _LOCKFILE_BASENAMES
+
+
+def is_dependency_manifest_path(path: str) -> bool:
+    """Return True when a changed path is a recognized dependency manifest."""
+    posix = PurePosixPath(path.replace("\\", "/"))
+    name_lower = posix.name.lower()
+    if name_lower in _MANIFEST_BASENAMES:
+        return True
+    return name_lower.startswith("requirements") and name_lower.endswith(".txt")
 
 
 def is_ci_workflow_validator_path(path: str) -> bool:
