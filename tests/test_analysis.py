@@ -205,3 +205,95 @@ def test_analyze_diff_no_missing_test_file_for_test_only_change(tmp_path: Path) 
     result = analyze_diff(summary, cwd=str(tmp_path))
 
     assert not any(hint.code == "missing_test_file" for hint in result.hints)
+
+
+def test_analyze_diff_lockfile_without_manifest_hint() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="poetry.lock", additions=10, deletions=5, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    hints = [hint for hint in result.hints if hint.code == "lockfile_without_manifest"]
+    assert len(hints) == 1
+    assert "poetry.lock" in hints[0].message
+
+
+def test_analyze_diff_no_lockfile_without_manifest_when_manifest_changed() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="poetry.lock", additions=10, deletions=5, binary=False),
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "lockfile_without_manifest" for hint in result.hints)
+
+
+def test_analyze_diff_manifest_without_lockfile_when_lockfile_on_disk(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "poetry.lock").write_text("lock\n")
+
+    summary = DiffSummary(
+        files=(
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary, cwd=str(tmp_path))
+
+    hints = [hint for hint in result.hints if hint.code == "manifest_without_lockfile"]
+    assert len(hints) == 1
+    assert "pyproject.toml" in hints[0].message
+    assert "poetry.lock" in hints[0].message
+
+
+def test_analyze_diff_no_manifest_without_lockfile_when_no_lockfile_on_disk(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "pyproject.toml").write_text("[project]\n")
+
+    summary = DiffSummary(
+        files=(
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary, cwd=str(tmp_path))
+
+    assert not any(hint.code == "manifest_without_lockfile" for hint in result.hints)
+
+
+def test_analyze_diff_no_manifest_without_lockfile_when_lockfile_changed(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "poetry.lock").write_text("lock\n")
+
+    summary = DiffSummary(
+        files=(
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+            FileChange(path="poetry.lock", additions=2, deletions=1, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary, cwd=str(tmp_path))
+
+    assert not any(hint.code == "manifest_without_lockfile" for hint in result.hints)
+    assert not any(hint.code == "lockfile_without_manifest" for hint in result.hints)
+
+
+def test_analyze_diff_no_manifest_without_lockfile_without_cwd() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "manifest_without_lockfile" for hint in result.hints)
