@@ -27,7 +27,11 @@ def render_review_json(
     check_results: list[CheckResult] | None = None,
 ) -> str:
     """Render a review report as a JSON document for stdout."""
-    result = analysis if analysis is not None else analyze_diff(summary)
+    result = (
+        analysis
+        if analysis is not None
+        else analyze_diff(summary, diff_content=diff_content)
+    )
 
     payload: dict[str, object] = {
         "schema_version": JSON_SCHEMA_VERSION,

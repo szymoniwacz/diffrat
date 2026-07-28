@@ -16,7 +16,8 @@ v1 complete on `main` — local diff review CLI without LLM (D-005):
 
 - `numbat review` with unstaged, `--staged`, and `--base` modes; optional `--json`
 - Bounded diff hunks, git context, file categories, deterministic Focus/Risk hints
-  (including CI/workflow path hints with suggested commands)
+  (including CI/workflow path hints with suggested commands, and content-based typo
+  hints for known CI validator patterns)
 - Optional `--check` for path-scoped local validators and tests
 
 Phase 3 (optional LLM) and Phase 4 (integrations) are deferred. See
@@ -97,8 +98,9 @@ Every successful review assigns each changed file a coarse category:
 
 The report also includes deterministic Focus/Risk hints derived from paths and
 diff size (for example large diffs, tests touched, config/dependency changes,
-CI/workflow path changes with suggested validator commands, and
-security-sensitive path names). No network or API key is required. JSON
+CI/workflow path changes with suggested validator commands, security-sensitive path
+names, and content-based typo hints for known CI validator patterns such as
+`PROJECT_EXECUTOR_COMMENT_FILTER`). No network or API key is required. JSON
 output includes additive `category` fields on each file and a top-level
 `focus_risk` array while keeping `schema_version` at `"1"`.
 
