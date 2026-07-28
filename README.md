@@ -135,17 +135,23 @@ include results in the report:
 | Touched path pattern | Command run |
 |---|---|
 | `ci/`, `.github/workflows/`, or `validate-workflow-contracts.py` | `python ci/validate-workflow-contracts.py --mode project` |
-| `src/numbat/<module>.py` | `pytest tests/test_<module>.py` and `mypy src/numbat/<module>.py` |
+| `src/numbat/<module>.py` | `pytest tests/test_<module>.py`, `mypy src/numbat/<module>.py`, and `bandit -r src/numbat/<module>.py` when `bandit` is on PATH |
 | `tests/test_<name>.py` | `pytest tests/test_<name>.py` |
 | other `tests/` files (e.g. `conftest.py`) | `pytest tests` |
-| `pyproject.toml` | `ruff check .` |
+| `pyproject.toml` | `ruff check .` and `pip-audit` when `pip-audit` is on PATH |
+| lockfile or dependency manifest paths (e.g. `poetry.lock`, `requirements.txt`) | `pip-audit` when `pip-audit` is on PATH |
 
-Multiple touched modules are deduplicated into one `pytest` and one `mypy`
-invocation with all target paths. Source and test changes that map to the same
-module run that test file once.
+Multiple touched modules are deduplicated into one `pytest`, one `mypy`, and one
+`bandit` invocation with all target paths. Source and test changes that map to the
+same module run that test file once.
+
+`bandit` and `pip-audit` are optional host tools. When a check applies by path
+but the executable is not on PATH, the report records a **skipped** result and
+the review run does not fail solely because the tool is missing.
 
 Text reports add a **Local checks** section. JSON output includes an additive
-top-level `checks` array with `code`, `command`, `passed`, and `output` fields.
+top-level `checks` array with `code`, `command`, `passed`, `output`, and
+optional `skipped` fields.
 
 Failed checks are echoed to stderr with the command and output. Exit code `3`
 means at least one check failed (distinct from git errors and empty diffs).
