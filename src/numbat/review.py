@@ -48,7 +48,7 @@ def run_review(
         print(str(exc), file=sys.stderr)
         return EXIT_ERROR
 
-    summary = parse_numstat(diff_result.numstat)
+    summary = parse_numstat(diff_result.numstat, name_status=diff_result.name_status)
     if _is_empty_diff(summary):
         if base is not None:
             print(f"no changes on branch since {base}", file=sys.stderr)

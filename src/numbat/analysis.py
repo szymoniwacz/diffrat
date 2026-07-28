@@ -304,6 +304,22 @@ def _build_hints(
             )
         )
 
+    rename_paths = [
+        file_change.path
+        for file_change in summary.files
+        if file_change.change_type in {"R", "C"}
+    ]
+    if rename_paths:
+        preview = ", ".join(rename_paths[:3])
+        if len(rename_paths) > 3:
+            preview = f"{preview}, +{len(rename_paths) - 3} more"
+        hints.append(
+            FocusRiskHint(
+                code="rename_or_move",
+                message=f"Rename or copy detected: {preview}",
+            )
+        )
+
     hints.extend(_missing_test_file_hints(summary, cwd=cwd))
     hints.extend(_lockfile_consistency_hints(summary, cwd=cwd))
 
