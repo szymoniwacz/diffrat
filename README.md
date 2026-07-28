@@ -12,9 +12,15 @@ scripting.
 
 ## Status
 
-Phase 2 complete — v1 static core: `numbat review` with modes, JSON, git
-context, categories, and deterministic Focus/Risk hints. Optional LLM (Phase 3)
-is deferred / out of v1 (D-005).
+v1 complete on `main` — local diff review CLI without LLM (D-005):
+
+- `numbat review` with unstaged, `--staged`, and `--base` modes; optional `--json`
+- Bounded diff hunks, git context, file categories, deterministic Focus/Risk hints
+  (including CI/workflow path hints with suggested commands)
+- Optional `--check` for path-scoped local validators and tests
+
+Phase 3 (optional LLM) and Phase 4 (integrations) are deferred. See
+`.ai/project/roadmap.md`.
 
 ## Current capabilities
 
@@ -22,7 +28,7 @@ is deferred / out of v1 (D-005).
 - `--help` and `--version`
 - `numbat review` — analyze unstaged or staged local git diffs and print a
   human-readable report (file list with coarse categories, per-file +/- counts,
-  summary, deterministic Focus/Risk hints)
+  bounded diff hunks, summary, deterministic Focus/Risk hints)
 - `numbat review --json` — same analysis as structured JSON on stdout for scripting
 - `numbat review --check` — run applicable local validators/tests for touched paths
 - `numbat review --base <ref>` — compare the current branch to a base ref and

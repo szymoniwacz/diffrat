@@ -39,6 +39,22 @@ Outputs:
 - Git-context section (commits, files touched, coarse change categories)
 - Deterministic Focus/Risk hints (no LLM)
 
+## Review depth — hunks, CI hints, local checks
+
+**Status:** complete
+
+Goal:
+Make `numbat review` useful for pre-merge self-review beyond file counts — show
+what changed, flag CI/workflow edits, and optionally run local checks.
+
+Evidence: Project Execution #13 closed; merged PRs #15, #17, #19 on `main`.
+
+Outputs:
+
+- Bounded diff hunks in text report and `--json` `changes`
+- `ci_workflow_paths` Focus/Risk hint with suggested validator command
+- `numbat review --check` with path-mapped validators, documented exit codes
+
 ## Phase 3 — Analysis depth (optional LLM layer)
 
 **Status:** deferred / out of v1 (D-005)
