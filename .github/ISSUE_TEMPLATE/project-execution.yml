@@ -10,6 +10,9 @@ body:
 
         When the brief is complete, comment exactly `/execute-project`.
 
+        After answering material-decision questions or merging a pull request,
+        comment exactly `/continue-project` to resume.
+
         You still review and manually merge every pull request. Agents never merge.
 
   - type: textarea
