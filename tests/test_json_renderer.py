@@ -34,6 +34,34 @@ def test_render_review_json_unstaged_mode() -> None:
     ]
     assert payload["focus_risk"] == []
     assert "git_context" not in payload
+    assert payload["changes"]["limits"] == {"max_files": 20, "max_lines_per_file": 100}
+    assert payload["changes"]["truncated_files"] is False
+
+
+def test_render_review_json_includes_changes() -> None:
+    from numbat.diff_parser import DiffContent, DiffHunk, FileDiffContent
+
+    summary = DiffSummary(
+        files=(FileChange(path="README.md", additions=1, deletions=0, binary=False),)
+    )
+    diff_content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="README.md",
+                hunks=(DiffHunk(header="@@ -1 +1 @@", lines=("+extra line",)),),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+    payload = json.loads(
+        render_review_json(summary, mode="unstaged", diff_content=diff_content)
+    )
+
+    assert payload["changes"]["files"][0]["path"] == "README.md"
+    assert payload["changes"]["files"][0]["hunks"][0]["lines"] == ["+extra line"]
 
 
 def test_render_review_json_includes_categories_and_focus_risk() -> None:

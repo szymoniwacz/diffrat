@@ -6,6 +6,7 @@ import argparse
 import sys
 
 from numbat import __version__
+from numbat.diff_parser import MAX_CHANGE_FILES, MAX_LINES_PER_FILE
 from numbat.review import run_review
 
 
@@ -31,7 +32,11 @@ def build_parser() -> argparse.ArgumentParser:
             "Use --staged for staged changes (index vs HEAD).\n"
             "Use --base to compare the current branch to a base ref (default: main)."
         ),
-        epilog="Exit codes: 0 success, 1 git error, 2 empty diff.",
+        epilog=(
+            "Exit codes: 0 success, 1 git error, 2 empty diff.\n"
+            f"Changes sections show up to {MAX_CHANGE_FILES} files and "
+            f"{MAX_LINES_PER_FILE} diff lines per file."
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     review_parser.add_argument(

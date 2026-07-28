@@ -5,7 +5,12 @@ from __future__ import annotations
 import json
 
 from numbat.analysis import AnalysisResult, analyze_diff
-from numbat.diff_parser import DiffSummary
+from numbat.diff_parser import (
+    MAX_CHANGE_FILES,
+    MAX_LINES_PER_FILE,
+    DiffContent,
+    DiffSummary,
+)
 from numbat.git_adapter import GitContext
 
 JSON_SCHEMA_VERSION = "1"
@@ -17,6 +22,7 @@ def render_review_json(
     mode: str,
     git_context: GitContext | None = None,
     analysis: AnalysisResult | None = None,
+    diff_content: DiffContent | None = None,
 ) -> str:
     """Render a review report as a JSON document for stdout."""
     result = analysis if analysis is not None else analyze_diff(summary)
@@ -41,6 +47,7 @@ def render_review_json(
         "focus_risk": [
             {"code": hint.code, "message": hint.message} for hint in result.hints
         ],
+        "changes": _serialize_changes(diff_content),
     }
 
     if git_context is not None:
@@ -55,3 +62,35 @@ def render_review_json(
         }
 
     return json.dumps(payload, indent=2) + "\n"
+
+
+def _serialize_changes(diff_content: DiffContent | None) -> dict[str, object]:
+    limits = {
+        "max_files": MAX_CHANGE_FILES,
+        "max_lines_per_file": MAX_LINES_PER_FILE,
+    }
+    if diff_content is None:
+        return {"limits": limits, "truncated_files": False, "files": []}
+
+    files_payload: list[dict[str, object]] = []
+    for file_diff in diff_content.files:
+        entry: dict[str, object] = {
+            "path": file_diff.path,
+            "binary": file_diff.binary,
+            "truncated": file_diff.truncated,
+        }
+        if not file_diff.binary:
+            entry["hunks"] = [
+                {
+                    "header": hunk.header,
+                    "lines": list(hunk.lines),
+                }
+                for hunk in file_diff.hunks
+            ]
+        files_payload.append(entry)
+
+    return {
+        "limits": limits,
+        "truncated_files": diff_content.truncated_files,
+        "files": files_payload,
+    }
