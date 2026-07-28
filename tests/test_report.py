@@ -26,9 +26,32 @@ def test_render_review_report_includes_summary_and_files() -> None:
     assert "bin.dat  [other]  (binary)" in report
     assert "Focus / Risk" in report
     assert "(none)" in report
+    assert "Changes" in report
 
 
-def test_render_review_report_includes_categories_and_hints() -> None:
+def test_render_review_report_includes_changes_section() -> None:
+    from numbat.diff_parser import DiffContent, DiffHunk, FileDiffContent
+
+    summary = DiffSummary(
+        files=(FileChange(path="README.md", additions=1, deletions=0, binary=False),)
+    )
+    diff_content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="README.md",
+                hunks=(DiffHunk(header="@@ -1 +1 @@", lines=("+extra line",)),),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+    report = render_review_report(summary, diff_content=diff_content)
+
+    assert "Changes" in report
+    assert "README.md" in report
+    assert "+extra line" in report
     summary = DiffSummary(
         files=(
             FileChange(path="tests/test_a.py", additions=2, deletions=0, binary=False),

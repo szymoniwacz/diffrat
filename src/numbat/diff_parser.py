@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+# Bounds for Changes sections in text and JSON reports (documented in CLI --help).
+MAX_CHANGE_FILES = 20
+MAX_LINES_PER_FILE = 100
+
 
 @dataclass(frozen=True)
 class FileChange:
@@ -38,6 +42,32 @@ class DiffSummary:
         return self.total_additions + self.total_deletions
 
 
+@dataclass(frozen=True)
+class DiffHunk:
+    """One @@ hunk with display lines (context, additions, deletions)."""
+
+    header: str
+    lines: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class FileDiffContent:
+    """Bounded unified-diff content for one file."""
+
+    path: str
+    hunks: tuple[DiffHunk, ...]
+    binary: bool
+    truncated: bool
+
+
+@dataclass(frozen=True)
+class DiffContent:
+    """Bounded unified-diff content across files."""
+
+    files: tuple[FileDiffContent, ...]
+    truncated_files: bool
+
+
 def parse_numstat(numstat: str) -> DiffSummary:
     """Parse ``git diff --numstat`` output into a diff summary."""
     files: list[FileChange] = []
@@ -65,3 +95,102 @@ def parse_numstat(numstat: str) -> DiffSummary:
         )
 
     return DiffSummary(files=tuple(files))
+
+
+def parse_unified_diff(
+    patch: str,
+    *,
+    max_files: int = MAX_CHANGE_FILES,
+    max_lines_per_file: int = MAX_LINES_PER_FILE,
+) -> DiffContent:
+    """Parse a unified diff patch into bounded per-file hunk content."""
+    if not patch.strip():
+        return DiffContent(files=(), truncated_files=False)
+
+    file_blocks = _split_patch_into_file_blocks(patch)
+    truncated_files = len(file_blocks) > max_files
+    selected_blocks = file_blocks[:max_files]
+
+    files: list[FileDiffContent] = []
+    for block in selected_blocks:
+        files.append(_parse_file_block(block, max_lines_per_file=max_lines_per_file))
+
+    return DiffContent(files=tuple(files), truncated_files=truncated_files)
+
+
+def _split_patch_into_file_blocks(patch: str) -> list[list[str]]:
+    blocks: list[list[str]] = []
+    current: list[str] = []
+
+    for line in patch.splitlines():
+        if line.startswith("diff --git "):
+            if current:
+                blocks.append(current)
+            current = [line]
+        elif current:
+            current.append(line)
+
+    if current:
+        blocks.append(current)
+
+    return blocks
+
+
+def _parse_file_block(block: list[str], *, max_lines_per_file: int) -> FileDiffContent:
+    path = _extract_path_from_block(block)
+    if _is_binary_block(block):
+        return FileDiffContent(path=path, hunks=(), binary=True, truncated=False)
+
+    hunks: list[DiffHunk] = []
+    current_header: str | None = None
+    current_lines: list[str] = []
+    line_count = 0
+    truncated = False
+
+    for line in block:
+        if line.startswith("@@"):
+            if current_header is not None:
+                hunks.append(DiffHunk(header=current_header, lines=tuple(current_lines)))
+                current_lines = []
+            current_header = line
+            continue
+
+        if current_header is None:
+            continue
+
+        if line_count >= max_lines_per_file:
+            truncated = True
+            break
+
+        if line.startswith(("+", "-", " ", "\\")):
+            current_lines.append(line)
+            line_count += 1
+
+    if current_header is not None and not truncated:
+        hunks.append(DiffHunk(header=current_header, lines=tuple(current_lines)))
+    elif current_header is not None and truncated and current_lines:
+        hunks.append(DiffHunk(header=current_header, lines=tuple(current_lines)))
+
+    return FileDiffContent(path=path, hunks=tuple(hunks), binary=False, truncated=truncated)
+
+
+def _extract_path_from_block(block: list[str]) -> str:
+    for line in block:
+        if line.startswith("+++ "):
+            path = line[4:].strip()
+            if path.startswith("b/"):
+                return path[2:]
+            return path
+    for line in block:
+        if line.startswith("diff --git "):
+            parts = line.split()
+            if len(parts) >= 4:
+                b_path = parts[3]
+                if b_path.startswith("b/"):
+                    return b_path[2:]
+                return b_path
+    return "(unknown)"
+
+
+def _is_binary_block(block: list[str]) -> bool:
+    return any("Binary files" in line for line in block)
