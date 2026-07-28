@@ -53,8 +53,11 @@ def test_run_review_empty_diff(git_repo_clean: Path, capsys: pytest.CaptureFixtu
     assert "no unstaged changes to review" in captured.err
 
 
-def test_run_review_not_a_repo(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    exit_code = run_review(staged=False, cwd=str(tmp_path))
+def test_run_review_not_a_repo(
+    outside_git_directory: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(staged=False, cwd=str(outside_git_directory))
 
     captured = capsys.readouterr()
     assert exit_code == EXIT_ERROR

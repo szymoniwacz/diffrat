@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
+import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -16,10 +19,21 @@ def _run_git(args: list[str], *, cwd: Path) -> None:
 
 
 @pytest.fixture
+def outside_git_directory() -> Iterator[Path]:
+    """Directory guaranteed outside any enclosing git work tree (e.g. this repo)."""
+    path = Path(tempfile.mkdtemp())
+    try:
+        yield path
+    finally:
+        shutil.rmtree(path, ignore_errors=True)
+
+
+@pytest.fixture
 def git_repo_clean(tmp_path: Path) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir()
-    _run_git(["init", "-b", "main"], cwd=repo)
+    # Empty template avoids hook copies that fail in sandboxed or restricted environments.
+    _run_git(["init", "-b", "main", "--template="], cwd=repo)
     _run_git(["config", "user.email", "test@example.com"], cwd=repo)
     _run_git(["config", "user.name", "Test User"], cwd=repo)
     (repo / "README.md").write_text("hello\n", encoding="utf-8")
