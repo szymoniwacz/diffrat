@@ -63,6 +63,7 @@ def render_review_json(
                 "command": check.command,
                 "passed": check.passed,
                 "output": check.output,
+                **({"skipped": True} if check.skipped else {}),
             }
             for check in check_results
         ]

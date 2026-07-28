@@ -12,6 +12,8 @@ from numbat.analysis import (
 )
 from numbat.checks import (
     CheckSpec,
+    bandit_targets_for_paths,
+    is_pip_audit_dependency_path,
     mypy_targets_for_paths,
     plan_checks,
     pytest_targets_for_paths,
@@ -86,7 +88,7 @@ def test_plan_checks_selects_mypy_for_source_paths() -> None:
 
     specs = plan_checks(summary)
 
-    assert [spec.code for spec in specs] == ["pytest", "mypy"]
+    assert [spec.code for spec in specs] == ["pytest", "mypy", "bandit"]
     assert specs[1].argv == (
         sys.executable,
         "-m",
@@ -106,7 +108,7 @@ def test_plan_checks_mypy_deduplicates_multiple_modules() -> None:
 
     specs = plan_checks(summary)
 
-    assert [spec.code for spec in specs] == ["pytest", "mypy"]
+    assert [spec.code for spec in specs] == ["pytest", "mypy", "bandit"]
     assert specs[1].argv[-2:] == ("src/numbat/checks.py", "src/numbat/review.py")
 
 
@@ -146,7 +148,7 @@ def test_plan_checks_selects_pytest_for_source_paths() -> None:
 
     specs = plan_checks(summary)
 
-    assert [spec.code for spec in specs] == ["pytest", "mypy"]
+    assert [spec.code for spec in specs] == ["pytest", "mypy", "bandit"]
     assert specs[0].argv == (
         sys.executable,
         "-m",
@@ -166,7 +168,7 @@ def test_plan_checks_deduplicates_checks() -> None:
 
     specs = plan_checks(summary)
 
-    assert [spec.code for spec in specs] == ["pytest", "mypy"]
+    assert [spec.code for spec in specs] == ["pytest", "mypy", "bandit"]
     assert specs[0].argv[-1] == "tests/test_review.py"
 
 
@@ -193,7 +195,7 @@ def test_plan_checks_ci_validator_unchanged_with_python_paths() -> None:
 
     specs = plan_checks(summary)
 
-    assert [spec.code for spec in specs] == ["ci_validator", "pytest", "mypy"]
+    assert [spec.code for spec in specs] == ["ci_validator", "pytest", "mypy", "bandit"]
     assert specs[0].display_command == (
         "python ci/validate-workflow-contracts.py --mode project"
     )
@@ -208,7 +210,7 @@ def test_plan_checks_selects_ruff_for_pyproject() -> None:
 
     specs = plan_checks(summary)
 
-    assert [spec.code for spec in specs] == ["ruff"]
+    assert [spec.code for spec in specs] == ["ruff", "pip-audit"]
     assert specs[0].display_command == "ruff check ."
 
 
@@ -219,7 +221,10 @@ def test_plan_checks_skips_ruff_for_other_config() -> None:
         )
     )
 
-    assert plan_checks(summary) == []
+    specs = plan_checks(summary)
+
+    assert [spec.code for spec in specs] == ["pip-audit"]
+    assert specs[0].skip_reason == "pip-audit not found on PATH"
 
 
 def test_plan_checks_pyproject_and_source() -> None:
@@ -232,7 +237,7 @@ def test_plan_checks_pyproject_and_source() -> None:
 
     specs = plan_checks(summary)
 
-    assert [spec.code for spec in specs] == ["pytest", "mypy", "ruff"]
+    assert [spec.code for spec in specs] == ["pytest", "mypy", "ruff", "bandit", "pip-audit"]
 
 
 def test_run_checks_records_pass_and_fail() -> None:
@@ -251,3 +256,92 @@ def test_run_checks_records_pass_and_fail() -> None:
     assert passed[0].output == "ok"
     assert failed[0].passed is False
     assert failed[0].output == "boom"
+
+
+def test_bandit_targets_match_mypy_targets() -> None:
+    paths = ["src/numbat/review.py", "tests/test_review.py"]
+    assert bandit_targets_for_paths(paths) == ["src/numbat/review.py"]
+
+
+def test_is_pip_audit_dependency_path() -> None:
+    assert is_pip_audit_dependency_path("pyproject.toml")
+    assert is_pip_audit_dependency_path("poetry.lock")
+    assert is_pip_audit_dependency_path("requirements.txt")
+    assert not is_pip_audit_dependency_path("README.md")
+
+
+def test_plan_checks_selects_bandit_when_on_path() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    with patch("numbat.checks.shutil.which", return_value="/usr/bin/bandit"):
+        specs = plan_checks(summary)
+
+    assert [spec.code for spec in specs] == ["pytest", "mypy", "bandit"]
+    assert specs[2].display_command == "bandit -r src/numbat/review.py"
+    assert specs[2].argv == ("/usr/bin/bandit", "-r", "src/numbat/review.py")
+    assert specs[2].skip_reason is None
+
+
+def test_plan_checks_skips_bandit_when_missing() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    with patch("numbat.checks.shutil.which", return_value=None):
+        specs = plan_checks(summary)
+
+    assert [spec.code for spec in specs] == ["pytest", "mypy", "bandit"]
+    assert specs[2].skip_reason == "bandit not found on PATH"
+
+
+def test_plan_checks_selects_pip_audit_for_pyproject() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    with patch("numbat.checks.shutil.which", return_value="/usr/bin/pip-audit"):
+        specs = plan_checks(summary)
+
+    assert [spec.code for spec in specs] == ["ruff", "pip-audit"]
+    assert specs[1].argv == ("/usr/bin/pip-audit",)
+
+
+def test_plan_checks_skips_pip_audit_when_missing() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="requirements.txt", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    with patch("numbat.checks.shutil.which", return_value=None):
+        specs = plan_checks(summary)
+
+    assert [spec.code for spec in specs] == ["pip-audit"]
+    assert specs[0].skip_reason == "pip-audit not found on PATH"
+
+
+def test_run_checks_records_skipped_without_subprocess() -> None:
+    specs = [
+        CheckSpec(
+            code="bandit",
+            argv=(),
+            display_command="bandit -r src/numbat/review.py",
+            skip_reason="bandit not found on PATH",
+        )
+    ]
+
+    with patch("numbat.checks.subprocess.run") as run_mock:
+        results = run_checks(specs, cwd="/tmp/repo")
+
+    run_mock.assert_not_called()
+    assert results[0].skipped is True
+    assert results[0].passed is True
+    assert results[0].output == "bandit not found on PATH"
