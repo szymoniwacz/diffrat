@@ -75,9 +75,16 @@ def render_review_report(
             lines.append("(none applicable)")
         else:
             for check in check_results:
-                status = "passed" if check.passed else "failed"
+                if check.skipped:
+                    status = "skipped"
+                elif check.passed:
+                    status = "passed"
+                else:
+                    status = "failed"
                 lines.append(f"- [{check.code}] {status}: {check.command}")
-                if not check.passed and check.output:
+                if check.skipped and check.output:
+                    lines.append(f"  {check.output}")
+                elif not check.passed and check.output:
                     for output_line in check.output.splitlines():
                         lines.append(f"  {output_line}")
 
