@@ -37,8 +37,8 @@ A reviewer running Numbat on someone else's diff to prioritize manual review.
 
 ### Analysis backend
 
-Component that turns parsed diff + git context into report content. v1 starts
-with deterministic/heuristic logic; optional LLM backend deferred to Phase 3.
+Component that turns parsed diff + git context into report content. v1 uses
+deterministic/heuristic logic only; optional LLM backend is out of v1 (D-005).
 
 ### Bootstrap
 

@@ -14,28 +14,29 @@ Before planning or changing anything, an AI assistant should read this file.
   someone else's diff
 - **Core problem:** Diff review is slow, inconsistent, and context-poor without
   structured assistance grounded in git changes
-- **Current phase:** documentation first (bootstrap complete; scaffold only)
+- **Current phase:** Phase 2 complete — v1 static core on `main`
 - **Important constraints:** Local-first; diff-scoped analysis only; no web UI in v1;
-  humans merge; agents never merge
+  no LLM in v1 (D-005); humans merge; agents never merge
 
 ## Current phase
 
-documentation first
-
-Bootstrap complete. Minimal CLI scaffold exists; diff ingestion not started.
+Phase 2 complete (v1 close bar). Optional Phase 3 LLM is deferred / out of v1
+per D-005.
 
 ## What exists today
 
 - AI workflow working system (`.ai/`) from `ai-project-template`
 - Project definition and requirements documentation
-- Python package scaffold (`src/numbat/`, `pyproject.toml`, tests)
-- `numbat --help` and `--version` only
+- Installable `numbat` CLI (`pip install -e ".[dev]"`)
+- `numbat review` — unstaged, `--staged`, `--base` (merge-base), `--json`
+- Human-readable report with file categories and deterministic Focus/Risk hints
+- Git context on branch-vs-base reviews
+- pytest / ruff / mypy green on main
 
 ## What does not exist yet
 
-- `numbat` CLI entry point
-- Diff ingestion and report generation
-- Optional LLM-backed analysis layer
+- Optional LLM-backed analysis layer (out of v1; D-005)
+- CI bots, GitHub App, PyPI publication (Phase 4 / later)
 
 ## Core workflows (intended)
 
@@ -57,12 +58,12 @@ Bootstrap complete. Minimal CLI scaffold exists; diff ingestion not started.
 
 - Respect scope in `.ai/project/scope.md`
 - Prefer small, reviewable changes; one Agent Goal at a time
-- Do not invent stack commands — record real commands when scaffold exists
-- Local git data only in v1; no sending repo contents to external services unless
-  explicitly configured for optional LLM analysis
+- Do not invent stack commands — use recorded README / pyproject commands
+- Local git data only in v1; do not send repo contents to external services
 
 ## References
 
 - Requirements: `.ai/docs/project-requirements.md`
 - Scope: `.ai/project/scope.md`
 - Architecture direction: `.ai/docs/architecture-direction.md`
+- Decisions: `.ai/project/decisions.md` (D-005)

@@ -22,7 +22,7 @@ This file protects the project from uncontrolled expansion.
 - CI/CD integration and PR comment bots (deferred to post-v1)
 - Full-repository or cross-repo analysis
 - Automatic merge, approval, or policy enforcement
-- LLM provider lock-in before the analysis-engine goal (provider choice deferred)
+- Optional LLM / network analysis backend (out of v1; D-005 skipped)
 - Large rewrites without explicit approval
 - New frameworks without a decision record
 - Hidden architecture changes
