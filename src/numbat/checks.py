@@ -18,6 +18,7 @@ _CI_VALIDATOR_COMMAND = (
     "python ci/validate-workflow-contracts.py --mode project"
 )
 _PYTEST_COMMAND = "pytest"
+_MYPY_COMMAND = "mypy"
 _RUFF_COMMAND = "ruff check ."
 
 
@@ -52,6 +53,28 @@ def pytest_targets_for_paths(paths: list[str]) -> list[str]:
         if target is not None and target not in seen:
             seen.add(target)
             targets.append(target)
+
+    return sorted(targets)
+
+
+def mypy_targets_for_paths(paths: list[str]) -> list[str]:
+    """Map changed source paths to mypy target modules under src/numbat/."""
+    targets: list[str] = []
+    seen: set[str] = set()
+
+    for path in paths:
+        posix = PurePosixPath(path.replace("\\", "/"))
+        parts = posix.parts
+        if (
+            len(parts) >= 2
+            and parts[0] == "src"
+            and parts[1] == "numbat"
+            and posix.suffix == ".py"
+        ):
+            target = "/".join(parts)
+            if target not in seen:
+                seen.add(target)
+                targets.append(target)
 
     return sorted(targets)
 
@@ -104,6 +127,19 @@ def plan_checks(summary: DiffSummary) -> list[CheckSpec]:
                 CheckSpec(
                     code="pytest",
                     argv=(sys.executable, "-m", "pytest", *pytest_targets),
+                    display_command=display_command,
+                )
+            )
+
+    mypy_targets = mypy_targets_for_paths(paths)
+    if mypy_targets:
+        if "mypy" not in seen:
+            seen.add("mypy")
+            display_command = f"{_MYPY_COMMAND} {' '.join(mypy_targets)}"
+            specs.append(
+                CheckSpec(
+                    code="mypy",
+                    argv=(sys.executable, "-m", "mypy", *mypy_targets),
                     display_command=display_command,
                 )
             )
