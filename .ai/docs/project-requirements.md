@@ -75,7 +75,7 @@ optional `--json` flag for scripting. There is no web UI and no CI integration i
 | FR-005 | Include git metadata (commits, files touched) in report | must | Phase 2 |
 | FR-006 | Non-zero exit on invalid repo, bad refs, or empty diff when inappropriate | must | Clear errors |
 | FR-007 | Heuristic risk/focus hints without LLM | should | v1 static analysis |
-| FR-008 | Optional LLM-backed analysis when configured | could | Phase 3; deferred |
+| FR-008 | Optional LLM-backed analysis when configured | could | Out of v1; D-005 skipped |
 
 ## Data and inputs
 

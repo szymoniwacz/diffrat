@@ -49,15 +49,19 @@ context; terminal output by default with `--json` optional.
 
 ---
 
-### D-005 — LLM analysis layer (2026-07-27)
+### D-005 — LLM analysis layer (2026-07-27; updated 2026-07-28)
 
-**Decision:** Deferred. v1 ships deterministic/heuristic analysis; optional LLM
-backend added in Phase 3 after provider choice.
+**Decision:** Skip Phase 3 LLM for this v1 project. Numbat v1 closes on the
+Phase 2 static core (deterministic Focus/Risk hints and file categories). No
+LLM provider, network client, or LLM-related env vars are in scope for v1.
 
-**Status:** deferred
+**Status:** confirmed (skipped for v1)
 
-**Return trigger:** Agent Goal "analysis engine / optional LLM" after diff
-ingestion goal merges.
+**Context:** Owner reply on Project Execution issue #8 (2026-07-28): treat
+Phase 2 as the v1 close bar; secrets N/A for v1; Phase 3 deferred.
+
+**Return trigger:** A later Project Execution (or explicit owner goal) that
+reopens optional LLM analysis and chooses a provider / data-handling policy.
 
 > Reusable workflow rules (for example, documentation before implementation)
 > live in the canonical workflow documents under `.ai/`, not in this product
