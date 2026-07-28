@@ -542,6 +542,24 @@ def test_missing_diff_risk_field_in_pr_template_is_detected() -> None:
         assert "missing required diff-risk field: Required action:" in result.stderr
 
 
+def test_missing_project_executor_material_decision_section_is_detected() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        copy_template_skeleton(root)
+        prompt = root / ".ai/automation/project-executor.md"
+        original = prompt.read_text(encoding="utf-8")
+        prompt.write_text(
+            original.replace("Material decision questions on GitHub", "Open questions"),
+            encoding="utf-8",
+        )
+        result = run_validator(root, "template")
+        assert result.returncode != 0
+        assert (
+            "material decision section is missing required phrase: "
+            "Material decision questions on GitHub"
+        ) in result.stderr
+
+
 def test_missing_project_executor_live_loader_block_is_detected() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -624,6 +642,7 @@ def main() -> int:
         test_goal_executor_loader_weakens_complete_canonical_wording_is_detected,
         test_goal_executor_loader_appends_contradictory_continue_after_failure_is_detected,
         test_missing_goal_executor_automation_name_is_detected,
+        test_missing_project_executor_material_decision_section_is_detected,
         test_missing_project_executor_live_loader_block_is_detected,
         test_missing_project_executor_loader_block_content_is_detected,
         test_project_executor_loader_missing_fail_closed_is_detected,

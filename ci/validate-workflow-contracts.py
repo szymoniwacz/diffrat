@@ -356,9 +356,17 @@ Before any repository mutation or remote write:
 2. Read .ai/automation/goal-executor.md from that default branch.
 3. If the default branch or canonical file cannot be resolved and read, fail closed: make no repository change and perform no remote write.
 4. Follow the loaded file as the complete canonical Goal Executor instructions for this run."""
+PROJECT_EXECUTOR_PROMPT = ".ai/automation/project-executor.md"
 PROJECT_EXECUTOR_PRODUCTION_SETUP = ".ai/automation/project-executor-production-setup.md"
 PROJECT_EXECUTOR_LIVE_LOADER_HEADING = "Live automation prompt"
 PROJECT_EXECUTOR_AUTOMATION_NAME = "Project Executor"
+PROJECT_EXECUTOR_MATERIAL_DECISION_REQUIRED_PHRASES = (
+    "Material decision questions on GitHub",
+    "lettered options",
+    "Other",
+    "reply with",
+    "reply with option letters",
+)
 PROJECT_EXECUTOR_EXPECTED_LOADER = """You are running the Project Executor automation.
 
 Before any repository mutation or remote write:
@@ -566,6 +574,7 @@ class Validator:
         self.check_lifecycle_order()
         self.check_goal_executor_loader_contract()
         self.check_project_executor_loader_contract()
+        self.check_project_executor_material_decision_contract()
         self.check_diff_risk_output_contract()
         self.check_idea_index()
         self.check_bootstrap_markers()
@@ -919,6 +928,23 @@ class Validator:
                 PROJECT_EXECUTOR_PRODUCTION_SETUP,
                 f"production setup must name the automation '{PROJECT_EXECUTOR_AUTOMATION_NAME}'",
             )
+
+    def check_project_executor_material_decision_contract(self) -> None:
+        prompt_path = self.root / PROJECT_EXECUTOR_PROMPT
+        if not prompt_path.is_file():
+            self.add_error(
+                PROJECT_EXECUTOR_PROMPT,
+                "Project Executor prompt is missing",
+            )
+            return
+
+        prompt_text = prompt_path.read_text(encoding="utf-8")
+        for phrase in PROJECT_EXECUTOR_MATERIAL_DECISION_REQUIRED_PHRASES:
+            if phrase not in prompt_text:
+                self.add_error(
+                    PROJECT_EXECUTOR_PROMPT,
+                    f"material decision section is missing required phrase: {phrase}",
+                )
 
     def check_diff_risk_output_contract(self) -> None:
         checklist_path = self.root / DIFF_RISK_CHECKLIST

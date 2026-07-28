@@ -105,6 +105,10 @@ are complete, but before final commits, push, and PR handoff.
 For every question include evidence or reason, a recommended answer, meaningful
 alternatives when they exist, and the impact of each option.
 
+When the human replies on a GitHub issue, present enumerated lettered options
+(plus **Other** when needed) and ask for letter-only replies. Project Executor
+format on project issues: `.ai/automation/project-executor.md`.
+
 If the user rejects a material suggestion, record it concisely as a deferred
 follow-up or accepted risk in the PR handoff.
 
