@@ -39,12 +39,12 @@ new task
   -> agent completes preparation through review-ready PR when authorized
   -> human review and merge
 
-whole product (comment-triggered automation)
+whole product (comment- and merge-triggered automation)
   -> Project Execution issue + /execute-project
   -> Project Executor selects one goal at a time
   -> Goal Executor completes each delegated goal per the automation contract
   -> human review and merge each PR
-  -> /continue-project for the next goal until completion criteria pass
+  -> merged PR triggers Project Executor for the next goal until completion criteria pass
 ```
 
 This walkthrough describes the complete canonical `/execute-goal` lifecycle.
@@ -54,8 +54,8 @@ lifecycle; see [`.ai/automation/README.md`](../automation/README.md) for the
 current stopping point. Goal Executor Cursor Automation implements Slice 2
 through review-ready handoff per
 [`.ai/automation/README.md`](../automation/README.md).
-Project Executor Cursor Automation selects at most one delegated goal per owner
-comment (`/execute-project` or `/continue-project`) and stops after Goal
+Project Executor Cursor Automation selects at most one delegated goal per run
+(issue comment or merged delegated pull request) and stops after Goal
 Executor review-ready handoff for human merge per
 [`.ai/automation/project-executor.md`](../automation/project-executor.md).
 
@@ -209,7 +209,7 @@ goals sequentially between your manual merges.
 | **You** | Create a **Project Execution** issue. Fill product outcome and completion criteria. Comment exactly `/execute-project`. Configure Project Executor per [`.ai/automation/project-executor-production-setup.md`](../automation/project-executor-production-setup.md). |
 | **AI** | Project Executor reads the project issue and repository state, selects at most one next goal, and delegates to Goal Executor. Stops while a PR is open or CI is pending. Never merges. |
 | **Result** | A sequence of pull requests, one scoped goal at a time. Goal Executor stopping point: [`.ai/automation/README.md`](../automation/README.md). |
-| **You next** | Review and merge each PR. Comment `/continue-project` when ready for the next goal until completion criteria are met. |
+| **You next** | Review and merge each PR. The next goal starts automatically when the pull request merges (or comment `/continue-project` if CI was pending). |
 
 Runtime: [`.ai/automation/project-executor.md`](../automation/project-executor.md)
 
@@ -305,7 +305,7 @@ keeping incomplete copies.
 |---|---|
 | `/execute-goal` | You want one outcome carried through the canonical goal-to-PR lifecycle. See [At a glance](#at-a-glance) for the automation boundary. |
 | `/execute-project` | GitHub comment on a **Project Execution** issue authorizing whole-project automation and starting the first step. Setup: [`.ai/automation/project-executor-production-setup.md`](../automation/project-executor-production-setup.md). |
-| `/continue-project` | GitHub comment on an authorized **Project Execution** issue to resume after material-decision answers or after you merge a PR. |
+| `/continue-project` | Optional GitHub comment on an authorized **Project Execution** issue after material-decision answers or when CI was pending at merge time. |
 | `/project-intake` | Starting a new project and you want AI to ask questions. |
 | `/define-project` | You already have a rough description and want AI to organize it. |
 | `/add-idea` | You want to add a new idea to the backlog. |

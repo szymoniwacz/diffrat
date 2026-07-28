@@ -34,7 +34,9 @@ Instruction payload: `.ai/automation/goal-executor.md`.
 Production setup: `.ai/automation/goal-executor-production-setup.md`.
 
 Delegated goals may instead inherit one active `/execute-project`
-authorization. Project-level state and setup live in
+authorization. Merging a delegated pull request with `Closes #<goal-number>`
+may trigger Project Executor when that trigger is configured. Project-level
+state and setup live in
 `.ai/automation/project-executor.md` and
 `.ai/automation/project-executor-production-setup.md`.
 

@@ -542,6 +542,26 @@ def test_missing_diff_risk_field_in_pr_template_is_detected() -> None:
         assert "missing required diff-risk field: Required action:" in result.stderr
 
 
+def test_missing_project_executor_merge_trigger_is_detected() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        copy_template_skeleton(root)
+        setup = root / ".ai/automation/project-executor-production-setup.md"
+        original = setup.read_text(encoding="utf-8")
+        setup.write_text(
+            original.replace(
+                "GitHub **issue comment** and **pull request merged**",
+                "GitHub **issue comment**",
+            ),
+            encoding="utf-8",
+        )
+        result = run_validator(root, "template")
+        assert result.returncode != 0
+        assert (
+            "configuration table row 'Trigger events' must require pull request merged"
+        ) in result.stderr
+
+
 def test_missing_project_executor_comment_filter_is_detected() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -663,6 +683,7 @@ def main() -> int:
         test_goal_executor_loader_weakens_complete_canonical_wording_is_detected,
         test_goal_executor_loader_appends_contradictory_continue_after_failure_is_detected,
         test_missing_goal_executor_automation_name_is_detected,
+        test_missing_project_executor_merge_trigger_is_detected,
         test_missing_project_executor_comment_filter_is_detected,
         test_missing_project_executor_material_decision_section_is_detected,
         test_missing_project_executor_live_loader_block_is_detected,

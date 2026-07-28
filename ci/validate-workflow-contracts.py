@@ -368,7 +368,11 @@ PROJECT_EXECUTOR_MATERIAL_DECISION_REQUIRED_PHRASES = (
     "reply with",
     "reply with option letters",
     "/continue-project",
-    "Trigger commands",
+    "Trigger events",
+    "Pull request merged",
+    "Closes #",
+    "project-executor:goal project=",
+    "does not need",
 )
 PROJECT_EXECUTOR_EXPECTED_LOADER = """You are running the Project Executor automation.
 
@@ -377,7 +381,8 @@ Before any repository mutation or remote write:
 2. Read .ai/automation/project-executor.md from that default branch.
 3. Read .ai/automation/goal-executor.md from that default branch.
 4. If the default branch or either file cannot be read, make no change or remote write and report the blocker.
-5. Follow project-executor.md for orchestration and goal-executor.md for the delegated goal."""
+5. Follow project-executor.md for orchestration and goal-executor.md for the delegated goal.
+6. If this run was triggered by a merged pull request, resolve the parent Project Execution issue via Closes #<goal> and the project-executor:goal marker before state resolution. If resolution fails, no-op."""
 EXACT_LOADER_MATCH_ERROR = (
     "live automation prompt must exactly match the canonical loader block"
 )
@@ -940,17 +945,24 @@ class Validator:
                 f"configuration table row 'Automation name' must include required value '{PROJECT_EXECUTOR_AUTOMATION_NAME}'",
             )
 
-        trigger_event = config_map.get("Trigger event", "")
-        if not trigger_event:
+        trigger_events = config_map.get("Trigger events", "")
+        if not trigger_events:
             self.add_error(
                 PROJECT_EXECUTOR_PRODUCTION_SETUP,
-                "configuration table is missing required row: Trigger event",
+                "configuration table is missing required row: Trigger events",
             )
-        elif "issue comment" not in trigger_event.lower():
-            self.add_error(
-                PROJECT_EXECUTOR_PRODUCTION_SETUP,
-                "configuration table row 'Trigger event' must require GitHub issue comment",
-            )
+        else:
+            trigger_lower = trigger_events.lower()
+            if "issue comment" not in trigger_lower:
+                self.add_error(
+                    PROJECT_EXECUTOR_PRODUCTION_SETUP,
+                    "configuration table row 'Trigger events' must require GitHub issue comment",
+                )
+            if "pull request merged" not in trigger_lower:
+                self.add_error(
+                    PROJECT_EXECUTOR_PRODUCTION_SETUP,
+                    "configuration table row 'Trigger events' must require pull request merged",
+                )
 
         comment_filter = config_map.get("Comment filter regex", "")
         if not comment_filter:
