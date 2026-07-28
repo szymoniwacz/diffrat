@@ -109,7 +109,40 @@ If completion is not proven:
 4. Exclude completed work, unrelated cleanup, speculative infrastructure, and
    work overlapping another open pull request.
 5. If a material decision blocks the next safe goal, ask one grouped batch on
-   the project issue and stop. Do not repeat unanswered questions.
+   the project issue per **Material decision questions on GitHub** below and
+   stop. Do not repeat unanswered questions.
+
+## Material decision questions on GitHub
+
+When posting a grouped batch on a Project Execution issue (or any GitHub issue
+where the human replies in comments):
+
+1. Use at most one comment per stop.
+2. For each decision, list **lettered options** (A, B, C, …) plus **Other** when
+   none fit.
+3. State a **recommended option** and one-line impact per option.
+4. Ask the owner to reply with **letters only** (e.g. `1: D, 2: confirm, 3: N/A`).
+   Binary decisions may use `confirm`, `Y`, or `N` instead of letters.
+5. Do not use open-ended-only questions when alternatives can be enumerated.
+6. Do not repeat the same batch until the owner replies or edits the project
+   issue.
+
+Example shape:
+
+### Decision needed — reply with option letters
+
+**1. Optional integration for Phase 3**
+- A) Vendor API (hosted)
+- B) Alternate vendor API (hosted)
+- C) Local runtime only
+- D) Skip Phase 3; close on static core *(recommended)*
+
+**2. Data handling** — confirm Y/N: opt-in only, diff-scoped, heuristics default
+
+**3. Secrets for v1** — pick one:
+- A) `SERVICE_LLM_PROVIDER` + `SERVICE_LLM_API_KEY`; no base URL for cloud
+- B) Same + optional `SERVICE_LLM_BASE_URL` for local runtime only
+- C) N/A — no LLM in this project *(recommended if 1=D)*
 
 Create one Agent Goal issue as the authenticated automation identity, containing
 Goal, Acceptance criteria, Constraints, Out of scope, Relevant context, and the
