@@ -6,6 +6,8 @@ Keep the project direction visible without turning the roadmap into a task dump.
 
 ## Phase 1 — Bootstrap and CLI skeleton
 
+**Status:** complete
+
 Goal:
 Complete project definition, template customization, and a runnable Python CLI
 with `--help` and documented dev commands.
@@ -19,6 +21,12 @@ Outputs:
 
 ## Phase 2 — Diff ingestion and static report (v1 core)
 
+**Status:** complete (v1 close bar)
+
+Evidence: `main` includes merged PR #10 (`7c8711b`) — `numbat review` modes,
+`--json` schema v1, git context, coarse file categories, and deterministic
+Focus/Risk hints; validated with pytest / ruff / mypy.
+
 Goal:
 Deliver the first useful version: read git diff context locally and emit a
 structured review-oriented report.
@@ -29,8 +37,11 @@ Outputs:
 - Terminal report and `--json` output
 - Tests covering CLI and diff parsing paths
 - Git-context section (commits, files touched, coarse change categories)
+- Deterministic Focus/Risk hints (no LLM)
 
 ## Phase 3 — Analysis depth (optional LLM layer)
+
+**Status:** deferred / out of v1 (D-005)
 
 Goal:
 Add optional intelligent analysis when configured; keep deterministic fallback
@@ -42,7 +53,8 @@ Outputs:
 - Documented secrets handling and offline behavior
 - Decision record for provider choice
 
-Return trigger: first Agent Goal after Phase 2 ships.
+Not implemented for this v1 project. Return trigger: a later project or owner
+goal that reopens LLM work after provider and data-handling choices.
 
 ## Phase 4 — Integrations (deferred)
 
