@@ -70,3 +70,44 @@ def test_analyze_diff_large_diff_hint_by_file_count() -> None:
     result = analyze_diff(DiffSummary(files=files))
 
     assert any(hint.code == "large_diff" for hint in result.hints)
+
+
+def test_analyze_diff_ci_workflow_paths_hint() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="ci/validate-workflow-contracts.py",
+                additions=2,
+                deletions=1,
+                binary=False,
+            ),
+            FileChange(
+                path=".github/workflows/validate-workflow-contracts.yml",
+                additions=1,
+                deletions=0,
+                binary=False,
+            ),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    ci_hints = [hint for hint in result.hints if hint.code == "ci_workflow_paths"]
+    assert len(ci_hints) == 1
+    assert "ci/validate-workflow-contracts.py" in ci_hints[0].message
+    assert (
+        "python ci/validate-workflow-contracts.py --mode project"
+        in ci_hints[0].message
+    )
+
+
+def test_analyze_diff_no_ci_workflow_hint_for_source_only() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/numbat/review.py", additions=5, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "ci_workflow_paths" for hint in result.hints)

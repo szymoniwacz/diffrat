@@ -96,6 +96,10 @@ _SOURCE_EXTENSIONS = frozenset(
     }
 )
 
+_CI_WORKFLOW_VALIDATOR_COMMAND = (
+    "python ci/validate-workflow-contracts.py --mode project"
+)
+
 _SECURITY_NAME_TOKENS = frozenset(
     {
         "auth",
@@ -215,6 +219,25 @@ def _build_hints(
             )
         )
 
+    ci_workflow_paths = [
+        file_change.path
+        for file_change in summary.files
+        if _is_ci_workflow_validator_path(file_change.path)
+    ]
+    if ci_workflow_paths:
+        preview = ", ".join(ci_workflow_paths[:3])
+        if len(ci_workflow_paths) > 3:
+            preview = f"{preview}, +{len(ci_workflow_paths) - 3} more"
+        hints.append(
+            FocusRiskHint(
+                code="ci_workflow_paths",
+                message=(
+                    f"CI/workflow paths changed ({preview}) — run: "
+                    f"{_CI_WORKFLOW_VALIDATOR_COMMAND}"
+                ),
+            )
+        )
+
     return hints
 
 
@@ -262,6 +285,24 @@ def _is_docs_path(
     if name_lower.startswith("readme") or name_lower.startswith("changelog"):
         return True
     if suffix in _DOC_EXTENSIONS:
+        return True
+    return False
+
+
+def _is_ci_workflow_validator_path(path: str) -> bool:
+    posix = PurePosixPath(path.replace("\\", "/"))
+    parts_lower = tuple(part.lower() for part in posix.parts)
+    name_lower = posix.name.lower()
+
+    if parts_lower and parts_lower[0] == "ci":
+        return True
+    if (
+        len(parts_lower) >= 2
+        and parts_lower[0] == ".github"
+        and parts_lower[1] == "workflows"
+    ):
+        return True
+    if name_lower == "validate-workflow-contracts.py":
         return True
     return False
 
