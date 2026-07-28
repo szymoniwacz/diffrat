@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from numbat.analysis import (
     LARGE_DIFF_FILE_THRESHOLD,
     LARGE_DIFF_LINE_THRESHOLD,
@@ -142,3 +144,64 @@ def test_analyze_diff_no_docs_touched_when_mixed_with_source() -> None:
     result = analyze_diff(summary)
 
     assert not any(hint.code == "docs_touched" for hint in result.hints)
+
+
+def test_analyze_diff_missing_test_file_hint_when_test_absent(tmp_path: Path) -> None:
+    (tmp_path / "src" / "numbat").mkdir(parents=True)
+    (tmp_path / "src" / "numbat" / "foo.py").write_text("x = 1\n")
+
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/numbat/foo.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary, cwd=str(tmp_path))
+
+    assert any(hint.code == "missing_test_file" for hint in result.hints)
+    hint = next(hint for hint in result.hints if hint.code == "missing_test_file")
+    assert "tests/test_foo.py" in hint.message
+
+
+def test_analyze_diff_no_missing_test_file_when_test_exists(tmp_path: Path) -> None:
+    (tmp_path / "src" / "numbat").mkdir(parents=True)
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "src" / "numbat" / "foo.py").write_text("x = 1\n")
+    (tmp_path / "tests" / "test_foo.py").write_text("def test_foo() -> None: pass\n")
+
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/numbat/foo.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary, cwd=str(tmp_path))
+
+    assert not any(hint.code == "missing_test_file" for hint in result.hints)
+
+
+def test_analyze_diff_no_missing_test_file_without_cwd() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/numbat/foo.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "missing_test_file" for hint in result.hints)
+
+
+def test_analyze_diff_no_missing_test_file_for_test_only_change(tmp_path: Path) -> None:
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_foo.py").write_text("def test_foo() -> None: pass\n")
+
+    summary = DiffSummary(
+        files=(
+            FileChange(path="tests/test_foo.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary, cwd=str(tmp_path))
+
+    assert not any(hint.code == "missing_test_file" for hint in result.hints)
