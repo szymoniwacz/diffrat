@@ -15,6 +15,7 @@ class GitDiffResult:
     """Raw diff output from git."""
 
     numstat: str
+    patch: str
 
 
 @dataclass(frozen=True)
@@ -58,20 +59,33 @@ def ensure_git_repository(*, cwd: str | None = None) -> None:
         raise GitError("not a git repository")
 
 
-def get_diff_numstat(*, staged: bool, cwd: str | None = None) -> GitDiffResult:
-    """Return numstat output for unstaged or staged changes."""
-    ensure_git_repository(cwd=cwd)
-
-    args = ["diff", "--numstat"]
-    if staged:
-        args.insert(1, "--cached")
-
-    result = _run_git(args, cwd=cwd)
-    if result.returncode != 0:
-        message = result.stderr.strip() or "git diff failed"
+def _get_diff_outputs(
+    diff_args: list[str],
+    *,
+    cwd: str | None = None,
+) -> GitDiffResult:
+    numstat_result = _run_git(["diff", "--numstat", *diff_args], cwd=cwd)
+    if numstat_result.returncode != 0:
+        message = numstat_result.stderr.strip() or "git diff failed"
         raise GitError(message)
 
-    return GitDiffResult(numstat=result.stdout)
+    patch_result = _run_git(["diff", *diff_args], cwd=cwd)
+    if patch_result.returncode != 0:
+        message = patch_result.stderr.strip() or "git diff failed"
+        raise GitError(message)
+
+    return GitDiffResult(numstat=numstat_result.stdout, patch=patch_result.stdout)
+
+
+def get_diff_numstat(*, staged: bool, cwd: str | None = None) -> GitDiffResult:
+    """Return numstat and unified diff for unstaged or staged changes."""
+    ensure_git_repository(cwd=cwd)
+
+    diff_args: list[str] = []
+    if staged:
+        diff_args.append("--cached")
+
+    return _get_diff_outputs(diff_args, cwd=cwd)
 
 
 def verify_ref(ref: str, *, cwd: str | None = None) -> None:
@@ -97,13 +111,9 @@ def get_merge_base(base_ref: str, *, cwd: str | None = None) -> str:
 
 
 def get_diff_numstat_vs_base(base_ref: str, *, cwd: str | None = None) -> GitDiffResult:
-    """Return numstat output for changes on HEAD since merge-base with ``base_ref``."""
+    """Return numstat and unified diff for changes on HEAD since merge-base with ``base_ref``."""
     merge_base = get_merge_base(base_ref, cwd=cwd)
-    result = _run_git(["diff", "--numstat", f"{merge_base}..HEAD"], cwd=cwd)
-    if result.returncode != 0:
-        message = result.stderr.strip() or "git diff failed"
-        raise GitError(message)
-    return GitDiffResult(numstat=result.stdout)
+    return _get_diff_outputs([f"{merge_base}..HEAD"], cwd=cwd)
 
 
 def get_git_context(base_ref: str, *, cwd: str | None = None) -> GitContext:

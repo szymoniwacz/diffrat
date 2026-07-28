@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from numbat.analysis import AnalysisResult, analyze_diff
-from numbat.diff_parser import DiffSummary
+from numbat.diff_parser import DiffContent, DiffSummary
 from numbat.git_adapter import GitContext
 
 
@@ -12,6 +12,7 @@ def render_review_report(
     *,
     git_context: GitContext | None = None,
     analysis: AnalysisResult | None = None,
+    diff_content: DiffContent | None = None,
 ) -> str:
     """Render a review-oriented text report for stdout."""
     result = analysis if analysis is not None else analyze_diff(summary)
@@ -52,6 +53,9 @@ def render_review_report(
                     f"+{file_change.additions} -{file_change.deletions}"
                 )
 
+    lines.extend(["", "Changes", "-------"])
+    lines.extend(_render_changes(diff_content))
+
     lines.extend(["", "Focus / Risk", "------------"])
     if not result.hints:
         lines.append("(none)")
@@ -77,5 +81,28 @@ def _render_git_context(git_context: GitContext) -> list[str]:
             lines.append(f"  {commit.short_hash} {commit.subject}")
     else:
         lines.append("Recent commits: (none)")
+
+    return lines
+
+
+def _render_changes(diff_content: DiffContent | None) -> list[str]:
+    if diff_content is None or not diff_content.files:
+        return ["(no change content)"]
+
+    lines: list[str] = []
+    for file_diff in diff_content.files:
+        lines.append(file_diff.path)
+        if file_diff.binary:
+            lines.append("(binary)")
+        else:
+            for hunk in file_diff.hunks:
+                lines.append(hunk.header)
+                lines.extend(hunk.lines)
+            if file_diff.truncated:
+                lines.append("(truncated — diff lines limit reached for this file)")
+        lines.append("")
+
+    if diff_content.truncated_files:
+        lines.append("(truncated — file limit reached; not all changed files shown)")
 
     return lines

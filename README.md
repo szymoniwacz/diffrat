@@ -94,6 +94,23 @@ and security-sensitive path names). No network or API key is required. JSON
 output includes additive `category` fields on each file and a top-level
 `focus_risk` array while keeping `schema_version` at `"1"`.
 
+### Changes section (diff hunks)
+
+Text reports include a **Changes** section with unified-diff hunks for each
+changed file (after the file list). JSON output includes a top-level `changes`
+object with the same bounded content per file (`path`, `hunks` with `header`
+and `lines`, plus `binary` / `truncated` flags).
+
+Output is bounded to keep reports readable:
+
+| Limit | Value |
+|---|---|
+| Max files shown in Changes | 20 |
+| Max diff lines per file | 100 |
+
+When limits apply, the report notes truncation. Limits are documented in
+`numbat review --help` and echoed in JSON under `changes.limits`.
+
 ## Tests and quality
 
 ```bash

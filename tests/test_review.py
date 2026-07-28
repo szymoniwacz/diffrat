@@ -21,6 +21,8 @@ def test_run_review_unstaged(
     assert exit_code == EXIT_SUCCESS
     assert "Review Report" in captured.out
     assert "README.md" in captured.out
+    assert "Changes" in captured.out
+    assert "+extra line" in captured.out
     assert captured.err == ""
 
 
