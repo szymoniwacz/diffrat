@@ -9,9 +9,9 @@ import pytest
 from numbat.git_adapter import GitError, ensure_git_repository, get_diff_numstat
 
 
-def test_ensure_git_repository_rejects_non_repo(tmp_path: Path) -> None:
+def test_ensure_git_repository_rejects_non_repo(outside_git_directory: Path) -> None:
     with pytest.raises(GitError, match="not a git repository"):
-        ensure_git_repository(cwd=str(tmp_path))
+        ensure_git_repository(cwd=str(outside_git_directory))
 
 
 def test_get_diff_numstat_unstaged(git_repo_with_changes: Path) -> None:
