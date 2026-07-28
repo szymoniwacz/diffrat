@@ -93,7 +93,7 @@ the default report.
 
 Every successful review assigns each changed file a coarse category:
 
-`source`, `tests`, `config`, `docs`, or `other`.
+`source`, `tests`, `config`, `docs`, `ci`, or `other`.
 
 The report also includes deterministic Focus/Risk hints derived from paths and
 diff size (for example large diffs, tests touched, config/dependency changes,
