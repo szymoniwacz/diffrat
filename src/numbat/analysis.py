@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-from numbat.diff_parser import DiffSummary, FileChange
+from numbat.diff_parser import DiffContent, DiffSummary, FileChange
 
 FileCategory = str  # source | tests | config | docs | other
 
@@ -161,10 +161,19 @@ def categorize_path(path: str) -> FileCategory:
     return "other"
 
 
-def analyze_diff(summary: DiffSummary) -> AnalysisResult:
+def analyze_diff(
+    summary: DiffSummary,
+    *,
+    diff_content: DiffContent | None = None,
+) -> AnalysisResult:
     """Compute per-file categories and focus/risk hints for a diff."""
     categories = tuple(categorize_path(file_change.path) for file_change in summary.files)
-    return AnalysisResult(categories=categories, hints=tuple(_build_hints(summary, categories)))
+    hints = _build_hints(summary, categories)
+    if diff_content is not None:
+        from numbat.content_hints import content_focus_risk_hints
+
+        hints.extend(content_focus_risk_hints(diff_content))
+    return AnalysisResult(categories=categories, hints=tuple(hints))
 
 
 def _build_hints(

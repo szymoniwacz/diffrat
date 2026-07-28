@@ -17,7 +17,11 @@ def render_review_report(
     check_results: list[CheckResult] | None = None,
 ) -> str:
     """Render a review-oriented text report for stdout."""
-    result = analysis if analysis is not None else analyze_diff(summary)
+    result = (
+        analysis
+        if analysis is not None
+        else analyze_diff(summary, diff_content=diff_content)
+    )
 
     lines = [
         "Review Report",
