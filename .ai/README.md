@@ -10,8 +10,9 @@ This file is the canonical entry point for AI tools and for work inside `.ai/`.
 
 - Goal execution: `/execute-goal` (`.ai/skills/execute-goal.md`). Loading rules
   for that run live in the skill.
-- Whole-project automation: create a **Project Execution** issue, authorize it
-  with `/execute-project`, and resume with `/continue-project`. Runtime:
+- Whole-project automation: create a **Project Execution** issue and authorize
+  it with `/execute-project`. Merged delegated pull requests continue
+  automatically; use `/continue-project` only when needed. Runtime:
   `.ai/automation/project-executor.md`.
 - Project onboarding or human walkthrough: `.ai/docs/template-flow.md`.
 - Operational workflow rules: `.ai/instructions/workflow.md`.

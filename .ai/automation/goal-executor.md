@@ -89,7 +89,8 @@ duplicate lifecycle or quality-gate content here.
 - Create or update a **draft** pull request only after local validation and
   review are current.
 - The pull request body must contain exact `Closes #<issue-number>` for the
-  triggering issue.
+  triggering issue. When Project Executor's pull request merged trigger is
+  configured, merging that pull request continues the parent project.
 
 ## CI stabilization and review-ready handoff
 

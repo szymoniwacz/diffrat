@@ -10,8 +10,9 @@ body:
 
         When the brief is complete, comment exactly `/execute-project`.
 
-        After answering material-decision questions or merging a pull request,
-        comment exactly `/continue-project` to resume.
+        Merging a delegated pull request automatically continues the project.
+        Use `/continue-project` only to resume after answering material-decision
+        questions or when automation stopped with CI pending.
 
         You still review and manually merge every pull request. Agents never merge.
 

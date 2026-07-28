@@ -5,20 +5,51 @@ Executor. It selects at most one goal, invokes Goal Executor, and then waits
 for human review and merge. It does not copy the goal lifecycle or merge pull
 requests.
 
-## Trigger commands
+## Trigger events
 
-Project Executor runs when the authorized repository owner comments exactly
-`/execute-project` or `/continue-project` on a **Project Execution** issue.
 Production trigger configuration:
 `.ai/automation/project-executor-production-setup.md`.
+
+### Issue comment
+
+When this run was triggered by an owner comment on a **Project Execution**
+issue:
 
 - `/execute-project` authorizes the project (initially or after the most recent
   edit to its title or structured fields) and starts or resumes when state
   permits.
-- `/continue-project` resumes an already authorized project after the owner
-  answers a material-decision batch or after human review and merge. It does
-  not replace re-authorization after issue edits. If no valid authorization
-  exists, stop as a no-op without writing.
+- `/continue-project` is an optional manual nudge on an already authorized
+  project: after material-decision answers, when applicable CI was pending, or
+  when the owner wants to retry sooner. It does not authorize a project by
+  itself and does not replace `/execute-project` after issue edits. If no valid
+  authorization exists, stop as a no-op without writing.
+
+Use the commented Project Execution issue as the active project.
+
+### Pull request merged
+
+When this run was triggered by a merged pull request:
+
+1. Read the merged pull request number and body from the trigger event.
+2. Extract exact `Closes #<goal-number>` from the body (same contract as Goal
+   Executor).
+3. Read the goal issue. If it lacks the trusted exact
+   `<!-- project-executor:goal project=OWNER/REPOSITORY#PROJECT_NUMBER -->`
+   marker from this automation identity, stop as a no-op without writing.
+4. Resolve the Project Execution issue `#PROJECT_NUMBER` from that marker.
+5. Verify `/execute-project` authorization on that project issue after the most
+   recent edit to its title or structured fields.
+6. Run the same state resolution and actions as for a comment trigger on that
+   project issue.
+
+Fail closed without writing when: the body has no `Closes #<goal-number>`, the
+goal is not a delegated Project Executor goal, authorization is missing or
+invalid, or the merge cannot be linked to an active authorized project.
+
+Merging a delegated pull request continues the project automatically when the
+pull request merged trigger is configured. The owner does not need
+`/continue-project` after merge unless state resolution enters `WAIT` (for
+example applicable CI still pending on the default branch).
 
 ## Authorization
 
@@ -142,7 +173,7 @@ where the human replies in comments):
 5. Do not use open-ended-only questions when alternatives can be enumerated.
 6. Do not repeat the same batch until the owner replies or edits the project
    issue.
-7. After the owner replies with option letters in a separate comment, they must
+7. After the owner replies with option letters in a separate comment, they may
    comment exactly `/continue-project` to resume.
 
 Example shape:
@@ -175,10 +206,11 @@ delegated issue.
 Goal Executor retains ownership of planning, implementation, validation,
 branches, commits, pull requests, idempotency, and its Slice 2 stopping point
 before merge.
-After it stops, Project Executor also stops. The owner may comment
-`/continue-project` when ready for the next step. If applicable CI is still
-pending, state resolution enters `WAIT` and the owner may comment
-`/continue-project` again later.
+After it stops, Project Executor also stops. Merging a delegated pull request
+triggers the next run automatically when the pull request merged trigger is
+configured. The owner may comment `/continue-project` as an optional nudge after
+material-decision answers or when state resolution entered `WAIT` (for example
+applicable CI still pending on the default branch).
 
 Never merge, enable auto-merge, force push, rewrite published history, or push
 directly to the protected default branch.

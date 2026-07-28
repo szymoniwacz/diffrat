@@ -81,10 +81,11 @@ branch, auto-merge, or merge. Runtime details live in
 
 An exact `/continue-project` comment by the authorized repository owner on an
 open **Project Execution** issue with valid `/execute-project` authorization
-nudges Project Executor to continue after material-decision answers or after
-human review and merge. It does not authorize a project by itself and does not
-replace `/execute-project` after issue edits. Runtime details live in
-`.ai/automation/project-executor.md`.
+optionally nudges Project Executor to continue after material-decision answers
+or when applicable CI was pending. It is not required after merge when the pull
+request merged trigger is configured. It does not authorize a project by itself
+and does not replace `/execute-project` after issue edits. Runtime details live
+in `.ai/automation/project-executor.md`.
 
 ## Question timing
 
