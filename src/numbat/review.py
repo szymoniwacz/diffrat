@@ -58,7 +58,7 @@ def run_review(
         return EXIT_EMPTY_DIFF
 
     diff_content = parse_unified_diff(diff_result.patch)
-    analysis = analyze_diff(summary, diff_content=diff_content)
+    analysis = analyze_diff(summary, diff_content=diff_content, cwd=cwd)
     check_results: list[CheckResult] | None = None
     if run_checks_flag:
         check_results = run_checks(plan_checks(summary), cwd=cwd)

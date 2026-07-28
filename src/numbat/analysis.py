@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 from numbat.diff_parser import DiffContent, DiffSummary, FileChange
 
@@ -169,10 +169,11 @@ def analyze_diff(
     summary: DiffSummary,
     *,
     diff_content: DiffContent | None = None,
+    cwd: str | None = None,
 ) -> AnalysisResult:
     """Compute per-file categories and focus/risk hints for a diff."""
     categories = tuple(categorize_path(file_change.path) for file_change in summary.files)
-    hints = _build_hints(summary, categories)
+    hints = _build_hints(summary, categories, cwd=cwd)
     if diff_content is not None:
         from numbat.content_hints import content_focus_risk_hints
 
@@ -183,6 +184,8 @@ def analyze_diff(
 def _build_hints(
     summary: DiffSummary,
     categories: tuple[FileCategory, ...],
+    *,
+    cwd: str | None = None,
 ) -> list[FocusRiskHint]:
     hints: list[FocusRiskHint] = []
 
@@ -272,6 +275,43 @@ def _build_hints(
                 ),
             )
         )
+
+    hints.extend(_missing_test_file_hints(summary, cwd=cwd))
+
+    return hints
+
+
+def _missing_test_file_hints(
+    summary: DiffSummary,
+    *,
+    cwd: str | None,
+) -> list[FocusRiskHint]:
+    """Emit hints when a changed src/numbat module lacks a mapped test file."""
+    if cwd is None:
+        return []
+
+    root = Path(cwd)
+    hints: list[FocusRiskHint] = []
+
+    for file_change in summary.files:
+        posix = PurePosixPath(file_change.path.replace("\\", "/"))
+        parts = posix.parts
+        if (
+            len(parts) >= 2
+            and parts[0] == "src"
+            and parts[1] == "numbat"
+            and posix.suffix == ".py"
+        ):
+            test_rel = f"tests/test_{posix.stem}.py"
+            if not (root / test_rel).exists():
+                hints.append(
+                    FocusRiskHint(
+                        code="missing_test_file",
+                        message=(
+                            f"Changed {file_change.path} has no {test_rel} on disk"
+                        ),
+                    )
+                )
 
     return hints
 

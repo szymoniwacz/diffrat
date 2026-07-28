@@ -99,7 +99,8 @@ Every successful review assigns each changed file a coarse category:
 The report also includes deterministic Focus/Risk hints derived from paths and
 diff size (for example large diffs, tests touched, config/dependency changes,
 docs-only changes, CI/workflow path changes with suggested validator commands,
-security-sensitive path names, and content-based hints from added hunk lines on
+security-sensitive path names, missing mapped test files for changed
+`src/numbat` modules, and content-based hints from added hunk lines on
 `source` and `ci` paths). Content-based codes include `possible_secret`,
 `debug_leftover`, `dangerous_call`, `broad_exception`, and `hardcoded_url_or_ip`,
 plus validator-specific typo hints for known CI patterns such as
@@ -133,13 +134,14 @@ include results in the report:
 | Touched path pattern | Command run |
 |---|---|
 | `ci/`, `.github/workflows/`, or `validate-workflow-contracts.py` | `python ci/validate-workflow-contracts.py --mode project` |
-| `src/numbat/<module>.py` | `pytest tests/test_<module>.py` |
+| `src/numbat/<module>.py` | `pytest tests/test_<module>.py` and `mypy src/numbat/<module>.py` |
 | `tests/test_<name>.py` | `pytest tests/test_<name>.py` |
 | other `tests/` files (e.g. `conftest.py`) | `pytest tests` |
+| `pyproject.toml` | `ruff check .` |
 
-Multiple touched modules are deduplicated into one `pytest` invocation with all
-target paths. Source and test changes that map to the same module run that test
-file once.
+Multiple touched modules are deduplicated into one `pytest` and one `mypy`
+invocation with all target paths. Source and test changes that map to the same
+module run that test file once.
 
 Text reports add a **Local checks** section. JSON output includes an additive
 top-level `checks` array with `code`, `command`, `passed`, and `output` fields.
