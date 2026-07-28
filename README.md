@@ -127,7 +127,13 @@ include results in the report:
 | Touched path pattern | Command run |
 |---|---|
 | `ci/`, `.github/workflows/`, or `validate-workflow-contracts.py` | `python ci/validate-workflow-contracts.py --mode project` |
-| `src/numbat/` or `tests/` | `pytest` (full suite) |
+| `src/numbat/<module>.py` | `pytest tests/test_<module>.py` |
+| `tests/test_<name>.py` | `pytest tests/test_<name>.py` |
+| other `tests/` files (e.g. `conftest.py`) | `pytest tests` |
+
+Multiple touched modules are deduplicated into one `pytest` invocation with all
+target paths. Source and test changes that map to the same module run that test
+file once.
 
 Text reports add a **Local checks** section. JSON output includes an additive
 top-level `checks` array with `code`, `command`, `passed`, and `output` fields.

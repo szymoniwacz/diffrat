@@ -5,6 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 
 from numbat.analysis import is_ci_workflow_validator_path, is_python_source_or_test_path
 from numbat.diff_parser import DiffSummary
@@ -34,6 +35,39 @@ class CheckResult:
     output: str
 
 
+def pytest_targets_for_paths(paths: list[str]) -> list[str]:
+    """Map changed source/test paths to pytest target paths."""
+    targets: list[str] = []
+    seen: set[str] = set()
+
+    for path in paths:
+        if not is_python_source_or_test_path(path):
+            continue
+        target = _map_path_to_pytest_target(path)
+        if target is not None and target not in seen:
+            seen.add(target)
+            targets.append(target)
+
+    return sorted(targets)
+
+
+def _map_path_to_pytest_target(path: str) -> str | None:
+    posix = PurePosixPath(path.replace("\\", "/"))
+    parts = posix.parts
+
+    if len(parts) >= 2 and parts[0] == "src" and parts[1] == "numbat":
+        if posix.suffix == ".py":
+            return f"tests/test_{posix.stem}.py"
+        return "tests"
+
+    if parts and parts[0] == "tests":
+        if posix.name.startswith("test_") and posix.suffix == ".py":
+            return "/".join(parts)
+        return "tests"
+
+    return None
+
+
 def plan_checks(summary: DiffSummary) -> list[CheckSpec]:
     """Select applicable checks from changed paths."""
     paths = [file_change.path for file_change in summary.files]
@@ -56,14 +90,16 @@ def plan_checks(summary: DiffSummary) -> list[CheckSpec]:
                 )
             )
 
-    if any(is_python_source_or_test_path(path) for path in paths):
+    pytest_targets = pytest_targets_for_paths(paths)
+    if pytest_targets:
         if "pytest" not in seen:
             seen.add("pytest")
+            display_command = f"{_PYTEST_COMMAND} {' '.join(pytest_targets)}"
             specs.append(
                 CheckSpec(
                     code="pytest",
-                    argv=(sys.executable, "-m", "pytest"),
-                    display_command=_PYTEST_COMMAND,
+                    argv=(sys.executable, "-m", "pytest", *pytest_targets),
+                    display_command=display_command,
                 )
             )
 
