@@ -28,7 +28,7 @@ per D-005.
 - AI workflow working system (`.ai/`) from `ai-project-template`
 - Project definition and requirements documentation
 - Installable `numbat` CLI (`pip install -e ".[dev]"`)
-- `numbat review` — unstaged, `--staged`, `--base` (merge-base), `--json`
+- `numbat review` — unstaged, `--staged`, `--base` (merge-base), `--range` (two-ref), `--json`
 - Human-readable report with file categories and deterministic Focus/Risk hints
 - Git context on branch-vs-base reviews
 - pytest / ruff / mypy green on main

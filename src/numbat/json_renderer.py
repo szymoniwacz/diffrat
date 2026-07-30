@@ -69,15 +69,27 @@ def render_review_json(
         ]
 
     if git_context is not None:
-        payload["git_context"] = {
-            "branch": git_context.branch,
-            "base": git_context.base_ref,
-            "commit_count": git_context.commit_count,
-            "commits": [
-                {"hash": commit.short_hash, "subject": commit.subject}
-                for commit in git_context.commits
-            ],
-        }
+        if git_context.range_spec is not None:
+            payload["git_context"] = {
+                "range": git_context.range_spec,
+                "from_ref": git_context.from_ref,
+                "to_ref": git_context.to_ref,
+                "commit_count": git_context.commit_count,
+                "commits": [
+                    {"hash": commit.short_hash, "subject": commit.subject}
+                    for commit in git_context.commits
+                ],
+            }
+        else:
+            payload["git_context"] = {
+                "branch": git_context.branch,
+                "base": git_context.base_ref,
+                "commit_count": git_context.commit_count,
+                "commits": [
+                    {"hash": commit.short_hash, "subject": commit.subject}
+                    for commit in git_context.commits
+                ],
+            }
 
     return json.dumps(payload, indent=2) + "\n"
 

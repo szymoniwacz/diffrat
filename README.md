@@ -14,7 +14,7 @@ scripting.
 
 v1 complete on `main` — local diff review CLI without LLM (D-005):
 
-- `numbat review` with unstaged, `--staged`, and `--base` modes; optional `--json`
+- `numbat review` with unstaged, `--staged`, `--base`, and `--range` modes; optional `--json`
 - Bounded diff hunks, git context, file categories, deterministic Focus/Risk hints
   (including CI/workflow path hints with suggested commands, and content-based typo
   hints for known CI validator patterns)
@@ -34,6 +34,8 @@ Phase 3 (optional LLM) and Phase 4 (integrations) are deferred. See
 - `numbat review --check` — run applicable local validators/tests for touched paths
 - `numbat review --base <ref>` — compare the current branch to a base ref and
   include git context (branch, base, commits since base)
+- `numbat review --range <A..B>` — compare two git refs using two-dot range
+  semantics (e.g. `main..feature`) and include range git context
 - Dev tooling: pytest, ruff, mypy
 
 ## Setup
@@ -65,6 +67,9 @@ numbat review --staged
 # Branch vs base (merge-base with ref through HEAD; default base is main)
 numbat review --base main
 numbat review --base
+
+# Two-dot commit range (changes reachable from B not from A)
+numbat review --range main..feature
 
 numbat review --help
 ```
