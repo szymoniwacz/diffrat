@@ -7,7 +7,7 @@ from pathlib import Path, PurePosixPath
 
 from numbat.diff_parser import DiffContent, DiffSummary, FileChange
 from numbat.git_adapter import GitContext
-from numbat.scoring import HintSeverity, severity_for_code
+from numbat.scoring import HintSeverity, risk_score_for_file, severity_for_code
 
 _SEVERITY_ORDER: dict[HintSeverity, int] = {"risk": 0, "warn": 1, "info": 2}
 
@@ -214,6 +214,7 @@ class AnalysisResult:
 
     categories: tuple[FileCategory, ...]
     hints: tuple[FocusRiskHint, ...]
+    risk_scores: tuple[int, ...]
 
 
 def categorize_path(path: str) -> FileCategory:
@@ -251,7 +252,28 @@ def analyze_diff(
         from numbat.content_hints import content_focus_risk_hints
 
         hints.extend(content_focus_risk_hints(diff_content))
-    return AnalysisResult(categories=categories, hints=tuple(hints))
+
+    non_binary_total_lines = sum(
+        file_change.additions + file_change.deletions
+        for file_change in summary.files
+        if not file_change.binary
+    )
+    has_tests_in_diff = any(category == "tests" for category in categories)
+    risk_scores = tuple(
+        risk_score_for_file(
+            file_change,
+            category,
+            total_non_binary_lines=non_binary_total_lines,
+            has_tests_in_diff=has_tests_in_diff,
+            security_sensitive=_is_security_sensitive(file_change),
+        )
+        for file_change, category in zip(summary.files, categories, strict=True)
+    )
+    return AnalysisResult(
+        categories=categories,
+        hints=tuple(hints),
+        risk_scores=risk_scores,
+    )
 
 
 def _build_hints(
