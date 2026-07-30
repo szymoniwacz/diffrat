@@ -198,6 +198,32 @@ numbat review --staged --check
 numbat review --base main --check --json
 ```
 
+### Scriptable gate (`--fail-on`)
+
+Use `--fail-on` with comma-separated hint codes (no spaces) to fail the review
+when any requested code appears in Focus/Risk hints. This is an advisory gate on
+hint presence only — it does not run extra subprocesses beyond `--check`.
+
+| Exit code | Meaning |
+|---|---|
+| `0` | Success (no requested codes matched) |
+| `1` | Git error, usage error, or invalid `--fail-on` token |
+| `2` | Empty diff (evaluated before `--fail-on`) |
+| `3` | `--check` subprocess failure (takes precedence over exit `4`) |
+| `4` | At least one requested hint code matched |
+
+```bash
+# Fail when typo or secret hints appear (human report)
+numbat review --base main --fail-on=regex_typo,possible_secret
+
+# Pre-push hook: JSON + gate
+numbat review --base main --json --fail-on=regex_typo,possible_secret
+```
+
+When `--json` and `--fail-on` are both used, JSON output includes a top-level
+`fail_on` object with `requested` and `matched` arrays so scripts can read
+matches without parsing stderr.
+
 ## Tests and quality
 
 ```bash
