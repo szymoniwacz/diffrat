@@ -30,7 +30,8 @@ per D-005.
 - Installable `numbat` CLI (`pip install -e ".[dev]"`)
 - `numbat review` — unstaged, `--staged`, `--base` (merge-base), `--range` (two-ref), `--json`
 - Human-readable report with file categories and deterministic Focus/Risk hints
-- Git context on branch-vs-base reviews
+  (including git-context hints: `many_commits`, `wip_commits`, `mixed_concerns`)
+- Git context on branch-vs-base and commit-range reviews
 - pytest / ruff / mypy green on main
 
 ## What does not exist yet
