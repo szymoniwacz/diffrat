@@ -9,10 +9,13 @@ from numbat.analysis import (
     LARGE_DIFF_FILE_THRESHOLD,
     LARGE_DIFF_LINE_THRESHOLD,
     LARGE_SINGLE_FILE_MIN_FILE_LINES,
+    MANY_COMMITS_THRESHOLD,
+    MIXED_CONCERNS_MIN_SEGMENTS,
     analyze_diff,
     categorize_path,
 )
 from numbat.diff_parser import DiffSummary, FileChange
+from numbat.git_adapter import GitCommitInfo, GitContext
 
 
 def test_categorize_path_assigns_expected_buckets() -> None:
@@ -620,3 +623,141 @@ def test_analyze_diff_no_manifest_without_lockfile_without_cwd() -> None:
     result = analyze_diff(summary)
 
     assert not any(hint.code == "manifest_without_lockfile" for hint in result.hints)
+
+
+def _git_context(
+    *,
+    commit_count: int,
+    subjects: tuple[str, ...] = (),
+) -> GitContext:
+    return GitContext(
+        commit_count=commit_count,
+        commits=tuple(
+            GitCommitInfo(short_hash=f"{index:07x}", subject=subject)
+            for index, subject in enumerate(subjects)
+        ),
+    )
+
+
+def test_analyze_diff_many_commits_hint_when_above_threshold() -> None:
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+    git_context = _git_context(
+        commit_count=MANY_COMMITS_THRESHOLD + 1,
+        subjects=("one", "two"),
+    )
+
+    result = analyze_diff(summary, git_context=git_context)
+
+    hint = next(hint for hint in result.hints if hint.code == "many_commits")
+    assert str(MANY_COMMITS_THRESHOLD + 1) in hint.message
+
+
+def test_analyze_diff_no_many_commits_hint_at_threshold() -> None:
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+    git_context = _git_context(
+        commit_count=MANY_COMMITS_THRESHOLD,
+        subjects=("one",),
+    )
+
+    result = analyze_diff(summary, git_context=git_context)
+
+    assert not any(hint.code == "many_commits" for hint in result.hints)
+
+
+def test_analyze_diff_no_many_commits_hint_without_git_context() -> None:
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "many_commits" for hint in result.hints)
+
+
+def test_analyze_diff_wip_commits_hint_for_fixup_subject() -> None:
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+    git_context = _git_context(
+        commit_count=2,
+        subjects=("fixup! previous", "normal subject"),
+    )
+
+    result = analyze_diff(summary, git_context=git_context)
+
+    hint = next(hint for hint in result.hints if hint.code == "wip_commits")
+    assert "fixup! previous" in hint.message
+
+
+def test_analyze_diff_no_wip_commits_hint_for_clean_subjects() -> None:
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+    git_context = _git_context(
+        commit_count=2,
+        subjects=("add feature", "fix tests"),
+    )
+
+    result = analyze_diff(summary, git_context=git_context)
+
+    assert not any(hint.code == "wip_commits" for hint in result.hints)
+
+
+def test_analyze_diff_mixed_concerns_hint_for_multiple_source_ci_areas() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/a.py", additions=1, deletions=0, binary=False),
+            FileChange(path="ci/validate.py", additions=1, deletions=0, binary=False),
+            FileChange(path="config/app.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    hint = next(hint for hint in result.hints if hint.code == "mixed_concerns")
+    assert "src" in hint.message
+    assert "ci" in hint.message
+    assert "config" in hint.message
+
+
+def test_analyze_diff_no_mixed_concerns_hint_when_only_two_segments() -> None:
+    files = tuple(
+        FileChange(path=f"src/f{index}.py", additions=1, deletions=0, binary=False)
+        for index in range(MIXED_CONCERNS_MIN_SEGMENTS - 1)
+    )
+
+    result = analyze_diff(DiffSummary(files=files))
+
+    assert not any(hint.code == "mixed_concerns" for hint in result.hints)
+
+
+def test_analyze_diff_no_mixed_concerns_hint_without_two_source_ci_segments() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/a.py", additions=1, deletions=0, binary=False),
+            FileChange(path="tests/t.py", additions=1, deletions=0, binary=False),
+            FileChange(path="config/app.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "mixed_concerns" for hint in result.hints)
+
+
+def test_analyze_diff_mixed_concerns_ignores_docs_only_paths() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/a.py", additions=1, deletions=0, binary=False),
+            FileChange(path="ci/validate.py", additions=1, deletions=0, binary=False),
+            FileChange(path="docs/guide.md", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "mixed_concerns" for hint in result.hints)

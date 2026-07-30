@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 from numbat.diff_parser import DiffContent, DiffSummary, FileChange
+from numbat.git_adapter import GitContext
 
 FileCategory = str  # source | tests | config | docs | ci | other
 
@@ -18,6 +19,10 @@ LARGE_SINGLE_FILE_MIN_FILE_LINES = 30
 LARGE_SINGLE_FILE_MIN_TOTAL_LINES = 20
 
 DELETIONS_HEAVY_MIN_DELETIONS = 20
+
+MANY_COMMITS_THRESHOLD = 10
+MIXED_CONCERNS_MIN_SEGMENTS = 3
+MIXED_CONCERNS_MIN_SOURCE_CI_SEGMENTS = 2
 
 _GENERATED_LOCKFILE_BASENAMES = frozenset(
     {
@@ -213,10 +218,12 @@ def analyze_diff(
     *,
     diff_content: DiffContent | None = None,
     cwd: str | None = None,
+    git_context: GitContext | None = None,
 ) -> AnalysisResult:
     """Compute per-file categories and focus/risk hints for a diff."""
     categories = tuple(categorize_path(file_change.path) for file_change in summary.files)
     hints = _build_hints(summary, categories, cwd=cwd)
+    hints.extend(_git_context_hints(summary, categories, git_context=git_context))
     if diff_content is not None:
         from numbat.content_hints import content_focus_risk_hints
 
@@ -476,6 +483,101 @@ def _build_hints(
     hints.extend(_lockfile_consistency_hints(summary, cwd=cwd))
 
     return hints
+
+
+def _git_context_hints(
+    summary: DiffSummary,
+    categories: tuple[FileCategory, ...],
+    *,
+    git_context: GitContext | None,
+) -> list[FocusRiskHint]:
+    """Emit git-derived focus/risk hints from commit and path context."""
+    hints: list[FocusRiskHint] = []
+
+    if git_context is not None:
+        if git_context.commit_count > MANY_COMMITS_THRESHOLD:
+            hints.append(
+                FocusRiskHint(
+                    code="many_commits",
+                    message=(
+                        f"Many commits in reviewed range: {git_context.commit_count} "
+                        f"(threshold > {MANY_COMMITS_THRESHOLD}) — consider smaller "
+                        "slices or squash before review"
+                    ),
+                )
+            )
+
+        wip_subjects = [
+            commit.subject
+            for commit in git_context.commits
+            if _is_wip_commit_subject(commit.subject)
+        ]
+        if wip_subjects:
+            preview = ", ".join(wip_subjects[:3])
+            if len(wip_subjects) > 3:
+                preview = f"{preview}, +{len(wip_subjects) - 3} more"
+            hints.append(
+                FocusRiskHint(
+                    code="wip_commits",
+                    message=(
+                        f"WIP/fixup/squash commit subjects detected: {preview} — "
+                        "clean up before merge"
+                    ),
+                )
+            )
+
+    mixed_concerns = _mixed_concerns_hint(summary, categories)
+    if mixed_concerns is not None:
+        hints.append(mixed_concerns)
+
+    return hints
+
+
+def _is_wip_commit_subject(subject: str) -> bool:
+    """Return True when a commit subject matches WIP/fixup/squash patterns."""
+    lower = subject.strip().lower()
+    if lower.startswith("wip"):
+        return True
+    return lower.startswith(("fixup!", "squash!", "sq!", "fixup:", "squash:"))
+
+
+def _mixed_concerns_hint(
+    summary: DiffSummary,
+    categories: tuple[FileCategory, ...],
+) -> FocusRiskHint | None:
+    """Return a hint when unrelated top-level areas change together."""
+    segment_categories: dict[str, set[FileCategory]] = {}
+    for file_change, category in zip(summary.files, categories, strict=True):
+        if category == "docs":
+            continue
+        posix = PurePosixPath(file_change.path.replace("\\", "/"))
+        if not posix.parts:
+            continue
+        segment = posix.parts[0]
+        segment_categories.setdefault(segment, set()).add(category)
+
+    if len(segment_categories) < MIXED_CONCERNS_MIN_SEGMENTS:
+        return None
+
+    source_ci_segments = sorted(
+        segment
+        for segment, cats in segment_categories.items()
+        if "source" in cats or "ci" in cats
+    )
+    if len(source_ci_segments) < MIXED_CONCERNS_MIN_SOURCE_CI_SEGMENTS:
+        return None
+
+    all_segments = sorted(segment_categories)
+    preview = ", ".join(all_segments[:5])
+    if len(all_segments) > 5:
+        preview = f"{preview}, +{len(all_segments) - 5} more"
+    return FocusRiskHint(
+        code="mixed_concerns",
+        message=(
+            f"Changes span multiple top-level areas ({preview}) — "
+            "confirm unrelated work is not bundled"
+        ),
+    )
 
 
 def _is_generated_artifact_path(path: str) -> bool:
