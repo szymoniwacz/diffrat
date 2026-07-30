@@ -12,6 +12,21 @@ FileCategory = str  # source | tests | config | docs | ci | other
 LARGE_DIFF_LINE_THRESHOLD = 300
 LARGE_DIFF_FILE_THRESHOLD = 20
 
+# Per-file concentration (complements aggregate large_diff threshold).
+LARGE_SINGLE_FILE_PERCENT_THRESHOLD = 60
+LARGE_SINGLE_FILE_MIN_FILE_LINES = 30
+LARGE_SINGLE_FILE_MIN_TOTAL_LINES = 20
+
+DELETIONS_HEAVY_MIN_DELETIONS = 20
+
+_GENERATED_LOCKFILE_BASENAMES = frozenset(
+    {
+        "package-lock.json",
+        "yarn.lock",
+        "poetry.lock",
+    }
+)
+
 _CONFIG_BASENAMES = frozenset(
     {
         "pyproject.toml",
@@ -231,6 +246,48 @@ def _build_hints(
             )
         )
 
+    # Per-file concentration: distinct from aggregate large_diff (300 lines / 20 files).
+    if summary.total_lines_changed >= LARGE_SINGLE_FILE_MIN_TOTAL_LINES:
+        dominant_file: FileChange | None = None
+        dominant_lines = 0
+        for file_change in summary.files:
+            if file_change.binary:
+                continue
+            file_lines = file_change.additions + file_change.deletions
+            if file_lines > dominant_lines:
+                dominant_file = file_change
+                dominant_lines = file_lines
+        if (
+            dominant_file is not None
+            and dominant_lines >= LARGE_SINGLE_FILE_MIN_FILE_LINES
+            and dominant_lines * 100
+            >= LARGE_SINGLE_FILE_PERCENT_THRESHOLD * summary.total_lines_changed
+        ):
+            percent = dominant_lines * 100 // summary.total_lines_changed
+            hints.append(
+                FocusRiskHint(
+                    code="large_single_file",
+                    message=(
+                        f"Single file dominates diff: {dominant_file.path} "
+                        f"({dominant_lines} lines, {percent}% of total)"
+                    ),
+                )
+            )
+
+    if (
+        summary.total_deletions >= DELETIONS_HEAVY_MIN_DELETIONS
+        and summary.total_deletions >= summary.total_additions
+    ):
+        hints.append(
+            FocusRiskHint(
+                code="deletions_heavy",
+                message=(
+                    f"Deletion-heavy diff: {summary.total_deletions} deletions vs "
+                    f"{summary.total_additions} additions"
+                ),
+            )
+        )
+
     if any(category == "tests" for category in categories):
         hints.append(
             FocusRiskHint(
@@ -400,10 +457,68 @@ def _build_hints(
             )
         )
 
+    generated_paths = _generated_file_paths_without_source(summary)
+    if generated_paths:
+        preview = ", ".join(generated_paths[:3])
+        if len(generated_paths) > 3:
+            preview = f"{preview}, +{len(generated_paths) - 3} more"
+        hints.append(
+            FocusRiskHint(
+                code="generated_file_touched",
+                message=(
+                    f"Generated artifact changed without source in diff ({preview}) — "
+                    "verify regeneration is intentional"
+                ),
+            )
+        )
+
     hints.extend(_missing_test_file_hints(summary, cwd=cwd))
     hints.extend(_lockfile_consistency_hints(summary, cwd=cwd))
 
     return hints
+
+
+def _is_generated_artifact_path(path: str) -> bool:
+    """Return True when a path matches a known generated-artifact pattern."""
+    posix = PurePosixPath(path.replace("\\", "/"))
+    name_lower = posix.name.lower()
+    if name_lower.endswith("_pb2.py"):
+        return True
+    if name_lower in _GENERATED_LOCKFILE_BASENAMES:
+        return True
+    return name_lower.endswith(".min.js")
+
+
+def _generated_artifact_source_counterpart(path: str) -> str | None:
+    """Return the expected source path for a generated artifact, if known."""
+    posix = PurePosixPath(path.replace("\\", "/"))
+    name_lower = posix.name.lower()
+    if name_lower.endswith("_pb2.py"):
+        stem = posix.stem[: -len("_pb2")]
+        return str(posix.with_name(f"{stem}.proto"))
+    if name_lower == "package-lock.json":
+        return str(posix.with_name("package.json"))
+    if name_lower == "yarn.lock":
+        return str(posix.with_name("package.json"))
+    if name_lower == "poetry.lock":
+        return str(posix.with_name("pyproject.toml"))
+    if name_lower.endswith(".min.js"):
+        base_name = posix.name[: -len(".min.js")] + ".js"
+        return str(posix.with_name(base_name))
+    return None
+
+
+def _generated_file_paths_without_source(summary: DiffSummary) -> list[str]:
+    """List generated-artifact paths changed without their source counterpart."""
+    changed_paths = {file_change.path for file_change in summary.files}
+    unmatched: list[str] = []
+    for file_change in summary.files:
+        if not _is_generated_artifact_path(file_change.path):
+            continue
+        counterpart = _generated_artifact_source_counterpart(file_change.path)
+        if counterpart is None or counterpart not in changed_paths:
+            unmatched.append(file_change.path)
+    return unmatched
 
 
 def _missing_test_file_hints(

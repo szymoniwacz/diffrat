@@ -5,8 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from numbat.analysis import (
+    DELETIONS_HEAVY_MIN_DELETIONS,
     LARGE_DIFF_FILE_THRESHOLD,
     LARGE_DIFF_LINE_THRESHOLD,
+    LARGE_SINGLE_FILE_MIN_FILE_LINES,
     analyze_diff,
     categorize_path,
 )
@@ -306,6 +308,135 @@ def test_analyze_diff_no_workflow_without_ci_validator_when_ci_changed() -> None
         hint.code == "workflow_without_ci_validator" for hint in result.hints
     )
     assert any(hint.code == "ci_workflow_paths" for hint in result.hints)
+
+
+def test_analyze_diff_large_single_file_hint() -> None:
+    dominant_lines = LARGE_SINGLE_FILE_MIN_FILE_LINES
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="src/big.py",
+                additions=dominant_lines,
+                deletions=0,
+                binary=False,
+            ),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    hints = [hint for hint in result.hints if hint.code == "large_single_file"]
+    assert len(hints) == 1
+    assert "src/big.py" in hints[0].message
+
+
+def test_analyze_diff_no_large_single_file_below_thresholds() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/a.py", additions=10, deletions=5, binary=False),
+            FileChange(path="src/b.py", additions=8, deletions=7, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "large_single_file" for hint in result.hints)
+
+
+def test_analyze_diff_deletions_heavy_hint() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="src/legacy.py",
+                additions=5,
+                deletions=DELETIONS_HEAVY_MIN_DELETIONS,
+                binary=False,
+            ),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    hints = [hint for hint in result.hints if hint.code == "deletions_heavy"]
+    assert len(hints) == 1
+    assert f"{DELETIONS_HEAVY_MIN_DELETIONS} deletions" in hints[0].message
+
+
+def test_analyze_diff_no_deletions_heavy_when_additions_exceed_deletions() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="src/feature.py",
+                additions=DELETIONS_HEAVY_MIN_DELETIONS + 5,
+                deletions=DELETIONS_HEAVY_MIN_DELETIONS,
+                binary=False,
+            ),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "deletions_heavy" for hint in result.hints)
+
+
+def test_analyze_diff_generated_file_touched_hint() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="api_pb2.py", additions=10, deletions=2, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    hints = [hint for hint in result.hints if hint.code == "generated_file_touched"]
+    assert len(hints) == 1
+    assert "api_pb2.py" in hints[0].message
+
+
+def test_analyze_diff_no_generated_file_touched_when_source_in_diff() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="api.proto", additions=3, deletions=1, binary=False),
+            FileChange(path="api_pb2.py", additions=10, deletions=2, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "generated_file_touched" for hint in result.hints)
+
+
+def test_analyze_diff_generated_file_touched_for_lockfile_without_manifest() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="yarn.lock", additions=50, deletions=10, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    generated_hints = [
+        hint for hint in result.hints if hint.code == "generated_file_touched"
+    ]
+    lockfile_hints = [
+        hint for hint in result.hints if hint.code == "lockfile_without_manifest"
+    ]
+    assert len(generated_hints) == 1
+    assert "yarn.lock" in generated_hints[0].message
+    assert len(lockfile_hints) == 1
+
+
+def test_analyze_diff_no_generated_file_touched_for_min_js_with_source() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="static/app.js", additions=5, deletions=0, binary=False),
+            FileChange(path="static/app.min.js", additions=2, deletions=1, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "generated_file_touched" for hint in result.hints)
 
 
 def test_analyze_diff_docs_touched_hint_for_docs_only() -> None:
