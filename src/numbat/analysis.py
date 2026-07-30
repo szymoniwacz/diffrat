@@ -320,6 +320,86 @@ def _build_hints(
             )
         )
 
+    # Structural hints from category composition (complement tests_touched / ci_workflow_paths).
+    has_tests_in_diff = any(category == "tests" for category in categories)
+    source_paths = [
+        file_change.path
+        for file_change, category in zip(summary.files, categories, strict=True)
+        if category == "source"
+    ]
+    if source_paths and not has_tests_in_diff:
+        preview = ", ".join(source_paths[:3])
+        if len(source_paths) > 3:
+            preview = f"{preview}, +{len(source_paths) - 3} more"
+        hints.append(
+            FocusRiskHint(
+                code="source_without_tests",
+                message=(
+                    f"Source changed without tests in diff ({preview}) — "
+                    "confirm test coverage"
+                ),
+            )
+        )
+
+    non_binary_files = [
+        file_change for file_change in summary.files if not file_change.binary
+    ]
+    if non_binary_files and all(
+        categorize_path(file_change.path) == "tests" for file_change in non_binary_files
+    ):
+        test_paths = [file_change.path for file_change in non_binary_files]
+        preview = ", ".join(test_paths[:3])
+        if len(test_paths) > 3:
+            preview = f"{preview}, +{len(test_paths) - 3} more"
+        hints.append(
+            FocusRiskHint(
+                code="tests_only",
+                message=f"Tests-only diff ({preview}) — verify behavior change is covered",
+            )
+        )
+
+    ci_paths = [
+        file_change.path
+        for file_change, category in zip(summary.files, categories, strict=True)
+        if category == "ci"
+    ]
+    if ci_paths and not has_tests_in_diff:
+        preview = ", ".join(ci_paths[:3])
+        if len(ci_paths) > 3:
+            preview = f"{preview}, +{len(ci_paths) - 3} more"
+        hints.append(
+            FocusRiskHint(
+                code="ci_without_tests",
+                message=(
+                    f"CI files changed without tests in diff ({preview}) — "
+                    "confirm CI changes are validated"
+                ),
+            )
+        )
+
+    workflow_paths = [
+        file_change.path
+        for file_change in summary.files
+        if _is_github_workflow_path(file_change.path)
+    ]
+    if workflow_paths and not any(
+        _is_ci_directory_path(file_change.path)
+        or file_change.path.endswith("validate-workflow-contracts.py")
+        for file_change in summary.files
+    ):
+        preview = ", ".join(workflow_paths[:3])
+        if len(workflow_paths) > 3:
+            preview = f"{preview}, +{len(workflow_paths) - 3} more"
+        hints.append(
+            FocusRiskHint(
+                code="workflow_without_ci_validator",
+                message=(
+                    f"Workflow changed without CI validator paths ({preview}) — "
+                    "confirm workflow contracts are validated"
+                ),
+            )
+        )
+
     hints.extend(_missing_test_file_hints(summary, cwd=cwd))
     hints.extend(_lockfile_consistency_hints(summary, cwd=cwd))
 
@@ -455,6 +535,22 @@ def _is_config_path(
 
 def _is_ci_path(parts_lower: tuple[str, ...]) -> bool:
     return bool(parts_lower and parts_lower[0] == "ci")
+
+
+def _is_ci_directory_path(path: str) -> bool:
+    posix = PurePosixPath(path.replace("\\", "/"))
+    parts_lower = tuple(part.lower() for part in posix.parts)
+    return bool(parts_lower and parts_lower[0] == "ci")
+
+
+def _is_github_workflow_path(path: str) -> bool:
+    posix = PurePosixPath(path.replace("\\", "/"))
+    parts_lower = tuple(part.lower() for part in posix.parts)
+    return (
+        len(parts_lower) >= 2
+        and parts_lower[0] == ".github"
+        and parts_lower[1] == "workflows"
+    )
 
 
 def _is_docs_path(

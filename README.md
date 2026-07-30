@@ -100,7 +100,8 @@ The report also includes deterministic Focus/Risk hints derived from paths and
 diff size (for example large diffs, tests touched, config/dependency changes,
 docs-only changes, CI/workflow path changes with suggested validator commands,
 security-sensitive path names, rename/copy detection (`rename_or_move`),
-missing mapped test files for changed
+category-composition signals (`source_without_tests`, `tests_only`,
+`ci_without_tests`, `workflow_without_ci_validator`), missing mapped test files for changed
 `src/numbat` modules, lockfile/manifest consistency hints (`lockfile_without_manifest`,
 `manifest_without_lockfile`), and content-based hints from added hunk lines on
 `source` and `ci` paths). Content-based codes include `possible_secret`,

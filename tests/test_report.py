@@ -11,6 +11,7 @@ def test_render_review_report_includes_summary_and_files() -> None:
     summary = DiffSummary(
         files=(
             FileChange(path="src/a.py", additions=4, deletions=1, binary=False),
+            FileChange(path="tests/test_a.py", additions=2, deletions=0, binary=False),
             FileChange(path="bin.dat", additions=0, deletions=0, binary=True),
         )
     )
@@ -18,14 +19,15 @@ def test_render_review_report_includes_summary_and_files() -> None:
     report = render_review_report(summary)
 
     assert "Review Report" in report
-    assert "Files changed: 2" in report
-    assert "Lines added: 4" in report
+    assert "Files changed: 3" in report
+    assert "Lines added: 6" in report
     assert "Lines deleted: 1" in report
-    assert "Total lines changed: 5" in report
+    assert "Total lines changed: 7" in report
     assert "src/a.py  [source]  +4 -1" in report
+    assert "tests/test_a.py  [tests]  +2 -0" in report
     assert "bin.dat  [other]  (binary)" in report
     assert "Focus / Risk" in report
-    assert "(none)" in report
+    assert "[tests_touched]" in report
     assert "Changes" in report
 
 
