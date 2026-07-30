@@ -90,3 +90,27 @@ def test_render_review_report_includes_git_context() -> None:
     assert "Base: main" in report
     assert "Commits since base: 2" in report
     assert "abc1234 second commit" in report
+
+
+def test_render_review_report_includes_range_git_context() -> None:
+    summary = DiffSummary(
+        files=(FileChange(path="feature.txt", additions=2, deletions=0, binary=False),)
+    )
+    git_context = GitContext(
+        commit_count=2,
+        commits=(
+            GitCommitInfo(short_hash="abc1234", subject="second commit"),
+            GitCommitInfo(short_hash="def5678", subject="first commit"),
+        ),
+        range_spec="main..feature",
+        from_ref="main",
+        to_ref="feature",
+    )
+
+    report = render_review_report(summary, git_context=git_context)
+
+    assert "Range: main..feature" in report
+    assert "From: main" in report
+    assert "To: feature" in report
+    assert "Commits in range: 2" in report
+    assert "abc1234 second commit" in report
