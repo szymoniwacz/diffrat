@@ -12,7 +12,10 @@ from numbat.review import (
     EXIT_CHECK_FAILED,
     EXIT_EMPTY_DIFF,
     EXIT_ERROR,
+    EXIT_FAIL_ON_MATCH,
     EXIT_SUCCESS,
+    matched_fail_on_codes,
+    parse_fail_on_codes,
     run_review,
 )
 
@@ -374,3 +377,153 @@ def test_run_review_check_json_includes_checks(
             "output": "",
         }
     ]
+
+
+def test_parse_fail_on_codes_splits_comma_separated() -> None:
+    codes, error = parse_fail_on_codes("regex_typo,possible_secret")
+    assert error is None
+    assert codes == ["regex_typo", "possible_secret"]
+
+
+def test_parse_fail_on_codes_rejects_empty_token() -> None:
+    codes, error = parse_fail_on_codes("regex_typo,")
+    assert codes is None
+    assert error is not None
+
+
+def test_parse_fail_on_codes_rejects_whitespace_token() -> None:
+    codes, error = parse_fail_on_codes("regex typo")
+    assert codes is None
+    assert error is not None
+
+
+def test_matched_fail_on_codes_preserves_request_order() -> None:
+    matched = matched_fail_on_codes(
+        ["possible_secret", "regex_typo", "docs_touched"],
+        {"docs_touched", "regex_typo"},
+    )
+    assert matched == ["regex_typo", "docs_touched"]
+
+
+def test_run_review_fail_on_match_exits_four(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        fail_on="docs_touched",
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_FAIL_ON_MATCH
+    assert "Review Report" in captured.out
+    assert captured.err == ""
+
+
+def test_run_review_fail_on_no_match_exits_zero(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        fail_on="possible_secret",
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+    assert captured.err == ""
+
+
+def test_run_review_fail_on_invalid_token(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        fail_on="bad token",
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_ERROR
+    assert captured.out == ""
+    assert "invalid --fail-on token" in captured.err
+
+
+def test_run_review_fail_on_empty_diff_before_evaluation(
+    git_repo_clean: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        fail_on="docs_touched",
+        cwd=str(git_repo_clean),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_EMPTY_DIFF
+    assert captured.out == ""
+
+
+def test_run_review_fail_on_json_includes_fail_on_metadata(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        json_output=True,
+        fail_on="docs_touched,possible_secret",
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_FAIL_ON_MATCH
+
+    payload = json.loads(captured.out)
+    assert payload["fail_on"] == {
+        "requested": ["docs_touched", "possible_secret"],
+        "matched": ["docs_touched"],
+    }
+
+
+def test_run_review_fail_on_check_failure_precedence(
+    git_repo_with_staged_change: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from numbat.checks import CheckResult, CheckSpec
+
+    monkeypatch.setattr(
+        "numbat.review.plan_checks",
+        lambda summary: [
+            CheckSpec(
+                code="ci_validator",
+                argv=("python",),
+                display_command=(
+                    "python ci/validate-workflow-contracts.py --mode project"
+                ),
+            )
+        ],
+    )
+    monkeypatch.setattr(
+        "numbat.review.run_checks",
+        lambda specs, *, cwd=None: [
+            CheckResult(
+                code="ci_validator",
+                command="python ci/validate-workflow-contracts.py --mode project",
+                passed=False,
+                output="validator failed",
+            )
+        ],
+    )
+
+    exit_code = run_review(
+        staged=True,
+        run_checks_flag=True,
+        fail_on="large_diff",
+        cwd=str(git_repo_with_staged_change),
+    )
+
+    assert exit_code == EXIT_CHECK_FAILED
