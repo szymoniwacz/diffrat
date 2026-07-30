@@ -69,7 +69,7 @@ optional `--json` flag for scripting. There is no web UI and no CI integration i
 | ID | Requirement | Priority | Notes |
 |---|---|---|---|
 | FR-001 | CLI installable from repo via editable install | must | Phase 1 bootstrap scaffold |
-| FR-002 | Accept diff targets: unstaged, staged, branch vs base, commit range | must | Phase 2 |
+| FR-002 | Accept diff targets: unstaged, staged, branch vs base, commit range (`--range A..B`) | must | Phase 2; `--range` uses two-dot `A..B` semantics |
 | FR-003 | Emit human-readable review report to stdout | must | Default output |
 | FR-004 | Support `--json` for structured output | must | Confirmed intake |
 | FR-005 | Include git metadata (commits, files touched) in report | must | Phase 2 |

@@ -95,10 +95,25 @@ def _render_git_context(git_context: GitContext) -> list[str]:
     lines = [
         "Git context",
         "-----------",
-        f"Branch: {git_context.branch}",
-        f"Base: {git_context.base_ref}",
-        f"Commits since base: {git_context.commit_count}",
     ]
+
+    if git_context.range_spec is not None:
+        lines.extend(
+            [
+                f"Range: {git_context.range_spec}",
+                f"From: {git_context.from_ref}",
+                f"To: {git_context.to_ref}",
+                f"Commits in range: {git_context.commit_count}",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                f"Branch: {git_context.branch}",
+                f"Base: {git_context.base_ref}",
+                f"Commits since base: {git_context.commit_count}",
+            ]
+        )
 
     if git_context.commits:
         lines.append("Recent commits:")

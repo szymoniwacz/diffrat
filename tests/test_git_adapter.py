@@ -70,3 +70,39 @@ def test_get_diff_numstat_vs_base(git_repo_with_feature_branch: Path) -> None:
     assert context.base_ref == "main"
     assert context.commit_count == 2
     assert len(context.commits) == 2
+
+
+def test_parse_range_spec_valid() -> None:
+    from numbat.git_adapter import parse_range_spec
+
+    assert parse_range_spec("main..feature") == ("main", "feature")
+    assert parse_range_spec("abc123..def456") == ("abc123", "def456")
+
+
+def test_parse_range_spec_rejects_invalid() -> None:
+    from numbat.git_adapter import GitError, parse_range_spec
+
+    with pytest.raises(GitError, match="expected REV format A..B"):
+        parse_range_spec("main-feature")
+    with pytest.raises(GitError, match="two refs"):
+        parse_range_spec("main..")
+    with pytest.raises(GitError, match="two refs"):
+        parse_range_spec("..feature")
+
+
+def test_get_diff_numstat_for_range(git_repo_with_feature_branch: Path) -> None:
+    from numbat.git_adapter import get_diff_numstat_for_range, get_git_context_for_range
+
+    result = get_diff_numstat_for_range("main", "feature", cwd=str(git_repo_with_feature_branch))
+    assert "feature.txt" in result.numstat
+
+    context = get_git_context_for_range(
+        "main",
+        "feature",
+        cwd=str(git_repo_with_feature_branch),
+    )
+    assert context.range_spec == "main..feature"
+    assert context.from_ref == "main"
+    assert context.to_ref == "feature"
+    assert context.commit_count == 2
+    assert len(context.commits) == 2

@@ -117,6 +117,100 @@ def test_run_review_staged_and_base_conflict(
     assert "cannot use --staged with --base" in captured.err
 
 
+def test_run_review_range_main_feature(
+    git_repo_with_feature_branch: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(range_spec="main..feature", cwd=str(git_repo_with_feature_branch))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+    assert "Range: main..feature" in captured.out
+    assert "From: main" in captured.out
+    assert "To: feature" in captured.out
+    assert "Commits in range: 2" in captured.out
+    assert "feature.txt" in captured.out
+    assert captured.err == ""
+
+
+def test_run_review_range_invalid_spec(
+    git_repo_clean: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(range_spec="not-a-range", cwd=str(git_repo_clean))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_ERROR
+    assert "expected REV format A..B" in captured.err
+
+
+def test_run_review_range_invalid_ref(
+    git_repo_clean: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(range_spec="main..not-a-real-ref", cwd=str(git_repo_clean))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_ERROR
+    assert "Needed a single revision" in captured.err
+
+
+def test_run_review_range_empty_diff(
+    git_repo_clean: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(range_spec="main..main", cwd=str(git_repo_clean))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_EMPTY_DIFF
+    assert captured.out == ""
+    assert "no changes in range main..main" in captured.err
+
+
+def test_run_review_staged_and_range_conflict(
+    git_repo_clean: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(staged=True, range_spec="main..main", cwd=str(git_repo_clean))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_ERROR
+    assert "cannot use --staged with --range" in captured.err
+
+
+def test_run_review_base_and_range_conflict(
+    git_repo_clean: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(base="main", range_spec="main..main", cwd=str(git_repo_clean))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_ERROR
+    assert "cannot use --base with --range" in captured.err
+
+
+def test_run_review_json_range(
+    git_repo_with_feature_branch: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        range_spec="main..feature",
+        json_output=True,
+        cwd=str(git_repo_with_feature_branch),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+
+    payload = json.loads(captured.out)
+    assert payload["mode"] == "range"
+    assert payload["git_context"]["range"] == "main..feature"
+    assert payload["git_context"]["from_ref"] == "main"
+    assert payload["git_context"]["to_ref"] == "feature"
+    assert payload["git_context"]["commit_count"] == 2
+    assert payload["git_context"]["commits"][0]["subject"] == "extend feature file"
+
+
 def test_run_review_json_unstaged(
     git_repo_with_changes: Path,
     capsys: pytest.CaptureFixture[str],

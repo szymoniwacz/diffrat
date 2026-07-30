@@ -119,3 +119,34 @@ def test_render_review_json_includes_git_context() -> None:
             {"hash": "def5678", "subject": "first commit"},
         ],
     }
+
+
+def test_render_review_json_includes_range_git_context() -> None:
+    summary = DiffSummary(
+        files=(FileChange(path="feature.txt", additions=2, deletions=0, binary=False),)
+    )
+    git_context = GitContext(
+        commit_count=2,
+        commits=(
+            GitCommitInfo(short_hash="abc1234", subject="second commit"),
+            GitCommitInfo(short_hash="def5678", subject="first commit"),
+        ),
+        range_spec="main..feature",
+        from_ref="main",
+        to_ref="feature",
+    )
+
+    output = render_review_json(summary, mode="range", git_context=git_context)
+    payload = json.loads(output)
+
+    assert payload["mode"] == "range"
+    assert payload["git_context"] == {
+        "range": "main..feature",
+        "from_ref": "main",
+        "to_ref": "feature",
+        "commit_count": 2,
+        "commits": [
+            {"hash": "abc1234", "subject": "second commit"},
+            {"hash": "def5678", "subject": "first commit"},
+        ],
+    }

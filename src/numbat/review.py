@@ -11,8 +11,11 @@ from numbat.git_adapter import (
     GitContext,
     GitError,
     get_diff_numstat,
+    get_diff_numstat_for_range,
     get_diff_numstat_vs_base,
     get_git_context,
+    get_git_context_for_range,
+    parse_range_spec,
 )
 from numbat.json_renderer import render_review_json
 from numbat.report import render_review_report
@@ -27,6 +30,7 @@ def run_review(
     *,
     staged: bool = False,
     base: str | None = None,
+    range_spec: str | None = None,
     json_output: bool = False,
     run_checks_flag: bool = False,
     cwd: str | None = None,
@@ -35,11 +39,21 @@ def run_review(
     if staged and base is not None:
         print("cannot use --staged with --base", file=sys.stderr)
         return EXIT_ERROR
+    if staged and range_spec is not None:
+        print("cannot use --staged with --range", file=sys.stderr)
+        return EXIT_ERROR
+    if base is not None and range_spec is not None:
+        print("cannot use --base with --range", file=sys.stderr)
+        return EXIT_ERROR
 
     git_context: GitContext | None = None
 
     try:
-        if base is not None:
+        if range_spec is not None:
+            from_ref, to_ref = parse_range_spec(range_spec)
+            diff_result = get_diff_numstat_for_range(from_ref, to_ref, cwd=cwd)
+            git_context = get_git_context_for_range(from_ref, to_ref, cwd=cwd)
+        elif base is not None:
             diff_result = get_diff_numstat_vs_base(base, cwd=cwd)
             git_context = get_git_context(base, cwd=cwd)
         else:
@@ -50,7 +64,9 @@ def run_review(
 
     summary = parse_numstat(diff_result.numstat, name_status=diff_result.name_status)
     if _is_empty_diff(summary):
-        if base is not None:
+        if range_spec is not None:
+            print(f"no changes in range {range_spec}", file=sys.stderr)
+        elif base is not None:
             print(f"no changes on branch since {base}", file=sys.stderr)
         else:
             scope = "staged" if staged else "unstaged"
@@ -63,7 +79,12 @@ def run_review(
     if run_checks_flag:
         check_results = run_checks(plan_checks(summary), cwd=cwd)
     if json_output:
-        mode = "branch" if base is not None else ("staged" if staged else "unstaged")
+        if range_spec is not None:
+            mode = "range"
+        elif base is not None:
+            mode = "branch"
+        else:
+            mode = "staged" if staged else "unstaged"
         output = render_review_json(
             summary,
             mode=mode,

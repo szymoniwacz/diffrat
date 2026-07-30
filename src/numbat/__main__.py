@@ -30,7 +30,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Read a local git diff and print a human-readable review report to stdout.\n"
             "By default analyzes unstaged changes (working tree vs index).\n"
             "Use --staged for staged changes (index vs HEAD).\n"
-            "Use --base to compare the current branch to a base ref (default: main)."
+            "Use --base to compare the current branch to a base ref (default: main).\n"
+            "Use --range to compare two git refs (e.g. main..feature)."
         ),
         epilog=(
             "Exit codes: 0 success, 1 git error, 2 empty diff, 3 check failure.\n"
@@ -53,6 +54,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Compare HEAD to merge-base with REF (default: main when flag is given "
             "without a value). Mutually exclusive with --staged."
+        ),
+    )
+    review_parser.add_argument(
+        "--range",
+        metavar="REV",
+        dest="range_spec",
+        help=(
+            "Compare two git refs using two-dot range semantics (e.g. main..feature). "
+            "Mutually exclusive with --staged and --base."
         ),
     )
     review_parser.add_argument(
@@ -87,6 +97,7 @@ def main(argv: list[str] | None = None) -> int:
         return run_review(
             staged=args.staged,
             base=args.base,
+            range_spec=args.range_spec,
             json_output=args.json,
             run_checks_flag=args.check,
         )

@@ -29,12 +29,15 @@ class GitCommitInfo:
 
 @dataclass(frozen=True)
 class GitContext:
-    """Git metadata for branch-vs-base review."""
+    """Git metadata for branch-vs-base or commit-range review."""
 
-    branch: str
-    base_ref: str
     commit_count: int
     commits: tuple[GitCommitInfo, ...]
+    branch: str | None = None
+    base_ref: str | None = None
+    range_spec: str | None = None
+    from_ref: str | None = None
+    to_ref: str | None = None
 
 
 def _run_git(args: list[str], *, cwd: str | None = None) -> subprocess.CompletedProcess[str]:
@@ -126,24 +129,41 @@ def get_diff_numstat_vs_base(base_ref: str, *, cwd: str | None = None) -> GitDif
     return _get_diff_outputs([f"{merge_base}..HEAD"], cwd=cwd)
 
 
-def get_git_context(base_ref: str, *, cwd: str | None = None) -> GitContext:
-    """Collect branch and commit metadata for branch-vs-base review."""
-    merge_base = get_merge_base(base_ref, cwd=cwd)
+def parse_range_spec(range_spec: str) -> tuple[str, str]:
+    """Parse a two-dot range ``A..B`` into ``(from_ref, to_ref)``."""
+    if ".." not in range_spec:
+        raise GitError("invalid range: expected REV format A..B")
+    from_ref, separator, to_ref = range_spec.partition("..")
+    if not separator or not from_ref or not to_ref:
+        raise GitError("invalid range: expected REV format A..B with two refs")
+    return from_ref, to_ref
 
-    branch_result = _run_git(["rev-parse", "--abbrev-ref", "HEAD"], cwd=cwd)
-    if branch_result.returncode != 0:
-        message = branch_result.stderr.strip() or "git rev-parse failed"
-        raise GitError(message)
-    branch = branch_result.stdout.strip() or "HEAD"
 
-    count_result = _run_git(["rev-list", "--count", f"{merge_base}..HEAD"], cwd=cwd)
+def get_diff_numstat_for_range(
+    from_ref: str,
+    to_ref: str,
+    *,
+    cwd: str | None = None,
+) -> GitDiffResult:
+    """Return numstat and unified diff for the two-dot range ``from_ref..to_ref``."""
+    verify_ref(from_ref, cwd=cwd)
+    verify_ref(to_ref, cwd=cwd)
+    return _get_diff_outputs([f"{from_ref}..{to_ref}"], cwd=cwd)
+
+
+def _collect_commits_in_range(
+    range_revision: str,
+    *,
+    cwd: str | None = None,
+) -> tuple[int, tuple[GitCommitInfo, ...]]:
+    count_result = _run_git(["rev-list", "--count", range_revision], cwd=cwd)
     if count_result.returncode != 0:
         message = count_result.stderr.strip() or "git rev-list failed"
         raise GitError(message)
     commit_count = int(count_result.stdout.strip() or "0")
 
     log_result = _run_git(
-        ["log", "--format=%h %s", "-n", "10", f"{merge_base}..HEAD"],
+        ["log", "--format=%h %s", "-n", "10", range_revision],
         cwd=cwd,
     )
     if log_result.returncode != 0:
@@ -157,9 +177,50 @@ def get_git_context(base_ref: str, *, cwd: str | None = None) -> GitContext:
         short_hash, _, subject = line.partition(" ")
         commits.append(GitCommitInfo(short_hash=short_hash, subject=subject))
 
+    return commit_count, tuple(commits)
+
+
+def get_git_context_for_range(
+    from_ref: str,
+    to_ref: str,
+    *,
+    cwd: str | None = None,
+) -> GitContext:
+    """Collect commit metadata for a two-dot range review."""
+    verify_ref(from_ref, cwd=cwd)
+    verify_ref(to_ref, cwd=cwd)
+    range_spec = f"{from_ref}..{to_ref}"
+    commit_count, commits = _collect_commits_in_range(
+        range_spec,
+        cwd=cwd,
+    )
     return GitContext(
+        commit_count=commit_count,
+        commits=commits,
+        range_spec=range_spec,
+        from_ref=from_ref,
+        to_ref=to_ref,
+    )
+
+
+def get_git_context(base_ref: str, *, cwd: str | None = None) -> GitContext:
+    """Collect branch and commit metadata for branch-vs-base review."""
+    merge_base = get_merge_base(base_ref, cwd=cwd)
+
+    branch_result = _run_git(["rev-parse", "--abbrev-ref", "HEAD"], cwd=cwd)
+    if branch_result.returncode != 0:
+        message = branch_result.stderr.strip() or "git rev-parse failed"
+        raise GitError(message)
+    branch = branch_result.stdout.strip() or "HEAD"
+
+    commit_count, commits = _collect_commits_in_range(
+        f"{merge_base}..HEAD",
+        cwd=cwd,
+    )
+
+    return GitContext(
+        commit_count=commit_count,
+        commits=commits,
         branch=branch,
         base_ref=base_ref,
-        commit_count=commit_count,
-        commits=tuple(commits),
     )
