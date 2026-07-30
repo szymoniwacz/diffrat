@@ -7,7 +7,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 
-from numbat.analysis import FocusRiskHint, categorize_path
+from numbat.analysis import FocusRiskHint, categorize_path, focus_risk_hint
 from numbat.diff_parser import DiffContent, FileDiffContent
 
 _VALIDATOR_PATH = "ci/validate-workflow-contracts.py"
@@ -112,7 +112,7 @@ def _validator_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
     typo_expected = _find_project_command_typo(added.text)
     if typo_expected is not None:
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="regex_typo",
                 message=(
                     f"Suspicious typo in {added.path} "
@@ -130,7 +130,7 @@ def _validator_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
         if missing and typo_expected is None:
             preview = ", ".join(f"'{token}'" for token in missing)
             hints.append(
-                FocusRiskHint(
+                focus_risk_hint(
                     code="suspicious_constant_change",
                     message=(
                         f"{_COMMENT_FILTER_CONSTANT} may be missing expected "
@@ -148,7 +148,7 @@ def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
 
     if _matches_possible_secret(added.text):
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="possible_secret",
                 message=f"Possible secret in {added.path}: {preview}",
             )
@@ -156,7 +156,7 @@ def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
 
     if _matches_any_pattern(added.text, _DEBUG_LEFTOVER_PATTERNS):
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="debug_leftover",
                 message=f"Debug leftover in {added.path}: {preview}",
             )
@@ -164,7 +164,7 @@ def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
 
     if _matches_any_pattern(added.text, _DANGEROUS_CALL_PATTERNS):
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="dangerous_call",
                 message=f"Dangerous call in {added.path}: {preview}",
             )
@@ -172,7 +172,7 @@ def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
 
     if _matches_broad_exception(added.text):
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="broad_exception",
                 message=f"Broad exception handler in {added.path}: {preview}",
             )
@@ -180,7 +180,7 @@ def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
 
     if _matches_hardcoded_url_or_ip(added.text):
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="hardcoded_url_or_ip",
                 message=f"Hardcoded URL or IP in {added.path}: {preview}",
             )
