@@ -155,6 +155,159 @@ def test_analyze_diff_no_rename_or_move_hint_for_modify_only() -> None:
     assert not any(hint.code == "rename_or_move" for hint in result.hints)
 
 
+def test_analyze_diff_source_without_tests_hint() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/numbat/review.py", additions=5, deletions=0, binary=False),
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    hints = [hint for hint in result.hints if hint.code == "source_without_tests"]
+    assert len(hints) == 1
+    assert "src/numbat/review.py" in hints[0].message
+
+
+def test_analyze_diff_no_source_without_tests_when_tests_in_diff() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/numbat/review.py", additions=5, deletions=0, binary=False),
+            FileChange(path="tests/test_review.py", additions=3, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "source_without_tests" for hint in result.hints)
+
+
+def test_analyze_diff_tests_only_hint() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="tests/test_cli.py", additions=10, deletions=2, binary=False),
+            FileChange(path="tests/test_review.py", additions=3, deletions=1, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    hints = [hint for hint in result.hints if hint.code == "tests_only"]
+    assert len(hints) == 1
+    assert "tests/test_cli.py" in hints[0].message
+
+
+def test_analyze_diff_no_tests_only_for_docs_only_diff() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="README.md", additions=3, deletions=1, binary=False),
+            FileChange(path="docs/guide.md", additions=5, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "tests_only" for hint in result.hints)
+
+
+def test_analyze_diff_no_tests_only_when_source_present() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/numbat/review.py", additions=2, deletions=0, binary=False),
+            FileChange(path="tests/test_review.py", additions=3, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "tests_only" for hint in result.hints)
+
+
+def test_analyze_diff_ci_without_tests_hint() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="ci/validate-workflow-contracts.py",
+                additions=2,
+                deletions=1,
+                binary=False,
+            ),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    hints = [hint for hint in result.hints if hint.code == "ci_without_tests"]
+    assert len(hints) == 1
+    assert "ci/validate-workflow-contracts.py" in hints[0].message
+
+
+def test_analyze_diff_no_ci_without_tests_when_tests_in_diff() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="ci/validate-workflow-contracts.py",
+                additions=2,
+                deletions=1,
+                binary=False,
+            ),
+            FileChange(path="tests/test_ci.py", additions=5, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "ci_without_tests" for hint in result.hints)
+
+
+def test_analyze_diff_workflow_without_ci_validator_hint() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path=".github/workflows/validate-workflow-contracts.yml",
+                additions=1,
+                deletions=0,
+                binary=False,
+            ),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    hints = [
+        hint for hint in result.hints if hint.code == "workflow_without_ci_validator"
+    ]
+    assert len(hints) == 1
+    assert ".github/workflows/validate-workflow-contracts.yml" in hints[0].message
+
+
+def test_analyze_diff_no_workflow_without_ci_validator_when_ci_changed() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path=".github/workflows/validate-workflow-contracts.yml",
+                additions=1,
+                deletions=0,
+                binary=False,
+            ),
+            FileChange(
+                path="ci/validate-workflow-contracts.py",
+                additions=2,
+                deletions=1,
+                binary=False,
+            ),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(
+        hint.code == "workflow_without_ci_validator" for hint in result.hints
+    )
+    assert any(hint.code == "ci_workflow_paths" for hint in result.hints)
+
+
 def test_analyze_diff_docs_touched_hint_for_docs_only() -> None:
     summary = DiffSummary(
         files=(
