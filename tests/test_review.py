@@ -40,7 +40,7 @@ def test_run_review_staged(
 
     captured = capsys.readouterr()
     assert exit_code == EXIT_SUCCESS
-    assert "staged.txt  [other]  +1 -0" in captured.out
+    assert "staged.txt  [other]  risk=" in captured.out
     assert "Focus / Risk" in captured.out
 
 
@@ -248,6 +248,7 @@ def test_run_review_json_staged(
             "additions": 1,
             "deletions": 0,
             "category": "other",
+            "risk_score": 50,
         }
     ]
     assert payload["focus_risk"] == []

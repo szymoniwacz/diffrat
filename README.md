@@ -124,6 +124,28 @@ output includes additive `category` fields on each file and a top-level
 `src/numbat/scoring.py`; unknown codes default to `info`. Hints are sorted by
 severity (risk first), then by code, in both text and JSON reports.
 
+### File risk scores and ordering
+
+Each changed file receives a deterministic non-negative integer `risk_score`
+computed in `src/numbat/scoring.py`. Files in the text **Files** list and JSON
+`files[]` array are sorted by descending `risk_score`; ties break by path name.
+The **Changes** section follows the same order.
+
+Text reports show `risk=<score>` on each file line (for example
+`src/a.py  [source]  risk=42  +4 -1`). Binary files use a fixed score of `5`.
+
+| Signal | Weight constant | Points |
+|---|---|---|
+| Line share of non-binary diff | `RISK_WEIGHT_LINE_SHARE_MAX` (50) | scaled by file lines ÷ total |
+| Security-sensitive path | `RISK_WEIGHT_SECURITY_SENSITIVE` | 40 |
+| `source` without tests in diff | `RISK_WEIGHT_SOURCE_WITHOUT_TESTS` | 25 |
+| `ci` category | `RISK_WEIGHT_CI_CATEGORY` | 20 |
+| `config` category | `RISK_WEIGHT_CONFIG_CATEGORY` | 10 |
+| Binary file | `RISK_WEIGHT_BINARY` | 5 (fixed) |
+
+JSON output includes additive `risk_score` on each file entry while keeping
+`schema_version` at `"1"`.
+
 ### Changes section (diff hunks)
 
 Text reports include a **Changes** section with unified-diff hunks for each
