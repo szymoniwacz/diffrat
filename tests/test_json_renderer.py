@@ -89,6 +89,8 @@ def test_render_review_json_includes_categories_and_focus_risk() -> None:
     assert "tests_touched" in codes
     assert "config_or_deps" in codes
     assert "security_sensitive_paths" in codes
+    assert all("severity" in item for item in payload["focus_risk"])
+    assert payload["focus_risk"][0]["severity"] == "risk"
     assert "git_context" not in payload
 
 
