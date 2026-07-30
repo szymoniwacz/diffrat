@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 from numbat.analysis import analyze_diff
 from numbat.checks import CheckResult, plan_checks, run_checks
+from numbat.config import load_config
 from numbat.diff_parser import DiffSummary, parse_numstat, parse_unified_diff
 from numbat.git_adapter import (
     GitContext,
@@ -108,6 +110,8 @@ def run_review(
         return EXIT_EMPTY_DIFF
 
     diff_content = parse_unified_diff(diff_result.patch)
+    config_cwd = cwd if cwd is not None else str(Path.cwd())
+    numbat_config = load_config(config_cwd)
     analysis = analyze_diff(
         summary,
         diff_content=diff_content,
@@ -116,7 +120,10 @@ def run_review(
     )
     check_results: list[CheckResult] | None = None
     if run_checks_flag:
-        check_results = run_checks(plan_checks(summary), cwd=cwd)
+        check_results = run_checks(
+            plan_checks(summary, config=numbat_config),
+            cwd=cwd,
+        )
 
     matched_codes: list[str] | None = None
     if fail_on_codes is not None:

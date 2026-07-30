@@ -15,11 +15,72 @@ from numbat.checks import (
     bandit_targets_for_paths,
     is_pip_audit_dependency_path,
     mypy_targets_for_paths,
+    parse_check_argv,
     plan_checks,
     pytest_targets_for_paths,
     run_checks,
 )
+from numbat.config import NumbatConfig
 from numbat.diff_parser import DiffSummary, FileChange
+
+
+def test_parse_check_argv_maps_python_to_sys_executable() -> None:
+    argv = parse_check_argv("python ci/validate-workflow-contracts.py --mode project")
+    assert argv == (
+        sys.executable,
+        "ci/validate-workflow-contracts.py",
+        "--mode",
+        "project",
+    )
+
+
+def test_parse_check_argv_preserves_non_python_commands() -> None:
+    assert parse_check_argv("pytest tests/test_review.py") == ("pytest", "tests/test_review.py")
+
+
+def test_plan_checks_ci_validator_uses_config_override() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="ci/validate-workflow-contracts.py",
+                additions=1,
+                deletions=0,
+                binary=False,
+            ),
+        )
+    )
+    config = NumbatConfig(
+        checks={"ci_validator": "python ci/validate-workflow-contracts.py --mode strict"},
+        content_rules={},
+    )
+
+    specs = plan_checks(summary, config=config)
+
+    assert specs[0].display_command == (
+        "python ci/validate-workflow-contracts.py --mode strict"
+    )
+    assert specs[0].argv == (
+        sys.executable,
+        "ci/validate-workflow-contracts.py",
+        "--mode",
+        "strict",
+    )
+
+
+def test_plan_checks_ignores_non_ci_validator_config_overrides() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+        )
+    )
+    config = NumbatConfig(
+        checks={"pytest": "custom-pytest"},
+        content_rules={},
+    )
+
+    specs = plan_checks(summary, config=config)
+
+    assert specs[0].display_command == "pytest tests/test_review.py"
 
 
 def test_is_python_source_or_test_path() -> None:

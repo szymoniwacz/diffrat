@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 import shutil
 import subprocess
 import sys
@@ -15,7 +16,10 @@ from numbat.analysis import (
     is_pyproject_path,
     is_python_source_or_test_path,
 )
+from numbat.config import NumbatConfig
 from numbat.diff_parser import DiffSummary
+
+# v1: only ci_validator may be overridden via [tool.numbat.checks].
 
 _CI_VALIDATOR_COMMAND = (
     "python ci/validate-workflow-contracts.py --mode project"
@@ -117,7 +121,39 @@ def _map_path_to_pytest_target(path: str) -> str | None:
     return None
 
 
-def plan_checks(summary: DiffSummary) -> list[CheckSpec]:
+def parse_check_argv(display_command: str) -> tuple[str, ...]:
+    """Parse a shell-style display command into argv without invoking a shell."""
+    tokens = shlex.split(display_command)
+    if not tokens:
+        return ()
+    if tokens[0] in {"python", "python3"}:
+        tokens[0] = sys.executable
+    return tuple(tokens)
+
+
+def _ci_validator_spec(config: NumbatConfig | None) -> CheckSpec:
+    display_command = _CI_VALIDATOR_COMMAND
+    argv: tuple[str, ...] = (
+        sys.executable,
+        "ci/validate-workflow-contracts.py",
+        "--mode",
+        "project",
+    )
+    if config is not None and "ci_validator" in config.checks:
+        display_command = config.checks["ci_validator"]
+        argv = parse_check_argv(display_command)
+    return CheckSpec(
+        code="ci_validator",
+        argv=argv,
+        display_command=display_command,
+    )
+
+
+def plan_checks(
+    summary: DiffSummary,
+    *,
+    config: NumbatConfig | None = None,
+) -> list[CheckSpec]:
     """Select applicable checks from changed paths."""
     paths = [file_change.path for file_change in summary.files]
     specs: list[CheckSpec] = []
@@ -126,18 +162,7 @@ def plan_checks(summary: DiffSummary) -> list[CheckSpec]:
     if any(is_ci_workflow_validator_path(path) for path in paths):
         if "ci_validator" not in seen:
             seen.add("ci_validator")
-            specs.append(
-                CheckSpec(
-                    code="ci_validator",
-                    argv=(
-                        sys.executable,
-                        "ci/validate-workflow-contracts.py",
-                        "--mode",
-                        "project",
-                    ),
-                    display_command=_CI_VALIDATOR_COMMAND,
-                )
-            )
+            specs.append(_ci_validator_spec(config))
 
     pytest_targets = pytest_targets_for_paths(paths)
     if pytest_targets:
