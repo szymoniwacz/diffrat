@@ -7,6 +7,9 @@ from pathlib import Path, PurePosixPath
 
 from numbat.diff_parser import DiffContent, DiffSummary, FileChange
 from numbat.git_adapter import GitContext
+from numbat.scoring import HintSeverity, severity_for_code
+
+_SEVERITY_ORDER: dict[HintSeverity, int] = {"risk": 0, "warn": 1, "info": 2}
 
 FileCategory = str  # source | tests | config | docs | ci | other
 
@@ -183,6 +186,26 @@ class FocusRiskHint:
 
     code: str
     message: str
+    severity: HintSeverity
+
+
+def focus_risk_hint(
+    code: str,
+    message: str,
+    *,
+    severity: HintSeverity | None = None,
+) -> FocusRiskHint:
+    """Create a hint with severity resolved from the registry when omitted."""
+    return FocusRiskHint(
+        code=code,
+        message=message,
+        severity=severity if severity is not None else severity_for_code(code),
+    )
+
+
+def sort_hints(hints: list[FocusRiskHint]) -> list[FocusRiskHint]:
+    """Sort hints by severity (risk → warn → info), then by code."""
+    return sorted(hints, key=lambda hint: (_SEVERITY_ORDER[hint.severity], hint.code))
 
 
 @dataclass(frozen=True)
@@ -244,7 +267,7 @@ def _build_hints(
         or summary.file_count >= LARGE_DIFF_FILE_THRESHOLD
     ):
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="large_diff",
                 message=(
                     f"Large diff: {summary.file_count} files, "
@@ -272,7 +295,7 @@ def _build_hints(
         ):
             percent = dominant_lines * 100 // summary.total_lines_changed
             hints.append(
-                FocusRiskHint(
+                focus_risk_hint(
                     code="large_single_file",
                     message=(
                         f"Single file dominates diff: {dominant_file.path} "
@@ -286,7 +309,7 @@ def _build_hints(
         and summary.total_deletions >= summary.total_additions
     ):
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="deletions_heavy",
                 message=(
                     f"Deletion-heavy diff: {summary.total_deletions} deletions vs "
@@ -297,7 +320,7 @@ def _build_hints(
 
     if any(category == "tests" for category in categories):
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="tests_touched",
                 message="Tests touched — confirm coverage matches behavior changes",
             )
@@ -306,7 +329,7 @@ def _build_hints(
     if any(category == "config" for category in categories):
         if any(is_pyproject_path(file_change.path) for file_change in summary.files):
             hints.append(
-                FocusRiskHint(
+                focus_risk_hint(
                     code="config_or_deps",
                     message=(
                         "pyproject.toml changed — run: "
@@ -316,7 +339,7 @@ def _build_hints(
             )
         else:
             hints.append(
-                FocusRiskHint(
+                focus_risk_hint(
                     code="config_or_deps",
                     message=(
                         "Config or dependency files changed — "
@@ -327,7 +350,7 @@ def _build_hints(
 
     if categories and all(category == "docs" for category in categories):
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="docs_touched",
                 message="Documentation changed — confirm product/code docs stay aligned",
             )
@@ -343,7 +366,7 @@ def _build_hints(
         if len(security_paths) > 3:
             preview = f"{preview}, +{len(security_paths) - 3} more"
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="security_sensitive_paths",
                 message=f"Security-sensitive paths changed: {preview}",
             )
@@ -359,7 +382,7 @@ def _build_hints(
         if len(ci_workflow_paths) > 3:
             preview = f"{preview}, +{len(ci_workflow_paths) - 3} more"
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="ci_workflow_paths",
                 message=(
                     f"CI/workflow paths changed ({preview}) — run: "
@@ -378,7 +401,7 @@ def _build_hints(
         if len(rename_paths) > 3:
             preview = f"{preview}, +{len(rename_paths) - 3} more"
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="rename_or_move",
                 message=f"Rename or copy detected: {preview}",
             )
@@ -396,7 +419,7 @@ def _build_hints(
         if len(source_paths) > 3:
             preview = f"{preview}, +{len(source_paths) - 3} more"
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="source_without_tests",
                 message=(
                     f"Source changed without tests in diff ({preview}) — "
@@ -416,7 +439,7 @@ def _build_hints(
         if len(test_paths) > 3:
             preview = f"{preview}, +{len(test_paths) - 3} more"
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="tests_only",
                 message=f"Tests-only diff ({preview}) — verify behavior change is covered",
             )
@@ -432,7 +455,7 @@ def _build_hints(
         if len(ci_paths) > 3:
             preview = f"{preview}, +{len(ci_paths) - 3} more"
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="ci_without_tests",
                 message=(
                     f"CI files changed without tests in diff ({preview}) — "
@@ -455,7 +478,7 @@ def _build_hints(
         if len(workflow_paths) > 3:
             preview = f"{preview}, +{len(workflow_paths) - 3} more"
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="workflow_without_ci_validator",
                 message=(
                     f"Workflow changed without CI validator paths ({preview}) — "
@@ -470,7 +493,7 @@ def _build_hints(
         if len(generated_paths) > 3:
             preview = f"{preview}, +{len(generated_paths) - 3} more"
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="generated_file_touched",
                 message=(
                     f"Generated artifact changed without source in diff ({preview}) — "
@@ -497,7 +520,7 @@ def _git_context_hints(
     if git_context is not None:
         if git_context.commit_count > MANY_COMMITS_THRESHOLD:
             hints.append(
-                FocusRiskHint(
+                focus_risk_hint(
                     code="many_commits",
                     message=(
                         f"Many commits in reviewed range: {git_context.commit_count} "
@@ -517,7 +540,7 @@ def _git_context_hints(
             if len(wip_subjects) > 3:
                 preview = f"{preview}, +{len(wip_subjects) - 3} more"
             hints.append(
-                FocusRiskHint(
+                focus_risk_hint(
                     code="wip_commits",
                     message=(
                         f"WIP/fixup/squash commit subjects detected: {preview} — "
@@ -571,7 +594,7 @@ def _mixed_concerns_hint(
     preview = ", ".join(all_segments[:5])
     if len(all_segments) > 5:
         preview = f"{preview}, +{len(all_segments) - 5} more"
-    return FocusRiskHint(
+    return focus_risk_hint(
         code="mixed_concerns",
         message=(
             f"Changes span multiple top-level areas ({preview}) — "
@@ -647,7 +670,7 @@ def _missing_test_file_hints(
             test_rel = f"tests/test_{posix.stem}.py"
             if not (root / test_rel).exists():
                 hints.append(
-                    FocusRiskHint(
+                    focus_risk_hint(
                         code="missing_test_file",
                         message=(
                             f"Changed {file_change.path} has no {test_rel} on disk"
@@ -682,7 +705,7 @@ def _lockfile_consistency_hints(
         if len(changed_lockfiles) > 3:
             preview = f"{preview}, +{len(changed_lockfiles) - 3} more"
         hints.append(
-            FocusRiskHint(
+            focus_risk_hint(
                 code="lockfile_without_manifest",
                 message=(
                     f"Lockfile changed without manifest ({preview}) — "
@@ -706,7 +729,7 @@ def _lockfile_consistency_hints(
                     f"{lockfile_preview}, +{len(lockfiles_on_disk) - 3} more"
                 )
             hints.append(
-                FocusRiskHint(
+                focus_risk_hint(
                     code="manifest_without_lockfile",
                     message=(
                         f"Manifest changed without lockfile ({preview}) — "

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from numbat.analysis import AnalysisResult, analyze_diff
+from numbat.analysis import AnalysisResult, analyze_diff, sort_hints
 from numbat.checks import CheckResult
 from numbat.diff_parser import (
     MAX_CHANGE_FILES,
@@ -51,7 +51,8 @@ def render_review_json(
             for file_change, category in zip(summary.files, result.categories, strict=True)
         ],
         "focus_risk": [
-            {"code": hint.code, "message": hint.message} for hint in result.hints
+            {"code": hint.code, "message": hint.message, "severity": hint.severity}
+            for hint in sort_hints(list(result.hints))
         ],
         "changes": _serialize_changes(diff_content),
     }

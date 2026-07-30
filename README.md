@@ -119,7 +119,10 @@ plus validator-specific typo hints for known CI patterns such as
 `PROJECT_EXECUTOR_COMMENT_FILTER`. No network or API key is
 required. JSON
 output includes additive `category` fields on each file and a top-level
-`focus_risk` array while keeping `schema_version` at `"1"`.
+`focus_risk` array while keeping `schema_version` at `"1"`. Each hint carries a
+`severity` (`risk`, `warn`, or `info`) from the central registry in
+`src/numbat/scoring.py`; unknown codes default to `info`. Hints are sorted by
+severity (risk first), then by code, in both text and JSON reports.
 
 ### Changes section (diff hunks)
 

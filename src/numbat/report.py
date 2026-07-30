@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from numbat.analysis import AnalysisResult, analyze_diff
+from numbat.analysis import AnalysisResult, analyze_diff, sort_hints
 from numbat.checks import CheckResult
 from numbat.diff_parser import DiffContent, DiffSummary
 from numbat.git_adapter import GitContext
@@ -63,11 +63,12 @@ def render_review_report(
     lines.extend(_render_changes(diff_content))
 
     lines.extend(["", "Focus / Risk", "------------"])
-    if not result.hints:
+    sorted_hints = sort_hints(list(result.hints))
+    if not sorted_hints:
         lines.append("(none)")
     else:
-        for hint in result.hints:
-            lines.append(f"- [{hint.code}] {hint.message}")
+        for hint in sorted_hints:
+            lines.append(f"- [{hint.severity}] [{hint.code}] {hint.message}")
 
     if check_results is not None:
         lines.extend(["", "Local checks", "------------"])
