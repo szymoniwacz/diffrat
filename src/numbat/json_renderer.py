@@ -26,6 +26,8 @@ def render_review_json(
     analysis: AnalysisResult | None = None,
     diff_content: DiffContent | None = None,
     check_results: list[CheckResult] | None = None,
+    fail_on_requested: list[str] | None = None,
+    fail_on_matched: list[str] | None = None,
 ) -> str:
     """Render a review report as a JSON document for stdout."""
     result = (
@@ -75,6 +77,12 @@ def render_review_json(
             }
             for check in check_results
         ]
+
+    if fail_on_requested is not None:
+        payload["fail_on"] = {
+            "requested": list(fail_on_requested),
+            "matched": list(fail_on_matched or []),
+        }
 
     if git_context is not None:
         if git_context.range_spec is not None:

@@ -34,7 +34,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Use --range to compare two git refs (e.g. main..feature)."
         ),
         epilog=(
-            "Exit codes: 0 success, 1 git error, 2 empty diff, 3 check failure.\n"
+            "Exit codes: 0 success, 1 git/usage error, 2 empty diff, "
+            "3 check failure, 4 --fail-on match.\n"
             f"Changes sections show up to {MAX_CHANGE_FILES} files and "
             f"{MAX_LINES_PER_FILE} diff lines per file."
         ),
@@ -81,6 +82,15 @@ def build_parser() -> argparse.ArgumentParser:
             "results in the report (exit code 3 when a check fails)"
         ),
     )
+    review_parser.add_argument(
+        "--fail-on",
+        metavar="CODES",
+        dest="fail_on",
+        help=(
+            "Comma-separated hint codes (no spaces); exit code 4 when any "
+            "requested code appears in Focus/Risk hints"
+        ),
+    )
 
     return parser
 
@@ -100,6 +110,7 @@ def main(argv: list[str] | None = None) -> int:
             range_spec=args.range_spec,
             json_output=args.json,
             run_checks_flag=args.check,
+            fail_on=args.fail_on,
         )
 
     parser.print_help()

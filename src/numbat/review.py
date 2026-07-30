@@ -24,6 +24,32 @@ EXIT_SUCCESS = 0
 EXIT_ERROR = 1
 EXIT_EMPTY_DIFF = 2
 EXIT_CHECK_FAILED = 3
+EXIT_FAIL_ON_MATCH = 4
+
+
+def parse_fail_on_codes(raw: str) -> tuple[list[str] | None, str | None]:
+    """Parse comma-separated hint codes for --fail-on.
+
+    Returns (codes, error_message). On error, codes is None.
+    """
+    if not raw:
+        return None, "invalid --fail-on: expected comma-separated hint codes"
+
+    codes: list[str] = []
+    for token in raw.split(","):
+        if not token or token != token.strip() or any(char.isspace() for char in token):
+            return None, f"invalid --fail-on token: {token!r}"
+        codes.append(token)
+
+    return codes, None
+
+
+def matched_fail_on_codes(
+    requested: list[str],
+    hint_codes: set[str],
+) -> list[str]:
+    """Return requested codes that appear in the report hints, in request order."""
+    return [code for code in requested if code in hint_codes]
 
 
 def run_review(
@@ -33,6 +59,7 @@ def run_review(
     range_spec: str | None = None,
     json_output: bool = False,
     run_checks_flag: bool = False,
+    fail_on: str | None = None,
     cwd: str | None = None,
 ) -> int:
     """Analyze a git diff and print a review report to stdout."""
@@ -45,6 +72,13 @@ def run_review(
     if base is not None and range_spec is not None:
         print("cannot use --base with --range", file=sys.stderr)
         return EXIT_ERROR
+
+    fail_on_codes: list[str] | None = None
+    if fail_on is not None:
+        fail_on_codes, fail_on_error = parse_fail_on_codes(fail_on)
+        if fail_on_error is not None:
+            print(fail_on_error, file=sys.stderr)
+            return EXIT_ERROR
 
     git_context: GitContext | None = None
 
@@ -83,6 +117,14 @@ def run_review(
     check_results: list[CheckResult] | None = None
     if run_checks_flag:
         check_results = run_checks(plan_checks(summary), cwd=cwd)
+
+    matched_codes: list[str] | None = None
+    if fail_on_codes is not None:
+        matched_codes = matched_fail_on_codes(
+            fail_on_codes,
+            {hint.code for hint in analysis.hints},
+        )
+
     if json_output:
         if range_spec is not None:
             mode = "range"
@@ -97,6 +139,8 @@ def run_review(
             analysis=analysis,
             diff_content=diff_content,
             check_results=check_results,
+            fail_on_requested=fail_on_codes,
+            fail_on_matched=matched_codes,
         )
     else:
         output = render_review_report(
@@ -112,6 +156,8 @@ def run_review(
         _write_check_failures_to_stderr(check_results)
         if any(not result.passed for result in check_results):
             return EXIT_CHECK_FAILED
+    if matched_codes:
+        return EXIT_FAIL_ON_MATCH
     return EXIT_SUCCESS
 
 
