@@ -13,6 +13,7 @@ from numbat.diff_parser import (
     DiffSummary,
 )
 from numbat.git_adapter import GitContext
+from numbat.scoring import sort_file_entries
 
 JSON_SCHEMA_VERSION = "1"
 
@@ -33,6 +34,11 @@ def render_review_json(
         else analyze_diff(summary, diff_content=diff_content)
     )
 
+    sorted_entries = sort_file_entries(
+        summary.files, result.categories, result.risk_scores
+    )
+    sorted_paths = [entry[0].path for entry in sorted_entries]
+
     payload: dict[str, object] = {
         "schema_version": JSON_SCHEMA_VERSION,
         "mode": mode,
@@ -47,14 +53,15 @@ def render_review_json(
                 "additions": file_change.additions,
                 "deletions": file_change.deletions,
                 "category": category,
+                "risk_score": risk_score,
             }
-            for file_change, category in zip(summary.files, result.categories, strict=True)
+            for file_change, category, risk_score in sorted_entries
         ],
         "focus_risk": [
             {"code": hint.code, "message": hint.message, "severity": hint.severity}
             for hint in sort_hints(list(result.hints))
         ],
-        "changes": _serialize_changes(diff_content),
+        "changes": _serialize_changes(diff_content, sort_paths=sorted_paths),
     }
 
     if check_results is not None:
@@ -95,7 +102,11 @@ def render_review_json(
     return json.dumps(payload, indent=2) + "\n"
 
 
-def _serialize_changes(diff_content: DiffContent | None) -> dict[str, object]:
+def _serialize_changes(
+    diff_content: DiffContent | None,
+    *,
+    sort_paths: list[str] | None = None,
+) -> dict[str, object]:
     limits = {
         "max_files": MAX_CHANGE_FILES,
         "max_lines_per_file": MAX_LINES_PER_FILE,
@@ -103,8 +114,21 @@ def _serialize_changes(diff_content: DiffContent | None) -> dict[str, object]:
     if diff_content is None:
         return {"limits": limits, "truncated_files": False, "files": []}
 
+    file_diffs_by_path = {file_diff.path: file_diff for file_diff in diff_content.files}
+    if sort_paths is not None:
+        ordered_paths = [path for path in sort_paths if path in file_diffs_by_path]
+        remaining = [
+            file_diff.path
+            for file_diff in diff_content.files
+            if file_diff.path not in set(ordered_paths)
+        ]
+        path_order = ordered_paths + remaining
+    else:
+        path_order = [file_diff.path for file_diff in diff_content.files]
+
     files_payload: list[dict[str, object]] = []
-    for file_diff in diff_content.files:
+    for path in path_order:
+        file_diff = file_diffs_by_path[path]
         entry: dict[str, object] = {
             "path": file_diff.path,
             "binary": file_diff.binary,

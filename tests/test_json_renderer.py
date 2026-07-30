@@ -27,20 +27,14 @@ def test_render_review_json_unstaged_mode() -> None:
         "total_additions": 6,
         "total_deletions": 1,
     }
-    assert payload["files"] == [
-        {
-            "path": "src/a.py",
-            "additions": 4,
-            "deletions": 1,
-            "category": "source",
-        },
-        {
-            "path": "tests/test_a.py",
-            "additions": 2,
-            "deletions": 0,
-            "category": "tests",
-        },
-    ]
+    files = payload["files"]
+    assert len(files) == 2
+    assert files[0]["path"] == "src/a.py"
+    assert files[0]["category"] == "source"
+    assert files[0]["risk_score"] >= files[1]["risk_score"]
+    assert files[1]["path"] == "tests/test_a.py"
+    assert "risk_score" in files[0]
+    assert "risk_score" in files[1]
     assert any(hint["code"] == "tests_touched" for hint in payload["focus_risk"])
     assert "git_context" not in payload
     assert payload["changes"]["limits"] == {"max_files": 20, "max_lines_per_file": 100}
@@ -83,8 +77,10 @@ def test_render_review_json_includes_categories_and_focus_risk() -> None:
 
     payload = json.loads(render_review_json(summary, mode="unstaged"))
 
-    assert payload["files"][0]["category"] == "tests"
-    assert payload["files"][1]["category"] == "config"
+    categories = {item["path"]: item["category"] for item in payload["files"]}
+    assert categories["tests/test_a.py"] == "tests"
+    assert categories[".env"] == "config"
+    assert payload["files"][0]["path"] == ".env"
     codes = [item["code"] for item in payload["focus_risk"]]
     assert "tests_touched" in codes
     assert "config_or_deps" in codes

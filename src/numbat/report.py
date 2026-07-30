@@ -6,6 +6,7 @@ from numbat.analysis import AnalysisResult, analyze_diff, sort_hints
 from numbat.checks import CheckResult
 from numbat.diff_parser import DiffContent, DiffSummary
 from numbat.git_adapter import GitContext
+from numbat.scoring import sort_file_entries
 
 
 def render_review_report(
@@ -50,17 +51,29 @@ def render_review_report(
     if not summary.files:
         lines.append("(no files changed)")
     else:
-        for file_change, category in zip(summary.files, result.categories, strict=True):
+        sorted_entries = sort_file_entries(
+            summary.files, result.categories, result.risk_scores
+        )
+        for file_change, category, risk_score in sorted_entries:
             if file_change.binary:
-                lines.append(f"{file_change.path}  [{category}]  (binary)")
+                lines.append(
+                    f"{file_change.path}  [{category}]  risk={risk_score}  (binary)"
+                )
             else:
                 lines.append(
-                    f"{file_change.path}  [{category}]  "
+                    f"{file_change.path}  [{category}]  risk={risk_score}  "
                     f"+{file_change.additions} -{file_change.deletions}"
                 )
 
     lines.extend(["", "Changes", "-------"])
-    lines.extend(_render_changes(diff_content))
+    sorted_paths = (
+        [entry[0].path for entry in sort_file_entries(
+            summary.files, result.categories, result.risk_scores
+        )]
+        if summary.files
+        else []
+    )
+    lines.extend(_render_changes(diff_content, sort_paths=sorted_paths))
 
     lines.extend(["", "Focus / Risk", "------------"])
     sorted_hints = sort_hints(list(result.hints))
@@ -126,12 +139,29 @@ def _render_git_context(git_context: GitContext) -> list[str]:
     return lines
 
 
-def _render_changes(diff_content: DiffContent | None) -> list[str]:
+def _render_changes(
+    diff_content: DiffContent | None,
+    *,
+    sort_paths: list[str] | None = None,
+) -> list[str]:
     if diff_content is None or not diff_content.files:
         return ["(no change content)"]
 
+    file_diffs_by_path = {file_diff.path: file_diff for file_diff in diff_content.files}
+    if sort_paths is not None:
+        ordered_paths = [path for path in sort_paths if path in file_diffs_by_path]
+        remaining = [
+            file_diff.path
+            for file_diff in diff_content.files
+            if file_diff.path not in set(ordered_paths)
+        ]
+        path_order = ordered_paths + remaining
+    else:
+        path_order = [file_diff.path for file_diff in diff_content.files]
+
     lines: list[str] = []
-    for file_diff in diff_content.files:
+    for path in path_order:
+        file_diff = file_diffs_by_path[path]
         lines.append(file_diff.path)
         if file_diff.binary:
             lines.append("(binary)")

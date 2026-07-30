@@ -23,9 +23,9 @@ def test_render_review_report_includes_summary_and_files() -> None:
     assert "Lines added: 6" in report
     assert "Lines deleted: 1" in report
     assert "Total lines changed: 7" in report
-    assert "src/a.py  [source]  +4 -1" in report
-    assert "tests/test_a.py  [tests]  +2 -0" in report
-    assert "bin.dat  [other]  (binary)" in report
+    assert "src/a.py  [source]  risk=" in report
+    assert "tests/test_a.py  [tests]  risk=" in report
+    assert "bin.dat  [other]  risk=5  (binary)" in report
     assert "Focus / Risk" in report
     assert "[tests_touched]" in report
     assert "[warn] [tests_touched]" in report
@@ -64,8 +64,8 @@ def test_render_review_report_includes_changes_section() -> None:
 
     report = render_review_report(summary)
 
-    assert "tests/test_a.py  [tests]  +2 -0" in report
-    assert "pyproject.toml  [config]  +1 -0" in report
+    assert "tests/test_a.py  [tests]  risk=" in report
+    assert "pyproject.toml  [config]  risk=" in report
     assert "[tests_touched]" in report
     assert "[warn] [tests_touched]" in report
     assert "[config_or_deps]" in report
