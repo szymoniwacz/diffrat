@@ -33,7 +33,7 @@ class NumbatConfig:
     """Parsed per-repository Numbat configuration."""
 
     checks: dict[str, str]
-    content_rules: dict[str, ContentRule]
+    content_rules: tuple[ContentRule, ...]
 
 
 def load_config(cwd: Path | str) -> NumbatConfig:
@@ -119,22 +119,22 @@ def _parse_checks(raw: object) -> dict[str, str]:
     return checks
 
 
-def _parse_content_rules(raw: object) -> dict[str, ContentRule]:
+def _parse_content_rules(raw: object) -> tuple[ContentRule, ...]:
     if not isinstance(raw, dict):
-        return {}
-    rules: dict[str, ContentRule] = {}
+        return ()
+    rules: list[ContentRule] = []
     for code, value in raw.items():
         if not isinstance(code, str):
             continue
         if isinstance(value, str):
             rule = _content_rule_from_shorthand(code, value)
             if rule is not None:
-                rules[code] = rule
+                rules.append(rule)
             continue
         if isinstance(value, dict):
             rule = _content_rule_from_mapping(code, value)
             if rule is not None:
-                rules[code] = rule
+                rules.append(rule)
             continue
         if isinstance(value, list):
             for entry in value:
@@ -142,8 +142,8 @@ def _parse_content_rules(raw: object) -> dict[str, ContentRule]:
                     continue
                 rule = _content_rule_from_mapping(code, entry)
                 if rule is not None:
-                    rules[code] = rule
-    return rules
+                    rules.append(rule)
+    return tuple(rules)
 
 
 def _content_rule_from_shorthand(code: str, value: str) -> ContentRule | None:

@@ -9,6 +9,17 @@ import pytest
 from numbat.config import ContentRule, NumbatConfig, load_config
 
 
+def _rule_codes(config: NumbatConfig) -> set[str]:
+    return {rule.code for rule in config.content_rules}
+
+
+def _rule_by_code(config: NumbatConfig, code: str) -> ContentRule:
+    for rule in config.content_rules:
+        if rule.code == code:
+            return rule
+    raise KeyError(code)
+
+
 def _write_pyproject(repo: Path, body: str) -> None:
     (repo / "pyproject.toml").write_text(body, encoding="utf-8")
 
@@ -20,7 +31,7 @@ def _write_numbat_toml(repo: Path, body: str) -> None:
 def test_load_config_empty_when_no_config(git_repo_clean: Path) -> None:
     config = load_config(git_repo_clean)
 
-    assert config == NumbatConfig(checks={}, content_rules={})
+    assert config == NumbatConfig(checks={}, content_rules=())
 
 
 def test_load_config_parses_pyproject_checks_and_shorthand_rules(git_repo_clean: Path) -> None:
@@ -38,8 +49,8 @@ regex_typo = "continue-projec(?!t) → continue-project"
     config = load_config(git_repo_clean)
 
     assert config.checks == {"ci_validator": "python ci/validate.py --mode project"}
-    assert "regex_typo" in config.content_rules
-    rule = config.content_rules["regex_typo"]
+    assert "regex_typo" in _rule_codes(config)
+    rule = _rule_by_code(config, "regex_typo")
     assert isinstance(rule, ContentRule)
     assert rule.expected == "continue-project"
     assert rule.pattern.search("continue-projec")
@@ -57,7 +68,7 @@ expected = "execute-project"
     )
 
     config = load_config(git_repo_clean)
-    rule = config.content_rules["scoped_rule"]
+    rule = _rule_by_code(config, "scoped_rule")
 
     assert rule.paths == ("ci/", "scripts/")
     assert rule.expected == "execute-project"
@@ -76,10 +87,36 @@ expected = "bar"
     )
 
     config = load_config(git_repo_clean)
-    rule = config.content_rules["array_rule"]
+    rule = _rule_by_code(config, "array_rule")
 
     assert rule.paths == ("docs/",)
     assert rule.expected == "bar"
+
+
+def test_load_config_parses_multiple_array_rules_with_same_code(git_repo_clean: Path) -> None:
+    _write_pyproject(
+        git_repo_clean,
+        """\
+[[tool.numbat.content_rules.regex_typo]]
+paths = ["ci/"]
+pattern = "continue-projec(?!t)"
+expected = "continue-project"
+
+[[tool.numbat.content_rules.regex_typo]]
+paths = ["ci/"]
+pattern = "execute-projec(?!t)"
+expected = "execute-project"
+""",
+    )
+
+    config = load_config(git_repo_clean)
+    regex_rules = [rule for rule in config.content_rules if rule.code == "regex_typo"]
+
+    assert len(regex_rules) == 2
+    assert {rule.expected for rule in regex_rules} == {
+        "continue-project",
+        "execute-project",
+    }
 
 
 def test_load_config_numbat_toml_overrides_pyproject(git_repo_clean: Path) -> None:
@@ -112,9 +149,9 @@ only_numbat = "x → y"
         "ci_validator": "python new.py",
         "pytest": "pytest old",
     }
-    assert set(config.content_rules) == {"shared", "only_numbat"}
-    assert config.content_rules["shared"].expected == "exp"
-    assert config.content_rules["only_numbat"].expected == "y"
+    assert _rule_codes(config) == {"shared", "only_numbat"}
+    assert _rule_by_code(config, "shared").expected == "exp"
+    assert _rule_by_code(config, "only_numbat").expected == "y"
 
 
 def test_load_config_skips_invalid_regex_with_warning(
@@ -133,8 +170,8 @@ good = "foo → bar"
     config = load_config(git_repo_clean)
     captured = capsys.readouterr()
 
-    assert "bad" not in config.content_rules
-    assert "good" in config.content_rules
+    assert "bad" not in _rule_codes(config)
+    assert "good" in _rule_codes(config)
     assert "invalid regex" in captured.err
 
 
@@ -153,7 +190,7 @@ broken = "missing arrow separator"
     config = load_config(git_repo_clean)
     captured = capsys.readouterr()
 
-    assert config.content_rules == {}
+    assert config.content_rules == ()
     assert "shorthand must use" in captured.err
 
 
