@@ -110,6 +110,9 @@ def render_review_json(
             "matched": list(fail_on_matched or []),
         }
 
+    if result.llm_findings is not None:
+        payload["llm_findings"] = result.llm_findings
+
     if git_context is not None:
         if git_context.range_spec is not None:
             payload["git_context"] = {

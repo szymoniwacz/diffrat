@@ -96,6 +96,10 @@ def render_review_report(
         for hint in sorted_hints:
             lines.append(f"- [{hint.severity}] [{hint.code}] {hint.message}")
 
+    if result.llm_findings is not None:
+        lines.extend(["", "LLM analysis", "-------------"])
+        lines.extend(result.llm_findings.splitlines())
+
     if check_results is not None:
         lines.extend(["", "Local checks", "------------"])
         if not check_results:

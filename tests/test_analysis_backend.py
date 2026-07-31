@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from numbat.analysis import analyze_diff
@@ -87,7 +89,8 @@ def test_run_analysis_invokes_llm_client_when_enabled(
 
     result = run_analysis(summary, diff_content=diff_content, llm_config=llm_config)
 
-    assert analyze_diff(summary) == result
+    assert analyze_diff(summary) == replace(result, llm_findings=None)
+    assert result.llm_findings == "llm-output"
     assert len(calls) == 1
     assert calls[0][0] == llm_config
     assert calls[0][1] == diff_content
