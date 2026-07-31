@@ -96,3 +96,52 @@ def sort_file_entries(
     """Sort files by descending risk_score, then path name."""
     entries = list(zip(files, categories, risk_scores, strict=True))
     return sorted(entries, key=lambda entry: (-entry[2], entry[0].path))
+
+
+# Fixed category subsection order for text and JSON reports (project #40).
+CATEGORY_DISPLAY_ORDER: tuple[str, ...] = (
+    "source",
+    "tests",
+    "ci",
+    "config",
+    "docs",
+    "other",
+)
+
+REVIEW_ORDER_CAP = 5
+
+
+def group_entries_by_category(
+    sorted_entries: list[tuple[FileChange, str, int]],
+) -> list[tuple[str, list[tuple[FileChange, str, int]]]]:
+    """Group file entries by category in display order; omit empty categories."""
+    by_category: dict[str, list[tuple[FileChange, str, int]]] = {}
+    for entry in sorted_entries:
+        by_category.setdefault(entry[1], []).append(entry)
+
+    grouped: list[tuple[str, list[tuple[FileChange, str, int]]]] = []
+    for category in CATEGORY_DISPLAY_ORDER:
+        if category not in by_category:
+            continue
+        entries = sorted(by_category[category], key=lambda entry: (-entry[2], entry[0].path))
+        grouped.append((category, entries))
+    return grouped
+
+
+def review_order_entries(
+    sorted_entries: list[tuple[FileChange, str, int]],
+    *,
+    cap: int = REVIEW_ORDER_CAP,
+) -> list[tuple[FileChange, str, int]]:
+    """Return up to cap highest-priority file entries (already globally sorted)."""
+    return sorted_entries[:cap]
+
+
+def files_by_category_mapping(
+    sorted_entries: list[tuple[FileChange, str, int]],
+) -> dict[str, list[str]]:
+    """Build category-to-paths mapping in display order with within-category sort."""
+    return {
+        category: [file_change.path for file_change, _category, _score in entries]
+        for category, entries in group_entries_by_category(sorted_entries)
+    }

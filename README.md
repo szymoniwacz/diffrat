@@ -134,8 +134,15 @@ computed in `src/numbat/scoring.py`. Files in the text **Files** list and JSON
 `files[]` array are sorted by descending `risk_score`; ties break by path name.
 The **Changes** section follows the same order.
 
+The text **Files** section groups paths by category (`source`, `tests`, `ci`,
+`config`, `docs`, `other`) in that fixed order. Within each category subsection,
+files keep the same `risk_score` sort. A **Review order** section lists up to
+five highest-priority paths (by `risk_score`) with rank, category, and line
+counts. JSON output adds top-level `review_order` (up to five paths) and
+`files_by_category` (category → path lists in the same order).
+
 Text reports show `risk=<score>` on each file line (for example
-`src/a.py  [source]  risk=42  +4 -1`). Binary files use a fixed score of `5`.
+`  src/a.py  [source]  risk=42  +4 -1`). Binary files use a fixed score of `5`.
 
 | Signal | Weight constant | Points |
 |---|---|---|

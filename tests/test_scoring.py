@@ -11,6 +11,9 @@ from numbat.scoring import (
     RISK_WEIGHT_CONFIG_CATEGORY,
     RISK_WEIGHT_SECURITY_SENSITIVE,
     RISK_WEIGHT_SOURCE_WITHOUT_TESTS,
+    files_by_category_mapping,
+    group_entries_by_category,
+    review_order_entries,
     risk_score_for_file,
     severity_for_code,
     sort_file_entries,
@@ -148,3 +151,53 @@ def test_sort_file_entries_by_risk_then_path() -> None:
     risk_scores = (10, 50, RISK_WEIGHT_BINARY)
     sorted_entries = sort_file_entries(files, categories, risk_scores)
     assert [e[0].path for e in sorted_entries] == ["a.py", "b.py", "c.py"]
+
+
+def test_group_entries_by_category_uses_display_order() -> None:
+    files = (
+        FileChange(path="README.md", additions=1, deletions=0, binary=False),
+        FileChange(path="src/a.py", additions=1, deletions=0, binary=False),
+        FileChange(path="tests/test_a.py", additions=1, deletions=0, binary=False),
+    )
+    categories = ("docs", "source", "tests")
+    risk_scores = (5, 20, 10)
+    sorted_entries = sort_file_entries(files, categories, risk_scores)
+
+    grouped = group_entries_by_category(sorted_entries)
+    assert [category for category, _entries in grouped] == ["source", "tests", "docs"]
+    assert [entry[0].path for entry in grouped[0][1]] == ["src/a.py"]
+
+
+def test_review_order_entries_caps_at_five() -> None:
+    files = tuple(
+        FileChange(path=f"src/file_{index}.py", additions=index + 1, deletions=0, binary=False)
+        for index in range(6)
+    )
+    categories = tuple("source" for _ in files)
+    risk_scores = tuple(50 - index for index in range(6))
+    sorted_entries = sort_file_entries(files, categories, risk_scores)
+
+    review_entries = review_order_entries(sorted_entries)
+    assert len(review_entries) == 5
+    assert [entry[0].path for entry in review_entries] == [
+        "src/file_0.py",
+        "src/file_1.py",
+        "src/file_2.py",
+        "src/file_3.py",
+        "src/file_4.py",
+    ]
+
+
+def test_files_by_category_mapping_matches_grouped_paths() -> None:
+    files = (
+        FileChange(path="src/a.py", additions=1, deletions=0, binary=False),
+        FileChange(path="tests/test_a.py", additions=1, deletions=0, binary=False),
+    )
+    categories = ("source", "tests")
+    risk_scores = (20, 10)
+    sorted_entries = sort_file_entries(files, categories, risk_scores)
+
+    assert files_by_category_mapping(sorted_entries) == {
+        "source": ["src/a.py"],
+        "tests": ["tests/test_a.py"],
+    }
