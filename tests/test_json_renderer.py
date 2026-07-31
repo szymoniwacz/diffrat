@@ -218,3 +218,30 @@ def test_render_review_json_includes_review_order_and_files_by_category() -> Non
     assert payload["files_by_category"]["tests"] == ["tests/test_a.py"]
     assert payload["files_by_category"]["ci"] == ["ci/run.py"]
     assert payload["files_by_category"]["other"] == ["bin.dat"]
+
+
+def test_render_review_json_includes_llm_findings_when_present() -> None:
+    from dataclasses import replace
+
+    from numbat.analysis import analyze_diff
+
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+    analysis = replace(analyze_diff(summary), llm_findings="LLM narrative.")
+
+    payload = json.loads(
+        render_review_json(summary, mode="unstaged", analysis=analysis)
+    )
+
+    assert payload["llm_findings"] == "LLM narrative."
+
+
+def test_render_review_json_omits_llm_findings_when_absent() -> None:
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+
+    payload = json.loads(render_review_json(summary, mode="unstaged"))
+
+    assert "llm_findings" not in payload
