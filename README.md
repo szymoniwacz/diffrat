@@ -12,16 +12,17 @@ scripting.
 
 ## Status
 
-v1 complete on `main` — local diff review CLI without LLM (D-005):
+v1 core and Phase 3 (optional LLM) are complete on `main`:
 
 - `numbat review` with unstaged, `--staged`, `--base`, and `--range` modes; optional `--json`
 - Bounded diff hunks, git context, file categories, deterministic Focus/Risk hints
   (including CI/workflow path hints with suggested commands, and content-based typo
   hints for known CI validator patterns)
 - Optional `--check` for path-scoped local validators and tests
+- Optional LLM-backed analysis when `NUMBAT_LLM_*` env vars are set (ADR-0001 / D-005);
+  heuristics-only report remains the default without API keys
 
-Phase 3 (optional LLM) and Phase 4 (integrations) are deferred. See
-`.ai/project/roadmap.md`.
+Phase 4 (integrations) is deferred. See `.ai/project/roadmap.md`.
 
 ## Current capabilities
 
@@ -78,7 +79,9 @@ numbat review --help
 
 Use `--json` to write a structured document to stdout instead of the
 human-readable report. The `schema_version` field identifies the output format;
-breaking changes require bumping that version.
+breaking changes require bumping that version. When LLM analysis is enabled and
+succeeds, JSON includes an additive top-level `llm_findings` string; the key is
+omitted when LLM is disabled or the request fails.
 
 ```bash
 # Unstaged diff as JSON
@@ -261,8 +264,35 @@ mypy .
 ## Configuration
 
 Numbat is offline and deterministic by default (D-005). No API keys or LLM
-credentials are required. Repositories without `[tool.numbat]` behave exactly as
-before — built-in check commands and content heuristics apply unchanged.
+credentials are required for the heuristic report. Repositories without
+`[tool.numbat]` behave exactly as before — built-in check commands and content
+heuristics apply unchanged.
+
+### Optional LLM analysis (Phase 3)
+
+LLM calls are **opt-in only**. With no `NUMBAT_LLM_*` variables set, Numbat
+makes no network requests and sends no diff content to external services. The
+heuristic Focus/Risk report is unchanged.
+
+When both provider and API key are set, Numbat sends **diff-scoped** prompts
+(bounded hunks from the current review only — never a whole-repo scan) to an
+OpenAI-compatible chat-completions endpoint. Successful responses appear as an
+**LLM analysis** section in the text report and as additive `llm_findings` in
+`--json` output. Failed or disabled LLM paths leave output unchanged.
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `NUMBAT_LLM_PROVIDER` | When LLM enabled | Provider id (e.g. `openai`, `ollama`) |
+| `NUMBAT_LLM_API_KEY` | When LLM enabled | API key or token for the provider |
+| `NUMBAT_LLM_BASE_URL` | Optional | Custom base URL for local runtimes or proxies |
+
+Cloud provider default endpoints are selected from `NUMBAT_LLM_PROVIDER`.
+`NUMBAT_LLM_BASE_URL` is for local or custom OpenAI-compatible endpoints only.
+
+**Privacy:** diff content leaves the machine only when you explicitly set these
+variables. Store keys in your environment or secret manager — never commit them.
+See ADR-0001 (`.ai/architecture/adr-0001-llm-analysis-layer.md`) and D-005 in
+`.ai/project/decisions.md`.
 
 Optional per-repository rules live in TOML at the git repository root (or
 `cwd` when not inside a git repo):
@@ -344,8 +374,9 @@ This repository uses `.ai/` as its AI working system. See
 
 ## Limitations
 
-- No CI integration or GitHub App
-- Optional LLM analysis is out of v1 (deferred; D-005)
+- No CI integration or GitHub App (Phase 4 deferred)
+- LLM analysis requires explicit env configuration; non-OpenAI-shaped APIs need
+  a compatibility layer or future adapter work (ADR-0001)
 
 ## License
 
