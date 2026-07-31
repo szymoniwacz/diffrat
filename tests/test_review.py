@@ -313,7 +313,7 @@ def test_run_review_check_reports_failure(
 
     monkeypatch.setattr(
         "numbat.review.plan_checks",
-        lambda summary: [
+        lambda summary, *, config=None: [
             CheckSpec(
                 code="ci_validator",
                 argv=("python",),
@@ -497,7 +497,7 @@ def test_run_review_fail_on_check_failure_precedence(
 
     monkeypatch.setattr(
         "numbat.review.plan_checks",
-        lambda summary: [
+        lambda summary, *, config=None: [
             CheckSpec(
                 code="ci_validator",
                 argv=("python",),
