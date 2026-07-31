@@ -84,6 +84,62 @@ def test_content_hints_regex_typo_for_continue_projec() -> None:
     assert "continue-project" in hints[0].message
     assert "continue-projec" in hints[0].message
     assert "ci/validate-workflow-contracts.py" in hints[0].message
+    assert hints[0].path == "ci/validate-workflow-contracts.py"
+    assert hints[0].line == 360
+
+
+def test_content_hints_path_only_when_hunk_header_unparseable() -> None:
+    content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="src/a.py",
+                hunks=(
+                    DiffHunk(
+                        header="invalid header",
+                        lines=("+print('debug')",),
+                    ),
+                ),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+    hints = content_focus_risk_hints(content)
+
+    assert len(hints) == 1
+    assert hints[0].code == "debug_leftover"
+    assert hints[0].path == "src/a.py"
+    assert hints[0].line is None
+
+
+def test_content_hints_line_advances_across_context_lines() -> None:
+    content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="src/a.py",
+                hunks=(
+                    DiffHunk(
+                        header="@@ -1,3 +1,4 @@",
+                        lines=(
+                            " context",
+                            "+print('debug')",
+                        ),
+                    ),
+                ),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+    hints = content_focus_risk_hints(content)
+
+    assert len(hints) == 1
+    assert hints[0].path == "src/a.py"
+    assert hints[0].line == 2
 
 
 def test_content_hints_ignore_correct_constant() -> None:

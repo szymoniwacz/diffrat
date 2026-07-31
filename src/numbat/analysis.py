@@ -188,6 +188,8 @@ class FocusRiskHint:
     code: str
     message: str
     severity: HintSeverity
+    path: str | None = None
+    line: int | None = None
 
 
 def focus_risk_hint(
@@ -195,12 +197,16 @@ def focus_risk_hint(
     message: str,
     *,
     severity: HintSeverity | None = None,
+    path: str | None = None,
+    line: int | None = None,
 ) -> FocusRiskHint:
     """Create a hint with severity resolved from the registry when omitted."""
     return FocusRiskHint(
         code=code,
         message=message,
         severity=severity if severity is not None else severity_for_code(code),
+        path=path,
+        line=line,
     )
 
 
@@ -325,6 +331,7 @@ def _build_hints(
                         f"Single file dominates diff: {dominant_file.path} "
                         f"({dominant_lines} lines, {percent}% of total)"
                     ),
+                    path=dominant_file.path,
                 )
             )
 
@@ -699,6 +706,7 @@ def _missing_test_file_hints(
                         message=(
                             f"Changed {file_change.path} has no {test_rel} on disk"
                         ),
+                        path=file_change.path,
                     )
                 )
 

@@ -120,9 +120,12 @@ plus validator-specific typo hints for known CI patterns such as
 required. JSON
 output includes additive `category` fields on each file and a top-level
 `focus_risk` array while keeping `schema_version` at `"1"`. Each hint carries a
-`severity` (`risk`, `warn`, or `info`) from the central registry in
-`src/numbat/scoring.py`; unknown codes default to `info`. Hints are sorted by
-severity (risk first), then by code, in both text and JSON reports.
+`code`, `message`, and `severity` (`risk`, `warn`, or `info`) from the central
+registry in `src/numbat/scoring.py`; unknown codes default to `info`. Content-derived
+hints may also include optional `path` (repository-relative file path) and `line`
+(1-based line number in the new file) when the location can be resolved from the
+diff; those keys are omitted when unset. Hints are sorted by severity (risk first),
+then by code, in both text and JSON reports.
 
 ### File risk scores and ordering
 

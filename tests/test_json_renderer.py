@@ -88,6 +88,46 @@ def test_render_review_json_includes_categories_and_focus_risk() -> None:
     assert all("severity" in item for item in payload["focus_risk"])
     assert payload["focus_risk"][0]["severity"] == "risk"
     assert "git_context" not in payload
+    for item in payload["focus_risk"]:
+        assert "path" not in item
+        assert "line" not in item
+
+
+def test_render_review_json_focus_risk_includes_path_and_line_when_set() -> None:
+    from numbat.analysis import AnalysisResult, focus_risk_hint
+
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+    analysis = AnalysisResult(
+        categories=("source",),
+        hints=(
+            focus_risk_hint(
+                "possible_secret",
+                "Possible secret in src/a.py",
+                path="src/a.py",
+                line=10,
+            ),
+            focus_risk_hint("docs_touched", "Documentation changed"),
+        ),
+        risk_scores=(10,),
+    )
+
+    payload = json.loads(
+        render_review_json(summary, mode="unstaged", analysis=analysis)
+    )
+
+    secret_hint = next(
+        item for item in payload["focus_risk"] if item["code"] == "possible_secret"
+    )
+    assert secret_hint["path"] == "src/a.py"
+    assert secret_hint["line"] == 10
+
+    docs_hint = next(
+        item for item in payload["focus_risk"] if item["code"] == "docs_touched"
+    )
+    assert "path" not in docs_hint
+    assert "line" not in docs_hint
 
 
 def test_render_review_json_includes_git_context() -> None:
