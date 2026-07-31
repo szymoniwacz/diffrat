@@ -188,3 +188,33 @@ def test_render_review_json_includes_range_git_context() -> None:
             {"hash": "def5678", "subject": "first commit"},
         ],
     }
+
+
+def test_render_review_json_includes_review_order_and_files_by_category() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="tests/test_a.py", additions=2, deletions=0, binary=False),
+            FileChange(path="src/a.py", additions=4, deletions=1, binary=False),
+            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
+            FileChange(path="ci/run.py", additions=1, deletions=0, binary=False),
+            FileChange(path="README.md", additions=1, deletions=0, binary=False),
+            FileChange(path="bin.dat", additions=0, deletions=0, binary=True),
+        )
+    )
+
+    payload = json.loads(render_review_json(summary, mode="unstaged"))
+
+    assert len(payload["review_order"]) == 5
+    assert payload["review_order"] == [entry["path"] for entry in payload["files"][:5]]
+    assert list(payload["files_by_category"].keys()) == [
+        "source",
+        "tests",
+        "ci",
+        "config",
+        "docs",
+        "other",
+    ]
+    assert payload["files_by_category"]["source"] == ["src/a.py"]
+    assert payload["files_by_category"]["tests"] == ["tests/test_a.py"]
+    assert payload["files_by_category"]["ci"] == ["ci/run.py"]
+    assert payload["files_by_category"]["other"] == ["bin.dat"]

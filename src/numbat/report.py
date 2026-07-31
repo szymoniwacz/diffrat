@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from numbat.analysis import AnalysisResult, analyze_diff, sort_hints
 from numbat.checks import CheckResult
-from numbat.diff_parser import DiffContent, DiffSummary
+from numbat.diff_parser import DiffContent, DiffSummary, FileChange
 from numbat.git_adapter import GitContext
-from numbat.scoring import sort_file_entries
+from numbat.scoring import (
+    group_entries_by_category,
+    review_order_entries,
+    sort_file_entries,
+)
 
 
 def render_review_report(
@@ -48,31 +52,39 @@ def render_review_report(
         ]
     )
 
-    if not summary.files:
-        lines.append("(no files changed)")
-    else:
-        sorted_entries = sort_file_entries(
-            summary.files, result.categories, result.risk_scores
-        )
-        for file_change, category, risk_score in sorted_entries:
-            if file_change.binary:
-                lines.append(
-                    f"{file_change.path}  [{category}]  risk={risk_score}  (binary)"
-                )
-            else:
-                lines.append(
-                    f"{file_change.path}  [{category}]  risk={risk_score}  "
-                    f"+{file_change.additions} -{file_change.deletions}"
-                )
-
-    lines.extend(["", "Changes", "-------"])
-    sorted_paths = (
-        [entry[0].path for entry in sort_file_entries(
-            summary.files, result.categories, result.risk_scores
-        )]
+    sorted_entries = (
+        sort_file_entries(summary.files, result.categories, result.risk_scores)
         if summary.files
         else []
     )
+
+    if not sorted_entries:
+        lines.append("(no files changed)")
+    else:
+        for category, entries in group_entries_by_category(sorted_entries):
+            lines.append(category)
+            for file_change, entry_category, risk_score in entries:
+                lines.append(_format_file_line(file_change, entry_category, risk_score))
+
+    lines.extend(["", "Review order", "------------"])
+    if not sorted_entries:
+        lines.append("(no files changed)")
+    else:
+        for rank, (file_change, category, _risk_score) in enumerate(
+            review_order_entries(sorted_entries), start=1
+        ):
+            if file_change.binary:
+                lines.append(
+                    f"{rank}. {file_change.path}  [{category}]  (binary)"
+                )
+            else:
+                lines.append(
+                    f"{rank}. {file_change.path}  [{category}]  "
+                    f"(+{file_change.additions} -{file_change.deletions} lines)"
+                )
+
+    lines.extend(["", "Changes", "-------"])
+    sorted_paths = [entry[0].path for entry in sorted_entries]
     lines.extend(_render_changes(diff_content, sort_paths=sorted_paths))
 
     lines.extend(["", "Focus / Risk", "------------"])
@@ -103,6 +115,21 @@ def render_review_report(
                         lines.append(f"  {output_line}")
 
     return "\n".join(lines) + "\n"
+
+
+def _format_file_line(
+    file_change: FileChange,
+    category: str,
+    risk_score: int,
+) -> str:
+    if file_change.binary:
+        return (
+            f"  {file_change.path}  [{category}]  risk={risk_score}  (binary)"
+        )
+    return (
+        f"  {file_change.path}  [{category}]  risk={risk_score}  "
+        f"+{file_change.additions} -{file_change.deletions}"
+    )
 
 
 def _render_git_context(git_context: GitContext) -> list[str]:
