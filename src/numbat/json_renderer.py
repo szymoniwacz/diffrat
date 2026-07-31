@@ -13,7 +13,11 @@ from numbat.diff_parser import (
     DiffSummary,
 )
 from numbat.git_adapter import GitContext
-from numbat.scoring import sort_file_entries
+from numbat.scoring import (
+    files_by_category_mapping,
+    review_order_entries,
+    sort_file_entries,
+)
 
 JSON_SCHEMA_VERSION = "1"
 
@@ -53,6 +57,7 @@ def render_review_json(
         summary.files, result.categories, result.risk_scores
     )
     sorted_paths = [entry[0].path for entry in sorted_entries]
+    review_order = [entry[0].path for entry in review_order_entries(sorted_entries)]
 
     payload: dict[str, object] = {
         "schema_version": JSON_SCHEMA_VERSION,
@@ -72,6 +77,8 @@ def render_review_json(
             }
             for file_change, category, risk_score in sorted_entries
         ],
+        "review_order": review_order,
+        "files_by_category": files_by_category_mapping(sorted_entries),
         "focus_risk": [
             _serialize_focus_risk_hint(hint)
             for hint in sort_hints(list(result.hints))
