@@ -57,7 +57,10 @@ Outputs:
 
 ## Phase 3 — Analysis depth (optional LLM layer)
 
-**Status:** deferred / out of v1 (D-005)
+**Status:** complete
+
+Evidence: Project Execution #71; merged PRs #73 (ADR/D-005), #75 (analysis
+backend), #77 (OpenAI-compatible client), #79 (report/JSON `llm_findings`).
 
 Goal:
 Add optional intelligent analysis when configured; keep deterministic fallback
@@ -65,12 +68,11 @@ without API keys.
 
 Outputs:
 
+- ADR-0001 and updated D-005 (OpenAI-compatible client, `NUMBAT_LLM_*` env vars)
 - Pluggable analysis backend (heuristics default, optional LLM via env/config)
-- Documented secrets handling and offline behavior
-- Decision record for provider choice
-
-Not implemented for this v1 project. Return trigger: a later project or owner
-goal that reopens LLM work after provider and data-handling choices.
+- Documented secrets handling and offline behavior in README
+- LLM findings in text report and additive `--json` `llm_findings` when enabled
+- Mocked LLM HTTP tests; no live integration required in CI
 
 ## Phase 4 — Integrations (deferred)
 
