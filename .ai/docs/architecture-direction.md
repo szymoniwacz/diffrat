@@ -34,7 +34,7 @@ Developer/Reviewer
 | CLI layer | Args, exit codes, stdout/stderr contract | Embed analysis rules |
 | Git adapter | Invoke/read git; handle missing repo | Parse diff semantics |
 | Diff parser | Normalize hunks, files, stats | Call LLM or network |
-| Analysis backend | Produce review signals and summaries | Write to git or network (v1 static) |
+| Analysis backend | Produce review signals and summaries | Write to git; network only when LLM opt-in configured (ADR-0001) |
 | Output renderer | Format report for human or JSON | Change analysis results |
 
 ## Design principles
@@ -59,14 +59,14 @@ Developer/Reviewer
 | Mechanism | Purpose |
 |---|---|
 | CLI flags | Diff target, output format, verbosity |
-| Env vars | Optional LLM API key and provider (Phase 3) |
+| Env vars | `NUMBAT_LLM_PROVIDER`, `NUMBAT_LLM_API_KEY`, optional `NUMBAT_LLM_BASE_URL` when LLM enabled (ADR-0001) |
 | Config file | Deferred — env + flags sufficient for v1 |
 
 ## Open questions
 
 - Exact CLI subcommand tree (`review` vs top-level default)
 - JSON schema version field and stability policy
-- LLM provider and prompt boundaries (deferred to Phase 3 goal)
+- LLM prompt content and token budget within diff-scoped bounds (implementation detail; provider/env resolved in ADR-0001)
 - Whether to support diff input from stdin/patch file in v1 (likely deferred)
 
 ## Related documents

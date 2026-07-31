@@ -49,19 +49,24 @@ context; terminal output by default with `--json` optional.
 
 ---
 
-### D-005 — LLM analysis layer (2026-07-27; updated 2026-07-28)
+### D-005 — LLM analysis layer (2026-07-27; updated 2026-07-31)
 
-**Decision:** Skip Phase 3 LLM for this v1 project. Numbat v1 closes on the
-Phase 2 static core (deterministic Focus/Risk hints and file categories). No
-LLM provider, network client, or LLM-related env vars are in scope for v1.
+**Decision:** Phase 3 adds an optional LLM analysis layer when explicitly
+configured. Default path remains heuristics-only (offline, no API keys). When
+opt-in env/config is set, a single OpenAI-compatible HTTP client augments the
+report with LLM findings; prompts are diff-scoped only.
 
-**Status:** confirmed (skipped for v1)
+**Env contract:** `NUMBAT_LLM_PROVIDER`, `NUMBAT_LLM_API_KEY`, optional
+`NUMBAT_LLM_BASE_URL` for local/custom endpoints.
 
-**Context:** Owner reply on Project Execution issue #8 (2026-07-28): treat
-Phase 2 as the v1 close bar; secrets N/A for v1; Phase 3 deferred.
+**Status:** confirmed (Phase 3 — Project Execution #71)
 
-**Return trigger:** A later Project Execution (or explicit owner goal) that
-reopens optional LLM analysis and chooses a provider / data-handling policy.
+**Context:** v1 closed on Phase 2 static core (issue #8, 2026-07-28). Reopened
+via Project Execution #71 (2026-07-31). Owner choices: single OpenAI-compatible
+client (1:A); explicit opt-in, diff-scoped prompts, heuristics additive
+(2:Y,Y,Y); unified `NUMBAT_LLM_*` env vars with optional base URL (3:B).
+
+**ADR:** [ADR-0001 — Phase 3 optional LLM analysis layer](../architecture/adr-0001-llm-analysis-layer.md)
 
 ---
 
@@ -97,4 +102,4 @@ Link full ADRs here when they exist.
 
 | ADR | File | Status |
 |---|---|---|
-| — | — | — |
+| ADR-0001 | [adr-0001-llm-analysis-layer.md](../architecture/adr-0001-llm-analysis-layer.md) | Accepted |
