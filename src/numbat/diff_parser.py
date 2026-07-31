@@ -7,6 +7,7 @@ from dataclasses import dataclass
 # Bounds for Changes sections in text and JSON reports (documented in CLI --help).
 MAX_CHANGE_FILES = 20
 MAX_LINES_PER_FILE = 100
+HUNKS_FOR_MAX_LINES_PER_FILE = 500
 
 
 ChangeType = str  # M | A | D | R | C
@@ -150,20 +151,50 @@ def parse_unified_diff(
     *,
     max_files: int = MAX_CHANGE_FILES,
     max_lines_per_file: int = MAX_LINES_PER_FILE,
+    only_paths: frozenset[str] | None = None,
+    max_lines_per_file_by_path: dict[str, int] | None = None,
 ) -> DiffContent:
     """Parse a unified diff patch into bounded per-file hunk content."""
     if not patch.strip():
         return DiffContent(files=(), truncated_files=False)
 
     file_blocks = _split_patch_into_file_blocks(patch)
+    if only_paths is not None:
+        filtered_blocks = [
+            block
+            for block in file_blocks
+            if _extract_path_from_block(block) in only_paths
+        ]
+        filtered_files = [
+            _parse_file_block(
+                block,
+                max_lines_per_file=(
+                    max_lines_per_file_by_path.get(
+                        _extract_path_from_block(block),
+                        max_lines_per_file,
+                    )
+                    if max_lines_per_file_by_path is not None
+                    else max_lines_per_file
+                ),
+            )
+            for block in filtered_blocks
+        ]
+        return DiffContent(files=tuple(filtered_files), truncated_files=False)
+
     truncated_files = len(file_blocks) > max_files
     selected_blocks = file_blocks[:max_files]
 
-    files: list[FileDiffContent] = []
+    parsed_files: list[FileDiffContent] = []
     for block in selected_blocks:
-        files.append(_parse_file_block(block, max_lines_per_file=max_lines_per_file))
+        path = _extract_path_from_block(block)
+        per_file_limit = (
+            max_lines_per_file_by_path.get(path, max_lines_per_file)
+            if max_lines_per_file_by_path is not None
+            else max_lines_per_file
+        )
+        parsed_files.append(_parse_file_block(block, max_lines_per_file=per_file_limit))
 
-    return DiffContent(files=tuple(files), truncated_files=truncated_files)
+    return DiffContent(files=tuple(parsed_files), truncated_files=truncated_files)
 
 
 def _split_patch_into_file_blocks(patch: str) -> list[list[str]]:

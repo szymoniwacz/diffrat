@@ -47,6 +47,7 @@ def test_review_help_documents_empty_diff_exit(
     assert "--json" in captured.out
     assert "--check" in captured.out
     assert "--fail-on" in captured.out
+    assert "--hunks-for" in captured.out
     assert "schema_version" in captured.out
     assert "20 files" in captured.out
     assert "100 diff lines" in captured.out

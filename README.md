@@ -234,6 +234,22 @@ When `--json` and `--fail-on` are both used, JSON output includes a top-level
 `fail_on` object with `requested` and `matched` arrays so scripts can read
 matches without parsing stderr.
 
+### Single-file deep diff (`--hunks-for`)
+
+Use `--hunks-for=<path>` to show **Changes** hunks for one repository-relative
+path only. **Files**, **Review order**, and **Focus / Risk** still reflect the
+full diff. The selected file uses a higher line budget (500 diff lines vs the
+default 100). When the path is not in the current diff, the command exits `1`
+with stderr `path not in diff: <path>`.
+
+With `--json`, `changes.files` contains only the requested path and
+`changes.limits.max_lines_per_file` reflects the elevated limit (500).
+
+```bash
+numbat review --staged --hunks-for=src/foo.py
+numbat review --base main --hunks-for=src/foo.py --json
+```
+
 ## Tests and quality
 
 ```bash

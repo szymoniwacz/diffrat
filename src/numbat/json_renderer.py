@@ -42,6 +42,7 @@ def render_review_json(
     git_context: GitContext | None = None,
     analysis: AnalysisResult | None = None,
     diff_content: DiffContent | None = None,
+    changes_limits_max_lines_per_file: int | None = None,
     check_results: list[CheckResult] | None = None,
     fail_on_requested: list[str] | None = None,
     fail_on_matched: list[str] | None = None,
@@ -83,7 +84,11 @@ def render_review_json(
             _serialize_focus_risk_hint(hint)
             for hint in sort_hints(list(result.hints))
         ],
-        "changes": _serialize_changes(diff_content, sort_paths=sorted_paths),
+        "changes": _serialize_changes(
+            diff_content,
+            sort_paths=sorted_paths,
+            max_lines_per_file_limit=changes_limits_max_lines_per_file,
+        ),
     }
 
     if check_results is not None:
@@ -134,10 +139,15 @@ def _serialize_changes(
     diff_content: DiffContent | None,
     *,
     sort_paths: list[str] | None = None,
+    max_lines_per_file_limit: int | None = None,
 ) -> dict[str, object]:
     limits = {
         "max_files": MAX_CHANGE_FILES,
-        "max_lines_per_file": MAX_LINES_PER_FILE,
+        "max_lines_per_file": (
+            max_lines_per_file_limit
+            if max_lines_per_file_limit is not None
+            else MAX_LINES_PER_FILE
+        ),
     }
     if diff_content is None:
         return {"limits": limits, "truncated_files": False, "files": []}

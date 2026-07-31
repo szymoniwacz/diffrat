@@ -8,7 +8,12 @@ from pathlib import Path
 from numbat.analysis import analyze_diff
 from numbat.checks import CheckResult, plan_checks, run_checks
 from numbat.config import load_config
-from numbat.diff_parser import DiffSummary, parse_numstat, parse_unified_diff
+from numbat.diff_parser import (
+    HUNKS_FOR_MAX_LINES_PER_FILE,
+    DiffSummary,
+    parse_numstat,
+    parse_unified_diff,
+)
 from numbat.git_adapter import (
     GitContext,
     GitError,
@@ -62,6 +67,7 @@ def run_review(
     json_output: bool = False,
     run_checks_flag: bool = False,
     fail_on: str | None = None,
+    hunks_for: str | None = None,
     cwd: str | None = None,
 ) -> int:
     """Analyze a git diff and print a review report to stdout."""
@@ -110,6 +116,17 @@ def run_review(
         return EXIT_EMPTY_DIFF
 
     diff_content = parse_unified_diff(diff_result.patch)
+    changes_diff_content = diff_content
+    if hunks_for is not None:
+        changed_paths = {file_change.path for file_change in summary.files}
+        if hunks_for not in changed_paths:
+            print(f"path not in diff: {hunks_for}", file=sys.stderr)
+            return EXIT_ERROR
+        changes_diff_content = parse_unified_diff(
+            diff_result.patch,
+            only_paths=frozenset({hunks_for}),
+            max_lines_per_file_by_path={hunks_for: HUNKS_FOR_MAX_LINES_PER_FILE},
+        )
     config_cwd = cwd if cwd is not None else str(Path.cwd())
     numbat_config = load_config(config_cwd)
     analysis = analyze_diff(
@@ -145,7 +162,10 @@ def run_review(
             mode=mode,
             git_context=git_context,
             analysis=analysis,
-            diff_content=diff_content,
+            diff_content=changes_diff_content,
+            changes_limits_max_lines_per_file=(
+                HUNKS_FOR_MAX_LINES_PER_FILE if hunks_for is not None else None
+            ),
             check_results=check_results,
             fail_on_requested=fail_on_codes,
             fail_on_matched=matched_codes,
@@ -155,7 +175,7 @@ def run_review(
             summary,
             git_context=git_context,
             analysis=analysis,
-            diff_content=diff_content,
+            diff_content=changes_diff_content,
             check_results=check_results,
         )
 
