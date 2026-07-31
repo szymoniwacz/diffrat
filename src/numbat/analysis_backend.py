@@ -6,6 +6,7 @@ from numbat.analysis import AnalysisResult, analyze_diff
 from numbat.config import NumbatConfig
 from numbat.diff_parser import DiffContent, DiffSummary
 from numbat.git_adapter import GitContext
+from numbat.llm_client import run_llm_analysis
 from numbat.llm_config import LlmConfig, load_llm_config
 
 
@@ -32,9 +33,6 @@ def run_analysis(
         config=config,
     )
     if resolved_llm.enabled:
-        _llm_analysis_placeholder(resolved_llm)
+        run_llm_analysis(resolved_llm, diff_content=diff_content)
     return result
 
-
-def _llm_analysis_placeholder(llm_config: LlmConfig) -> None:
-    """Reserved hook for future LLM-backed findings (no network in this slice)."""
