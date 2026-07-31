@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from numbat.analysis import AnalysisResult, analyze_diff, sort_hints
+from numbat.analysis import AnalysisResult, sort_hints
+from numbat.analysis_backend import run_analysis
 from numbat.checks import CheckResult
 from numbat.diff_parser import DiffContent, DiffSummary, FileChange
 from numbat.git_adapter import GitContext
@@ -25,7 +26,7 @@ def render_review_report(
     result = (
         analysis
         if analysis is not None
-        else analyze_diff(summary, diff_content=diff_content)
+        else run_analysis(summary, diff_content=diff_content)
     )
 
     lines = [

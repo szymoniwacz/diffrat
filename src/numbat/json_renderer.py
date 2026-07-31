@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 
-from numbat.analysis import AnalysisResult, FocusRiskHint, analyze_diff, sort_hints
+from numbat.analysis import AnalysisResult, FocusRiskHint, sort_hints
+from numbat.analysis_backend import run_analysis
 from numbat.checks import CheckResult
 from numbat.diff_parser import (
     MAX_CHANGE_FILES,
@@ -51,7 +52,7 @@ def render_review_json(
     result = (
         analysis
         if analysis is not None
-        else analyze_diff(summary, diff_content=diff_content)
+        else run_analysis(summary, diff_content=diff_content)
     )
 
     sorted_entries = sort_file_entries(
