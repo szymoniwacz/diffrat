@@ -63,6 +63,30 @@ Phase 2 as the v1 close bar; secrets N/A for v1; Phase 3 deferred.
 **Return trigger:** A later Project Execution (or explicit owner goal) that
 reopens optional LLM analysis and chooses a provider / data-handling policy.
 
+---
+
+### D-006 — Per-repository config format (2026-07-31)
+
+**Decision:** Numbat v1 loads optional per-repository rules from TOML at the git
+repository root (or `cwd` when not in a git repo):
+
+1. `pyproject.toml` → `[tool.numbat]` (base)
+2. `.numbat.toml` overrides duplicate keys when both exist
+
+`[tool.numbat.checks]` maps check code → display command string; v1 allows
+override for `ci_validator` only (pytest/ruff/mypy/bandit/pip-audit stay
+built-in). `[tool.numbat.content_rules]` provides declarative regex rules on
+added diff-hunk lines with shorthand (`pattern → expected`) or table form
+(`pattern`, `expected`, optional `paths`). Invalid regex at load time: stderr
+warning, skip rule. Parsing uses stdlib `tomllib` only; no new runtime
+dependencies. Absent config preserves pre-config behavior.
+
+**Status:** confirmed (Project Execution #33)
+
+**Context:** Replaces numbat-specific hardcoding in `content_hints.py` and
+`checks.py` with dogfood rules in this repo's `pyproject.toml`. Remote/shared
+rule packs and `--config PATH` remain deferred.
+
 > Reusable workflow rules (for example, documentation before implementation)
 > live in the canonical workflow documents under `.ai/`, not in this product
 > decision log.
