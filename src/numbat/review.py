@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from numbat.analysis import analyze_diff
+from numbat.analysis_backend import run_analysis
 from numbat.checks import CheckResult, plan_checks, run_checks
 from numbat.config import load_config
 from numbat.diff_parser import (
@@ -129,7 +129,7 @@ def run_review(
         )
     config_cwd = cwd if cwd is not None else str(Path.cwd())
     numbat_config = load_config(config_cwd)
-    analysis = analyze_diff(
+    analysis = run_analysis(
         summary,
         diff_content=diff_content,
         cwd=cwd,
