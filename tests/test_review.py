@@ -527,3 +527,71 @@ def test_run_review_fail_on_check_failure_precedence(
     )
 
     assert exit_code == EXIT_CHECK_FAILED
+
+
+def test_run_review_hunks_for_shows_single_file_changes(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        hunks_for="README.md",
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+    assert "README.md" in captured.out
+    assert "extra line" in captured.out
+    assert captured.out.index("Review order") < captured.out.index("Changes")
+    assert captured.out.index("Changes") < captured.out.index("Focus / Risk")
+
+
+def test_run_review_hunks_for_unknown_path_exits_one(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        hunks_for="missing.py",
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_ERROR
+    assert captured.err.strip() == "path not in diff: missing.py"
+
+
+def test_run_review_hunks_for_json_single_file_changes(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        json_output=True,
+        hunks_for="README.md",
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+
+    payload = json.loads(captured.out)
+    assert payload["summary"]["file_count"] == 1
+    assert payload["review_order"] == ["README.md"]
+    assert len(payload["changes"]["files"]) == 1
+    assert payload["changes"]["files"][0]["path"] == "README.md"
+    assert payload["changes"]["limits"]["max_lines_per_file"] == 500
+
+
+def test_run_review_default_unchanged_without_hunks_for(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(staged=False, cwd=str(git_repo_with_changes))
+    default_output = capsys.readouterr().out
+
+    assert exit_code == EXIT_SUCCESS
+    assert "Review order" in default_output
+    assert "Changes" in default_output
+    assert "+extra line" in default_output

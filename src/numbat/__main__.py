@@ -6,7 +6,7 @@ import argparse
 import sys
 
 from numbat import __version__
-from numbat.diff_parser import MAX_CHANGE_FILES, MAX_LINES_PER_FILE
+from numbat.diff_parser import HUNKS_FOR_MAX_LINES_PER_FILE, MAX_CHANGE_FILES, MAX_LINES_PER_FILE
 from numbat.review import run_review
 
 
@@ -91,6 +91,16 @@ def build_parser() -> argparse.ArgumentParser:
             "requested code appears in Focus/Risk hints"
         ),
     )
+    review_parser.add_argument(
+        "--hunks-for",
+        metavar="PATH",
+        dest="hunks_for",
+        help=(
+            "Show Changes hunks for a single repository-relative path only "
+            f"(up to {HUNKS_FOR_MAX_LINES_PER_FILE} diff lines for that file; "
+            "exit 1 if the path is not in the diff)"
+        ),
+    )
 
     return parser
 
@@ -111,6 +121,7 @@ def main(argv: list[str] | None = None) -> int:
             json_output=args.json,
             run_checks_flag=args.check,
             fail_on=args.fail_on,
+            hunks_for=args.hunks_for,
         )
 
     parser.print_help()
