@@ -44,6 +44,40 @@ def test_parse_unified_diff_truncates_files() -> None:
     assert content.truncated_files is True
 
 
+def test_parse_unified_diff_only_paths_filters_to_matching_file() -> None:
+    blocks = [
+        "diff --git a/a.txt b/a.txt\n--- a/a.txt\n+++ b/a.txt\n@@ -1 +1 @@\n+a\n",
+        "diff --git a/b.txt b/b.txt\n--- a/b.txt\n+++ b/b.txt\n@@ -1 +1 @@\n+b\n",
+    ]
+    patch = "\n".join(blocks)
+    content = parse_unified_diff(patch, only_paths=frozenset({"b.txt"}))
+
+    assert len(content.files) == 1
+    assert content.files[0].path == "b.txt"
+    assert content.truncated_files is False
+    assert "+b" in content.files[0].hunks[0].lines
+
+
+def test_parse_unified_diff_elevated_per_path_line_limit() -> None:
+    from numbat.diff_parser import HUNKS_FOR_MAX_LINES_PER_FILE
+
+    lines = "\n".join(f"+line {index}" for index in range(HUNKS_FOR_MAX_LINES_PER_FILE + 1))
+    patch = (
+        "diff --git a/large.txt b/large.txt\n"
+        "--- a/large.txt\n+++ b/large.txt\n"
+        "@@ -1 +1,501 @@\n"
+        f"{lines}\n"
+    )
+    content = parse_unified_diff(
+        patch,
+        only_paths=frozenset({"large.txt"}),
+        max_lines_per_file_by_path={"large.txt": HUNKS_FOR_MAX_LINES_PER_FILE},
+    )
+
+    assert len(content.files) == 1
+    assert content.files[0].truncated is True
+
+
 def test_parse_numstat_text_files() -> None:
     numstat = "10\t5\tsrc/foo.py\n3\t0\tREADME.md\n"
     summary = parse_numstat(numstat)
