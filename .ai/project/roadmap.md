@@ -85,5 +85,9 @@ Outputs:
 ## Later phases
 
 - PyPI publication
-- Config profiles per repository
-- Custom rule packs for domain-specific review focus
+- Config profiles per repository — **partially delivered** (v1 repo-local
+  `[tool.numbat]` in `pyproject.toml` / `.numbat.toml`; see D-006 and README
+  Configuration)
+- Custom rule packs for domain-specific review focus — **partially delivered**
+  (v1 `content_rules` declarative regex on added hunk lines; shared/remote
+  packs still deferred)
