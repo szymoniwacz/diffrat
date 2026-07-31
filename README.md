@@ -232,10 +232,78 @@ ruff check .
 mypy .
 ```
 
-## Configuration and environment variables
+## Configuration
 
-No configuration or API keys required. v1 is offline and deterministic. Optional
-LLM credentials are out of scope for this project (Phase 3 deferred; D-005).
+Numbat is offline and deterministic by default (D-005). No API keys or LLM
+credentials are required. Repositories without `[tool.numbat]` behave exactly as
+before — built-in check commands and content heuristics apply unchanged.
+
+Optional per-repository rules live in TOML at the git repository root (or
+`cwd` when not inside a git repo):
+
+1. `pyproject.toml` → `[tool.numbat]` (base)
+2. `.numbat.toml` at the repo root overrides duplicate keys when both exist
+
+Parsing uses stdlib `tomllib` only (Python 3.11+). Invalid regex in a content
+rule emits a stderr warning and skips that rule; review does not crash.
+
+### `[tool.numbat.checks]`
+
+Map check code → display command string. Commands are parsed safely into argv
+(no `shell=True`). A leading `python` token maps to `sys.executable`.
+
+In v1, only `ci_validator` may be overridden. Built-in defaults for pytest,
+ruff, mypy, bandit, and pip-audit remain when a key is omitted.
+
+```toml
+[tool.numbat.checks]
+ci_validator = "python ci/validate-workflow-contracts.py --mode project"
+```
+
+### `[tool.numbat.content_rules]`
+
+Declarative regex rules scanned on **added diff-hunk lines** (before built-in
+production heuristics). The hint `code` is the TOML table key (for example
+`regex_typo`).
+
+**Shorthand** — one string per rule code:
+
+```toml
+[tool.numbat.content_rules]
+regex_typo = "continue-projec(?!t) → continue-project"
+```
+
+**Table form** — supports path scoping and multiple entries per code:
+
+```toml
+[[tool.numbat.content_rules.regex_typo]]
+paths = ["ci/validate-workflow-contracts.py"]
+pattern = "execute-projec(?!t)"
+expected = "execute-project"
+```
+
+When `paths` is empty or omitted, the rule applies to all non-binary,
+non-test, non-doc files (same skip rules as built-in production hints). Path
+entries match as prefix or glob-style patterns.
+
+### Example (this repository)
+
+This repo dogfoods `[tool.numbat.content_rules]` for CI validator typo patterns
+and `PROJECT_EXECUTOR_COMMENT_FILTER` checks — see `pyproject.toml`:
+
+```toml
+[[tool.numbat.content_rules.regex_typo]]
+paths = ["ci/validate-workflow-contracts.py"]
+pattern = "continue-projec(?!t)"
+expected = "continue-project"
+
+[[tool.numbat.content_rules.suspicious_constant_change]]
+paths = ["ci/validate-workflow-contracts.py"]
+pattern = "PROJECT_EXECUTOR_COMMENT_FILTER\\s*=(?!.*continue-project)(?!.*continue-projec)"
+expected = "continue-project"
+```
+
+See D-006 in `.ai/project/decisions.md` for format scope and precedence.
 
 ## Architecture and context
 
