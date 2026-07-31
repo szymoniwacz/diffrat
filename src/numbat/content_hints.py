@@ -6,19 +6,11 @@ import math
 import re
 from collections import Counter
 from dataclasses import dataclass
+from fnmatch import fnmatch
 
 from numbat.analysis import FocusRiskHint, categorize_path, focus_risk_hint
+from numbat.config import ContentRule, NumbatConfig
 from numbat.diff_parser import DiffContent, FileDiffContent
-
-_VALIDATOR_PATH = "ci/validate-workflow-contracts.py"
-_COMMENT_FILTER_CONSTANT = "PROJECT_EXECUTOR_COMMENT_FILTER"
-_COMMENT_FILTER_EXPECTED = ("execute-project", "continue-project")
-
-# Near-miss tokens: look like the real command but are truncated or mistyped.
-_COMMAND_TYPO_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
-    (re.compile(r"continue-projec(?!t)"), "continue-project"),
-    (re.compile(r"execute-projec(?!t)"), "execute-project"),
-)
 
 # High-entropy string literal detection (documented threshold).
 _ENTROPY_MIN_LENGTH = 20
@@ -66,7 +58,11 @@ class _AddedLine:
     category: str
 
 
-def content_focus_risk_hints(diff_content: DiffContent | None) -> list[FocusRiskHint]:
+def content_focus_risk_hints(
+    diff_content: DiffContent | None,
+    *,
+    config: NumbatConfig | None = None,
+) -> list[FocusRiskHint]:
     """Return content-derived hints from unified-diff hunks."""
     if diff_content is None:
         return []
@@ -76,7 +72,7 @@ def content_focus_risk_hints(diff_content: DiffContent | None) -> list[FocusRisk
         if file_diff.binary:
             continue
         for added in _iter_added_lines(file_diff):
-            hints.extend(_hints_for_added_line(added))
+            hints.extend(_hints_for_added_line(added, config=config))
     return hints
 
 
@@ -95,11 +91,15 @@ def _iter_added_lines(file_diff: FileDiffContent) -> list[_AddedLine]:
     return lines
 
 
-def _hints_for_added_line(added: _AddedLine) -> list[FocusRiskHint]:
+def _hints_for_added_line(
+    added: _AddedLine,
+    *,
+    config: NumbatConfig | None,
+) -> list[FocusRiskHint]:
     hints: list[FocusRiskHint] = []
 
-    if _is_validator_path(added.path):
-        hints.extend(_validator_hints_for_line(added))
+    if config is not None:
+        hints.extend(_config_rule_hints_for_line(added, config.content_rules))
 
     if added.category in {"source", "ci"}:
         hints.extend(_production_hints_for_line(added))
@@ -107,39 +107,44 @@ def _hints_for_added_line(added: _AddedLine) -> list[FocusRiskHint]:
     return hints
 
 
-def _validator_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
+def _config_rule_hints_for_line(
+    added: _AddedLine,
+    rules: tuple[ContentRule, ...],
+) -> list[FocusRiskHint]:
     hints: list[FocusRiskHint] = []
-    typo_expected = _find_project_command_typo(added.text)
-    if typo_expected is not None:
+    for rule in rules:
+        if not _content_rule_applies_to_path(added.path, rule.paths):
+            continue
+        if rule.pattern.search(added.text) is None:
+            continue
+        if rule.expected in added.text:
+            continue
         hints.append(
             focus_risk_hint(
-                code="regex_typo",
+                code=rule.code,
                 message=(
-                    f"Suspicious typo in {added.path} "
-                    f"(expected '{typo_expected}'): {added.text.strip()}"
+                    f"Suspicious pattern in {added.path} "
+                    f"(expected '{rule.expected}'): {added.text.strip()}"
                 ),
             )
         )
-
-    if _COMMENT_FILTER_CONSTANT in added.text and "=" in added.text:
-        missing = [
-            token
-            for token in _COMMENT_FILTER_EXPECTED
-            if token not in added.text
-        ]
-        if missing and typo_expected is None:
-            preview = ", ".join(f"'{token}'" for token in missing)
-            hints.append(
-                focus_risk_hint(
-                    code="suspicious_constant_change",
-                    message=(
-                        f"{_COMMENT_FILTER_CONSTANT} may be missing expected "
-                        f"tokens ({preview}): {added.text.strip()}"
-                    ),
-                )
-            )
-
     return hints
+
+
+def _content_rule_applies_to_path(path: str, paths: tuple[str, ...]) -> bool:
+    if not paths:
+        return True
+    normalized = path.replace("\\", "/")
+    for entry in paths:
+        if entry.endswith("/"):
+            if normalized.startswith(entry) or normalized == entry.rstrip("/"):
+                return True
+            continue
+        if fnmatch(normalized, entry):
+            return True
+        if normalized == entry or normalized.endswith(f"/{entry}"):
+            return True
+    return False
 
 
 def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
@@ -187,18 +192,6 @@ def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
         )
 
     return hints
-
-
-def _is_validator_path(path: str) -> bool:
-    normalized = path.replace("\\", "/")
-    return normalized == _VALIDATOR_PATH or normalized.endswith(f"/{_VALIDATOR_PATH}")
-
-
-def _find_project_command_typo(line: str) -> str | None:
-    for pattern, expected in _COMMAND_TYPO_PATTERNS:
-        if pattern.search(line) and expected not in line:
-            return expected
-    return None
 
 
 def _matches_any_pattern(line: str, patterns: tuple[re.Pattern[str], ...]) -> bool:

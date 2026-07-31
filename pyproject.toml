@@ -36,3 +36,23 @@ python_version = "3.11"
 strict = true
 packages = ["numbat"]
 exclude = ["ci/"]
+
+[[tool.numbat.content_rules.regex_typo]]
+paths = ["ci/validate-workflow-contracts.py"]
+pattern = "continue-projec(?!t)"
+expected = "continue-project"
+
+[[tool.numbat.content_rules.regex_typo]]
+paths = ["ci/validate-workflow-contracts.py"]
+pattern = "execute-projec(?!t)"
+expected = "execute-project"
+
+[[tool.numbat.content_rules.suspicious_constant_change]]
+paths = ["ci/validate-workflow-contracts.py"]
+pattern = "PROJECT_EXECUTOR_COMMENT_FILTER\\s*=(?!.*continue-project)(?!.*continue-projec)"
+expected = "continue-project"
+
+[[tool.numbat.content_rules.suspicious_constant_change]]
+paths = ["ci/validate-workflow-contracts.py"]
+pattern = "PROJECT_EXECUTOR_COMMENT_FILTER\\s*=(?!.*execute-project)(?!.*execute-projec)"
+expected = "execute-project"

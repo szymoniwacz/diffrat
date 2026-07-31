@@ -51,7 +51,7 @@ def test_plan_checks_ci_validator_uses_config_override() -> None:
     )
     config = NumbatConfig(
         checks={"ci_validator": "python ci/validate-workflow-contracts.py --mode strict"},
-        content_rules={},
+        content_rules=(),
     )
 
     specs = plan_checks(summary, config=config)
@@ -75,7 +75,7 @@ def test_plan_checks_ignores_non_ci_validator_config_overrides() -> None:
     )
     config = NumbatConfig(
         checks={"pytest": "custom-pytest"},
-        content_rules={},
+        content_rules=(),
     )
 
     specs = plan_checks(summary, config=config)

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
+from numbat.config import NumbatConfig
 from numbat.diff_parser import DiffContent, DiffSummary, FileChange
 from numbat.git_adapter import GitContext
 from numbat.scoring import HintSeverity, risk_score_for_file, severity_for_code
@@ -243,6 +244,7 @@ def analyze_diff(
     diff_content: DiffContent | None = None,
     cwd: str | None = None,
     git_context: GitContext | None = None,
+    config: NumbatConfig | None = None,
 ) -> AnalysisResult:
     """Compute per-file categories and focus/risk hints for a diff."""
     categories = tuple(categorize_path(file_change.path) for file_change in summary.files)
@@ -251,7 +253,7 @@ def analyze_diff(
     if diff_content is not None:
         from numbat.content_hints import content_focus_risk_hints
 
-        hints.extend(content_focus_risk_hints(diff_content))
+        hints.extend(content_focus_risk_hints(diff_content, config=config))
 
     non_binary_total_lines = sum(
         file_change.additions + file_change.deletions
