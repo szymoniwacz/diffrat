@@ -39,6 +39,19 @@ def test_focus_risk_hint_resolves_severity_from_registry() -> None:
     hint = focus_risk_hint("possible_secret", "test message")
     assert hint.severity == "risk"
     assert hint.code == "possible_secret"
+    assert hint.path is None
+    assert hint.line is None
+
+
+def test_focus_risk_hint_accepts_path_and_line() -> None:
+    hint = focus_risk_hint(
+        "possible_secret",
+        "test message",
+        path="src/a.py",
+        line=42,
+    )
+    assert hint.path == "src/a.py"
+    assert hint.line == 42
 
 
 def test_focus_risk_hint_unknown_code_defaults_to_info() -> None:

@@ -50,12 +50,15 @@ _IPV4_PATTERN = re.compile(
 
 _STRING_LITERAL_PATTERN = re.compile(r"""['"]([^'"]+)['"]""")
 
+_HUNK_HEADER_PATTERN = re.compile(r"@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+
 
 @dataclass(frozen=True)
 class _AddedLine:
     text: str
     path: str
     category: str
+    line: int | None
 
 
 def content_focus_risk_hints(
@@ -83,12 +86,30 @@ def _iter_added_lines(file_diff: FileDiffContent) -> list[_AddedLine]:
 
     lines: list[_AddedLine] = []
     for hunk in file_diff.hunks:
+        new_line = _new_file_start_line(hunk.header)
         for line in hunk.lines:
             if line.startswith("+"):
                 lines.append(
-                    _AddedLine(text=line[1:], path=file_diff.path, category=category)
+                    _AddedLine(
+                        text=line[1:],
+                        path=file_diff.path,
+                        category=category,
+                        line=new_line,
+                    )
                 )
+                if new_line is not None:
+                    new_line += 1
+            elif line.startswith(" "):
+                if new_line is not None:
+                    new_line += 1
     return lines
+
+
+def _new_file_start_line(header: str) -> int | None:
+    match = _HUNK_HEADER_PATTERN.search(header)
+    if match is None:
+        return None
+    return int(match.group(1))
 
 
 def _hints_for_added_line(
@@ -126,6 +147,8 @@ def _config_rule_hints_for_line(
                     f"Suspicious pattern in {added.path} "
                     f"(expected '{rule.expected}'): {added.text.strip()}"
                 ),
+                path=added.path,
+                line=added.line,
             )
         )
     return hints
@@ -150,12 +173,16 @@ def _content_rule_applies_to_path(path: str, paths: tuple[str, ...]) -> bool:
 def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
     hints: list[FocusRiskHint] = []
     preview = added.text.strip()
+    path = added.path
+    line = added.line
 
     if _matches_possible_secret(added.text):
         hints.append(
             focus_risk_hint(
                 code="possible_secret",
                 message=f"Possible secret in {added.path}: {preview}",
+                path=path,
+                line=line,
             )
         )
 
@@ -164,6 +191,8 @@ def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
             focus_risk_hint(
                 code="debug_leftover",
                 message=f"Debug leftover in {added.path}: {preview}",
+                path=path,
+                line=line,
             )
         )
 
@@ -172,6 +201,8 @@ def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
             focus_risk_hint(
                 code="dangerous_call",
                 message=f"Dangerous call in {added.path}: {preview}",
+                path=path,
+                line=line,
             )
         )
 
@@ -180,6 +211,8 @@ def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
             focus_risk_hint(
                 code="broad_exception",
                 message=f"Broad exception handler in {added.path}: {preview}",
+                path=path,
+                line=line,
             )
         )
 
@@ -188,6 +221,8 @@ def _production_hints_for_line(added: _AddedLine) -> list[FocusRiskHint]:
             focus_risk_hint(
                 code="hardcoded_url_or_ip",
                 message=f"Hardcoded URL or IP in {added.path}: {preview}",
+                path=path,
+                line=line,
             )
         )
 

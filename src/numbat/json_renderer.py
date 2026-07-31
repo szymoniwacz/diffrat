@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from numbat.analysis import AnalysisResult, analyze_diff, sort_hints
+from numbat.analysis import AnalysisResult, FocusRiskHint, analyze_diff, sort_hints
 from numbat.checks import CheckResult
 from numbat.diff_parser import (
     MAX_CHANGE_FILES,
@@ -16,6 +16,19 @@ from numbat.git_adapter import GitContext
 from numbat.scoring import sort_file_entries
 
 JSON_SCHEMA_VERSION = "1"
+
+
+def _serialize_focus_risk_hint(hint: FocusRiskHint) -> dict[str, object]:
+    entry: dict[str, object] = {
+        "code": hint.code,
+        "message": hint.message,
+        "severity": hint.severity,
+    }
+    if hint.path is not None:
+        entry["path"] = hint.path
+    if hint.line is not None:
+        entry["line"] = hint.line
+    return entry
 
 
 def render_review_json(
@@ -60,7 +73,7 @@ def render_review_json(
             for file_change, category, risk_score in sorted_entries
         ],
         "focus_risk": [
-            {"code": hint.code, "message": hint.message, "severity": hint.severity}
+            _serialize_focus_risk_hint(hint)
             for hint in sort_hints(list(result.hints))
         ],
         "changes": _serialize_changes(diff_content, sort_paths=sorted_paths),
