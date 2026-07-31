@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from numbat.analysis import AnalysisResult, analyze_diff
 from numbat.config import NumbatConfig
 from numbat.diff_parser import DiffContent, DiffSummary
@@ -21,8 +23,8 @@ def run_analysis(
 ) -> AnalysisResult:
     """Run analysis through the configured backend.
 
-    Deterministic heuristics always run. When LLM config is enabled, the LLM path
-    is selected but does not add findings until a later implementation slice.
+    Deterministic heuristics always run. When LLM config is enabled and the
+    request succeeds, optional LLM narrative is attached additively.
     """
     resolved_llm = llm_config if llm_config is not None else load_llm_config()
     result = analyze_diff(
@@ -33,6 +35,8 @@ def run_analysis(
         config=config,
     )
     if resolved_llm.enabled:
-        run_llm_analysis(resolved_llm, diff_content=diff_content)
+        llm_content = run_llm_analysis(resolved_llm, diff_content=diff_content)
+        if llm_content is not None:
+            result = replace(result, llm_findings=llm_content)
     return result
 

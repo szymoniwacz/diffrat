@@ -181,3 +181,35 @@ def test_render_review_report_review_order_lists_all_when_five_or_fewer_files() 
 
     assert "1. src/a.py  [source]  (+4 -1 lines)" in review_section
     assert "2. tests/test_a.py  [tests]  (+2 -0 lines)" in review_section
+
+
+def test_render_review_report_includes_llm_analysis_when_present() -> None:
+    from dataclasses import replace
+
+    from numbat.analysis import analyze_diff
+
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+    analysis = replace(
+        analyze_diff(summary),
+        llm_findings="Review auth changes carefully.\nCheck token expiry.",
+    )
+
+    report = render_review_report(summary, analysis=analysis)
+
+    assert "LLM analysis" in report
+    assert "Review auth changes carefully." in report
+    assert "Check token expiry." in report
+    llm_section = report.split("LLM analysis", maxsplit=1)[1]
+    assert "Local checks" not in llm_section
+
+
+def test_render_review_report_omits_llm_analysis_when_absent() -> None:
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+
+    report = render_review_report(summary)
+
+    assert "LLM analysis" not in report
