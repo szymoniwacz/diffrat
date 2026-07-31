@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import re
+from pathlib import Path
+
 from numbat.analysis import analyze_diff
+from numbat.config import ContentRule, NumbatConfig, load_config
 from numbat.content_hints import content_focus_risk_hints
 from numbat.diff_parser import (
     DiffContent,
@@ -18,6 +22,17 @@ _FILTER_GOOD = (
 _FILTER_TYPO = (
     'PROJECT_EXECUTOR_COMMENT_FILTER = "^/(execute-project|continue-projec)$"'
 )
+
+_DOGFOOD_CONFIG = load_config(Path(__file__).resolve().parents[1])
+
+
+def _dogfood_regex_typo_config() -> NumbatConfig:
+    rules = tuple(
+        rule
+        for rule in _DOGFOOD_CONFIG.content_rules
+        if rule.code == "regex_typo"
+    )
+    return NumbatConfig(checks={}, content_rules=rules)
 
 
 def _single_file_content(path: str, added_line: str) -> DiffContent:
@@ -59,7 +74,10 @@ def _validator_typo_content() -> DiffContent:
 
 
 def test_content_hints_regex_typo_for_continue_projec() -> None:
-    hints = content_focus_risk_hints(_validator_typo_content())
+    hints = content_focus_risk_hints(
+        _validator_typo_content(),
+        config=_DOGFOOD_CONFIG,
+    )
 
     assert len(hints) == 1
     assert hints[0].code == "regex_typo"
@@ -86,10 +104,7 @@ def test_content_hints_ignore_correct_constant() -> None:
         truncated_files=False,
     )
 
-    assert content_focus_risk_hints(content) == []
-
-
-def test_content_hints_skip_tests_paths() -> None:
+    assert content_focus_risk_hints(content, config=_DOGFOOD_CONFIG) == []
     content = _single_file_content("tests/test_foo.py", 'api_key = "sk-abcdefghijklmnopqrstuvwxyz"')
 
     assert content_focus_risk_hints(content) == []
@@ -249,8 +264,79 @@ def test_analyze_diff_merges_content_hints() -> None:
         )
     )
 
-    result = analyze_diff(summary, diff_content=_validator_typo_content())
+    result = analyze_diff(
+        summary,
+        diff_content=_validator_typo_content(),
+        config=_DOGFOOD_CONFIG,
+    )
 
     codes = [hint.code for hint in result.hints]
     assert "ci_workflow_paths" in codes
     assert "regex_typo" in codes
+
+
+def test_content_hints_config_rule_hit() -> None:
+    config = NumbatConfig(
+        checks={},
+        content_rules=(
+            ContentRule(
+                code="regex_typo",
+                pattern=re.compile(r"foo(?!bar)"),
+                expected="foobar",
+                paths=("src/",),
+            ),
+        ),
+    )
+    content = _single_file_content("src/numbat/review.py", "value = foo")
+
+    hints = content_focus_risk_hints(content, config=config)
+
+    assert len(hints) == 1
+    assert hints[0].code == "regex_typo"
+    assert "foobar" in hints[0].message
+
+
+def test_content_hints_config_rule_miss_when_expected_present() -> None:
+    config = NumbatConfig(
+        checks={},
+        content_rules=(
+            ContentRule(
+                code="regex_typo",
+                pattern=re.compile(r"foo(?!bar)"),
+                expected="foobar",
+                paths=(),
+            ),
+        ),
+    )
+    content = _single_file_content("src/numbat/review.py", "value = foobar")
+
+    assert content_focus_risk_hints(content, config=config) == []
+
+
+def test_content_hints_config_rule_path_scoping() -> None:
+    config = NumbatConfig(
+        checks={},
+        content_rules=(
+            ContentRule(
+                code="regex_typo",
+                pattern=re.compile(r"foo(?!bar)"),
+                expected="foobar",
+                paths=("ci/",),
+            ),
+        ),
+    )
+    content = _single_file_content("src/numbat/review.py", "value = foo")
+
+    assert content_focus_risk_hints(content, config=config) == []
+
+
+def test_content_hints_without_config_skips_dogfood_rules() -> None:
+    assert content_focus_risk_hints(_validator_typo_content()) == []
+
+
+def test_content_hints_dogfood_rules_match_repo_pyproject() -> None:
+    config = _dogfood_regex_typo_config()
+
+    assert len(config.content_rules) == 2
+    hints = content_focus_risk_hints(_validator_typo_content(), config=_DOGFOOD_CONFIG)
+    assert any(hint.code == "regex_typo" for hint in hints)

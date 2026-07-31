@@ -117,6 +117,7 @@ def run_review(
         diff_content=diff_content,
         cwd=cwd,
         git_context=git_context,
+        config=numbat_config,
     )
     check_results: list[CheckResult] | None = None
     if run_checks_flag:
