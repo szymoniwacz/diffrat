@@ -292,7 +292,7 @@ FULL_WORKFLOW_LIFECYCLE_ORDER = (
     "ci stabilization",
     "diff-risk assessment",
     "human review",
-    "manual human merge",
+    "human merge",
 )
 
 EXECUTE_GOAL_LIFECYCLE_ORDER = (
@@ -361,7 +361,7 @@ PROJECT_EXECUTOR_PRODUCTION_SETUP = ".ai/automation/project-executor-production-
 PROJECT_EXECUTOR_LIVE_LOADER_HEADING = "Live automation prompt"
 PROJECT_EXECUTOR_AUTOMATION_NAME = "Project Executor"
 PROJECT_EXECUTOR_COMMENT_FILTER = (
-    "^/(execute-project( self-correcting-review)?|continue-project)$"
+    "^/(execute-project( self-correcting-review( auto-merge)?)?|continue-project)$"
 )
 PROJECT_EXECUTOR_MATERIAL_DECISION_REQUIRED_PHRASES = (
     "Material decision questions on GitHub",

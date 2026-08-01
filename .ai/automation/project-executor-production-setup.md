@@ -27,11 +27,12 @@ Start disabled and enable the automation only after this change is merged.
 ## Comment filter
 
 ```text
-^/(execute-project( self-correcting-review)?|continue-project)$
+^/(execute-project( self-correcting-review( auto-merge)?)?|continue-project)$
 ```
 
-Accepts `/execute-project`, `/execute-project self-correcting-review`, and
-`/continue-project` only.
+Accepts `/execute-project`, `/execute-project self-correcting-review`,
+`/execute-project self-correcting-review auto-merge`, and `/continue-project`
+only.
 ## Pull request merged trigger
 
 GitHub **pull request merged** on this repository. Use the same automation name,
@@ -63,16 +64,29 @@ a Cursor Runtime Secret; never commit or print it.
 1. Create a **Project Execution** issue.
 2. Fill its outcome, completion criteria, constraints, and context.
 3. Comment exactly `/execute-project` as the authorized owner (or
-   `/execute-project self-correcting-review` for the same run with
-   self-correcting review mode on eligible delegated goals).
+   `/execute-project self-correcting-review` for self-correcting review without
+   agent merge, or `/execute-project self-correcting-review auto-merge` for
+   self-correcting review plus authorized squash merge on eligible delegated
+   goals).
 4. Verify that it creates at most one delegated goal and one review-ready pull
    request (or an explicit blocker comment when review-ready criteria are not
-   met).
-5. Comment `/continue-project` while the pull request is open and verify that it
-   makes no change.
-6. Manually merge the pull request without commenting and verify that Project
-   Executor continues (or enters `WAIT` when applicable CI is still pending).
+   met). Under `self-correcting-review auto-merge`, when eligible, Goal Executor
+   also squash-merges that pull request.
+5. Comment `/continue-project` while the pull request is still open (default or
+   self-correcting-review path, or auto-merge before merge completes) and verify
+   that it makes no change.
+6. Default / self-correcting-review path: manually merge the pull request
+   without commenting and verify that Project Executor continues (or enters
+   `WAIT` when applicable CI is still pending). Auto-merge path: after Goal
+   Executor squash-merges, verify that the pull request merged trigger continues
+   Project Executor (or enters `WAIT` when applicable CI is still pending on the
+   default branch).
 7. When merge-time CI is pending, verify that `/continue-project` resumes after
    CI passes.
 
-Agents never merge.
+Merge permissions: the Goal Executor / Project Executor automation identity must
+be allowed to squash-merge into the protected default branch when using
+`/execute-project self-correcting-review auto-merge`. Project Executor itself
+never merges; Goal Executor performs authorized squash merges only with that
+flag. Default `/execute-project` and `/execute-project self-correcting-review`
+still require human merge.

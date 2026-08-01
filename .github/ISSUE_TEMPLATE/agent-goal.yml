@@ -61,8 +61,9 @@ body:
 
         - `/execute-goal` — default: authorize work through a review-ready PR (human CR, then you merge)
         - `/execute-goal self-correcting-review` — same + self-correcting review mode when eligible (skip human CR; you still merge)
+        - `/execute-goal self-correcting-review auto-merge` — same + Goal Executor squash-merges when eligible
 
-        Authorizes branch, scoped changes, validation, commits, push, PR, CI stabilization, and handoff. Never merge.
+        Authorizes branch, scoped changes, validation, commits, push, PR, CI stabilization, and handoff. Merge only with the `auto-merge` form when eligible.
 
         Details: `.ai/policies/autonomy-and-authorization.md`, `.ai/review/self-correcting-review-loop.md`
     validations:

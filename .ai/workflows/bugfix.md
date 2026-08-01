@@ -28,7 +28,8 @@ acceptance criteria.
 9. Complete via the canonical lifecycle (`.ai/docs/full-workflow.md`). Prefer
    independent review when available; otherwise self-review with
    `.ai/review/ai-review-checklist.md`. Prepare a review handoff highlighting
-   the root cause and fix. Agents never merge.
+   the root cause and fix. Merge rules:
+   `.ai/policies/autonomy-and-authorization.md`.
 
 ## Validation
 

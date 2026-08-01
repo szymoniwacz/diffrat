@@ -14,6 +14,10 @@ remain in their canonical files. Slice boundaries:
 - Maintainer access to Cursor Automations for this GitHub repository
 - Repository connected to Cursor with permission to create branches and pull
   requests
+- For `/execute-goal self-correcting-review auto-merge` squash merge: automation
+  identity allowed to squash-merge into the protected default branch
+  (branch-protection allowlist / required-review rules must permit that identity
+  when no human review is required for eligible self-verified PRs)
 
 ## Configuration parameters
 
@@ -24,7 +28,7 @@ remain in their canonical files. Slice boundaries:
 | Trigger event | GitHub **issue comment** | Ordinary GitHub issues only. Pull request review threads and pull request comments are out of scope. |
 | Repository scope | **This repository** | Configure the automation against the repository that contains this documentation. |
 | Author filter | **Me** | Cursor UI value. Restricts execution to comments from the authorized repository owner. |
-| Comment filter regex | `^/execute-goal( self-correcting-review)?$` | Exact match on the full comment body. Accepts `/execute-goal` and `/execute-goal self-correcting-review`. No leading or trailing text, whitespace, or punctuation. |
+| Comment filter regex | `^/execute-goal( self-correcting-review( auto-merge)?)?$` | Exact match on the full comment body. Accepts `/execute-goal`, `/execute-goal self-correcting-review`, and `/execute-goal self-correcting-review auto-merge`. No leading or trailing text, whitespace, or punctuation. |
 | Live automation prompt | See **Live automation prompt** below | Small stable loader. Loads `.ai/automation/goal-executor.md` from the repository default branch at the start of every run. |
 
 Authorization meaning: `.ai/policies/autonomy-and-authorization.md`.
@@ -93,7 +97,14 @@ GitHub issue before relying on production execution.
    ```
 
 3. Expect a cloud agent run that opens a pull request and, when Slice 2
-   criteria pass, marks it ready for review. Automation never merges.
+   criteria pass, marks it ready for review. Default `/execute-goal` and
+   `/execute-goal self-correcting-review` never merge. With
+   `/execute-goal self-correcting-review auto-merge`, when eligible, Goal
+   Executor squash-merges after that handoff.
+4. For an auto-merge smoke test: authorize with
+   `/execute-goal self-correcting-review auto-merge` on a low-risk docs-only
+   goal, confirm the PR merges, and confirm the `main` tip commit has clean
+   attribution.
 
 Repeated `/execute-goal` comments must not create duplicate work. See
 `.ai/automation/README.md`.
@@ -105,3 +116,6 @@ Repeated `/execute-goal` comments must not create duplicate work. See
 - [ ] For private repositories, issue read access works or `GH_TOKEN` is set.
 - [ ] No secrets appear in repository files, prompts, PRs, comments, or logs.
 - [ ] A test Agent Goal issue can be authorized with exact `/execute-goal`.
+- [ ] For auto-merge: automation identity can squash-merge to the protected
+      default branch; a `/execute-goal self-correcting-review auto-merge` smoke
+      test merges with clean `main` tip attribution.

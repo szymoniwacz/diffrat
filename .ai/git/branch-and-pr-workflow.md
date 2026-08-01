@@ -97,10 +97,37 @@ Open one pull request per branch targeting `main`.
 
 Agents and automated workflows must not push directly to `main`. Use a branch and pull request.
 
-## No merge by agent
+## No merge by agent except auto-merge
 
 Agents may create branches, commits, and pull requests. Agents must never merge
-pull requests. Only humans merge after review.
+pull requests except under authorized eligible
+`self-correcting-review auto-merge`. Default, self-correcting-without-auto-merge,
+and escalated paths: only humans merge after review. Mode and preconditions:
+`.ai/policies/autonomy-and-authorization.md`.
+
+## Authorized self-correcting merge
+
+Use only when all merge preconditions in
+`.ai/policies/autonomy-and-authorization.md` are met
+(`self-correcting-review auto-merge` authorization; loop clean; eligible
+low/medium; applicable CI green or none; no open material, dangerous, or
+immediate blockers).
+
+Procedure (Goal Executor):
+
+1. Confirm the pull request is ready for review, applicable CI is green (or no
+   applicable CI is configured), attribution and PR metadata are clean, and the
+   self-correcting handoff records eligibility.
+2. Squash-merge only (for example `gh pr merge --squash`). Do not use merge
+   commit or rebase merge. Do not enable GitHub auto-merge queue.
+3. Read back the remote pull request and confirm it is merged.
+4. Read the resulting `main` tip commit. Confirm a clean title, an empty or
+   clean body, and no prohibited attribution trailers.
+5. If merge is denied (permissions, branch protection, required reviews) or
+   verification fails, stop with an explicit blocker. Do not bypass protection,
+   force push, or retry with a different merge strategy.
+6. Report the merge SHA and pull request URL. On success under Project Executor,
+   the existing pull request merged trigger continues the project.
 
 ## Attribution by surface
 
@@ -155,10 +182,12 @@ the locally prepared text or write response.
 
 ### Commits on `main`
 
-Final commits on `main` must not contain prohibited attribution. A human
-performs a squash merge and verifies that the resulting `main` commit has a
-clean title, an empty or clean body, and no AI attribution trailers. Agents
-never merge.
+Final commits on `main` must not contain prohibited attribution. Squash merge
+onto `main` is performed by a human (default, self-correcting without
+`auto-merge`, or escalated) or by Goal Executor under authorized eligible
+`self-correcting-review auto-merge`. The merger verifies that the resulting
+`main` commit has a clean title, an empty or clean body, and no AI attribution
+trailers. Agents must not merge outside that authorized path.
 
 ## Pre-push metadata gate
 

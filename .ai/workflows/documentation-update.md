@@ -29,7 +29,8 @@ Provide at minimum:
 10. Complete via the canonical lifecycle (`.ai/docs/full-workflow.md`). Prefer
     independent review when available; otherwise self-review with
     `.ai/review/ai-review-checklist.md`. Prepare a review handoff listing what
-    readers should re-check. Agents never merge.
+    readers should re-check. Merge rules:
+    `.ai/policies/autonomy-and-authorization.md`.
 
 ## Validation
 

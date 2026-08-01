@@ -33,8 +33,22 @@ Hard max: **3** passes. Do not expand scope or weaken validators.
   review-before-merge under dangerous-actions or security policy
 - a dangerous action needs prior approval
 
+Escalated work requires human CR. Do not agent-merge.
+
 ## Handoff
 
 PR description or review packet must state: mode used, pass count, finding
 summary, diff-risk/eligibility, residual risks, and whether human CR was
-skipped or escalated. Agents never merge.
+skipped or escalated.
+
+## Authorized squash merge
+
+Only when `self-correcting-review auto-merge` was authorized. After a clean
+eligible exit, applicable CI green, and all merge preconditions in
+`.ai/policies/autonomy-and-authorization.md`, Goal Executor performs the
+authorized squash merge and verification in
+`.ai/git/branch-and-pr-workflow.md`. Do not enable GitHub auto-merge queue.
+If merge fails (permissions, branch protection, verification), stop with an
+explicit blocker and do not claim Done via merge.
+
+Without `auto-merge`, stop after the self-verified handoff; a human merges.

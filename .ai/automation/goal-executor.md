@@ -10,17 +10,20 @@ from the working tree and is unaffected by the live loader.
 
 Run in either of these cases:
 
-1. an authorized repository owner comments exactly `/execute-goal` or
-   `/execute-goal self-correcting-review` on an ordinary GitHub issue in this
-   repository;
+1. an authorized repository owner comments exactly `/execute-goal`,
+   `/execute-goal self-correcting-review`, or
+   `/execute-goal self-correcting-review auto-merge` on an ordinary GitHub
+   issue in this repository;
 2. Project Executor invokes one delegated Agent Goal under an active,
-   in-scope `/execute-project` or `/execute-project self-correcting-review`
-   authorization.
+   in-scope `/execute-project`, `/execute-project self-correcting-review`, or
+   `/execute-project self-correcting-review auto-merge` authorization.
 
 For case 2, require the exact project marker and reverify the parent issue and
 authorization before every write. When the parent authorization is
-`/execute-project self-correcting-review`, treat the delegated run as
-self-correcting review mode (same as `/execute-goal self-correcting-review`).
+`/execute-project self-correcting-review` or
+`/execute-project self-correcting-review auto-merge`, treat the delegated run as
+self-correcting review mode (same as the matching `/execute-goal` form). When
+the parent form includes `auto-merge`, inherit authorized squash merge as well.
 
 ## Live loader precondition (automation only)
 
@@ -37,6 +40,7 @@ fail closed before every repository mutation or remote write:
 - perform no push;
 - perform no remote branch publication;
 - create or update no pull request;
+- perform no merge;
 - report an explicit live-loader precondition blocker;
 - point to `.ai/automation/goal-executor-production-setup.md`.
 
@@ -73,8 +77,8 @@ Apply the complete execution-state contract from `.ai/automation/README.md`:
   switch, implementation, or commit; and
 - immediately before the first remote write of every run, including resumed work.
 
-Remote writes include push, pull request creation or metadata update, and issue
-or pull request comment creation or edit.
+Remote writes include push, pull request creation or metadata update, issue or
+pull request comment creation or edit, and authorized squash merge.
 
 ## Execution
 
@@ -123,6 +127,18 @@ If applicable CI cannot be inspected, or attribution cannot be fixed without
 rewriting published history, stop with an explicit blocker. Do not claim
 review-ready status.
 
+## Authorized self-correcting merge
+
+When `self-correcting-review auto-merge` is active (direct opt-in or inherited
+from Project Executor) and all merge preconditions in
+`.ai/policies/autonomy-and-authorization.md` are met after the handoff above,
+perform the authorized squash merge and verification in
+`.ai/git/branch-and-pr-workflow.md`. Report the merge SHA and pull request URL.
+
+When `auto-merge` was not authorized, the run escalated to human CR, or any
+merge precondition fails, stop before merge. Do not enable GitHub auto-merge
+queue.
+
 ## Remote verification
 
 Before stopping:
@@ -138,11 +154,14 @@ Before stopping:
    issue or pull request comment created or edited during the current run.
 3. Read the remote pull request back and confirm it is marked ready for review
    when review-ready criteria are met.
+4. When an authorized self-correcting merge ran, confirm the pull request is
+   merged and the `main` tip commit attribution is clean.
 
 ## Prohibited actions
 
-Never merge, enable auto-merge, force push, or rewrite published branch history
-after the first push. Human authorization cannot override the append-only
-published-history rule. Do not bypass branch protection, disable required
-validation, or make unrelated cleanup changes.
+Never enable GitHub auto-merge queue, force push, or rewrite published branch
+history after the first push. Never merge except under authorized eligible
+`self-correcting-review auto-merge`. Human authorization cannot override the
+append-only published-history rule. Do not bypass branch protection, disable
+required validation, or make unrelated cleanup changes.
 

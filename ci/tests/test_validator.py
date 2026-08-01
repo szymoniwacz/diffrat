@@ -297,8 +297,14 @@ def test_incorrect_execute_goal_lifecycle_order_is_detected() -> None:
         execute_goal = root / ".ai/skills/execute-goal.md"
         original = execute_goal.read_text(encoding="utf-8")
         swapped = original.replace(
-            "  -> create or update PR\n  -> CI stabilization\n  -> stop before merge\n",
-            "  -> create or update PR\n  -> stop before merge\n  -> CI stabilization\n",
+            "  -> create or update PR\n"
+            "  -> CI stabilization\n"
+            "  -> then exactly one of:\n"
+            "       stop before merge (default / self-correcting-review)\n",
+            "  -> create or update PR\n"
+            "  -> then exactly one of:\n"
+            "       stop before merge (default / self-correcting-review)\n"
+            "  -> CI stabilization\n",
         )
         assert swapped != original
         execute_goal.write_text(swapped, encoding="utf-8")
@@ -570,7 +576,7 @@ def test_missing_project_executor_comment_filter_is_detected() -> None:
         original = setup.read_text(encoding="utf-8")
         setup.write_text(
             original.replace(
-                "^/(execute-project( self-correcting-review)?|continue-project)$",
+                "^/(execute-project( self-correcting-review( auto-merge)?)?|continue-project)$",
                 "^/execute-project$",
             ),
             encoding="utf-8",
@@ -579,7 +585,7 @@ def test_missing_project_executor_comment_filter_is_detected() -> None:
         assert result.returncode != 0
         assert (
             "production setup must document comment filter "
-            "'^/(execute-project( self-correcting-review)?|continue-project)$'"
+            "'^/(execute-project( self-correcting-review( auto-merge)?)?|continue-project)$'"
         ) in result.stderr
 
 

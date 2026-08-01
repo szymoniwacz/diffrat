@@ -11,7 +11,7 @@ Use it as the first human-readable guide before asking AI to implement anything.
 
 Prefer `/execute-goal` for one meaningful outcome, or whole-project
 automation via a **Project Execution** issue and `/execute-project`. Agents
-never merge.
+never merge except under authorized eligible `self-correcting-review auto-merge`.
 
 Canonical rules:
 
@@ -37,13 +37,17 @@ new project
 new task
   -> /execute-goal with one scoped outcome
   -> agent completes preparation through review-ready PR when authorized
-  -> human review and merge
+  -> human review and merge (default)
+  -> or self-correcting-review: eligible self-verified handoff, human merges
+  -> or self-correcting-review auto-merge: eligible self-verified squash merge
 
 whole product (comment- and merge-triggered automation)
   -> Project Execution issue + /execute-project
+  -> or /execute-project self-correcting-review (skip CR; you merge)
+  -> or /execute-project self-correcting-review auto-merge (skip CR; agent squash-merges when eligible)
   -> Project Executor selects one goal at a time
   -> Goal Executor completes each delegated goal per the automation contract
-  -> human review and merge each PR
+  -> human review and merge each PR (default / self-correcting-review), or Goal Executor squash-merges when auto-merge eligible
   -> merged PR triggers Project Executor for the next goal until completion criteria pass
 ```
 
@@ -183,10 +187,10 @@ boundary: see [At a glance](#at-a-glance) and
 | | |
 |---|---|
 | **You** | Prefer `/execute-goal` for the full outcome. Answer the grouped decision batch when asked. |
-| **AI** | Changes files within scope. Fixes clear in-scope failures. Prefers independent review; self-review is the fallback. Asks one grouped decision batch after validation and review when material questions remain. Completion boundary: see [At a glance](#at-a-glance). Never merges. |
+| **AI** | Changes files within scope. Fixes clear in-scope failures. Prefers independent review; self-review is the fallback. Asks one grouped decision batch after validation and review when material questions remain. Completion boundary: see [At a glance](#at-a-glance). Merges only under authorized eligible `self-correcting-review auto-merge`. |
 | **AI may say** | “That request is outside the scope — should I add it as a follow-up idea?” |
 | **Result** | PR outcome per [At a glance](#at-a-glance) and the automation contract. |
-| **You next** | Human review and merge after review-ready handoff. |
+| **You next** | Human review and merge after review-ready handoff (default / self-correcting-review), or confirm auto-merge when that form was used. |
 
 ```txt
 /execute-goal
@@ -202,25 +206,27 @@ PR workflow: [`.ai/git/branch-and-pr-workflow.md`](../git/branch-and-pr-workflow
 ### 8b. Whole-project automation (optional)
 
 Use this when you want to describe the product once and let automation select
-goals sequentially between your manual merges.
+goals sequentially. Default and `self-correcting-review` wait for your manual
+merges; with `/execute-project self-correcting-review auto-merge`, eligible
+delegated PRs are squash-merged by Goal Executor.
 
 | | |
 |---|---|
-| **You** | Create a **Project Execution** issue. Fill product outcome and completion criteria. Comment exactly `/execute-project`. Configure Project Executor per [`.ai/automation/project-executor-production-setup.md`](../automation/project-executor-production-setup.md). |
-| **AI** | Project Executor reads the project issue and repository state, selects at most one next goal, and delegates to Goal Executor. Stops while a PR is open or CI is pending. Never merges. |
+| **You** | Create a **Project Execution** issue. Fill product outcome and completion criteria. Comment exactly `/execute-project`, `/execute-project self-correcting-review`, or `/execute-project self-correcting-review auto-merge`. Configure Project Executor per [`.ai/automation/project-executor-production-setup.md`](../automation/project-executor-production-setup.md). |
+| **AI** | Project Executor reads the project issue and repository state, selects at most one next goal, and delegates to Goal Executor. Stops while a PR is open or CI is pending. Project Executor never merges; Goal Executor may squash-merge only under `self-correcting-review auto-merge` when eligible. |
 | **Result** | A sequence of pull requests, one scoped goal at a time. Goal Executor stopping point: [`.ai/automation/README.md`](../automation/README.md). |
-| **You next** | Review and merge each PR. The next goal starts automatically when the pull request merges (or comment `/continue-project` if CI was pending). |
+| **You next** | Default / self-correcting-review: review and merge each PR. Auto-merge eligible: answer material decisions only; merges continue the project automatically. Use `/continue-project` if CI was pending. |
 
 Runtime: [`.ai/automation/project-executor.md`](../automation/project-executor.md)
 
-### 9. Human review and manual merge
+### 9. Human review and merge
 
 | | |
 |---|---|
-| **You** | Review diff, diff-risk note, and checklists. Approve, request changes, or reject. |
-| **AI** | Does not merge. Waits for your decision. |
-| **Result** | Approved work merged to `main` by a human only. |
-| **You next** | Start the next scoped task. |
+| **You** | Default / self-correcting-review / escalated: review diff, diff-risk note, and checklists; approve, request changes, or reject; merge. `auto-merge` eligible: no CR or merge required. |
+| **AI** | Default / self-correcting-review / escalated: does not merge. `self-correcting-review auto-merge` eligible: Goal Executor squash-merges per [`.ai/git/branch-and-pr-workflow.md`](../git/branch-and-pr-workflow.md). |
+| **Result** | Work on `main` via human squash merge or authorized `auto-merge` squash merge. |
+| **You next** | Start the next scoped task (or let Project Executor continue after merge). |
 
 Checklists: [`.ai/review/human-review-checklist.md`](../review/human-review-checklist.md), [`.ai/review/diff-risk-checklist.md`](../review/diff-risk-checklist.md)
 
@@ -304,7 +310,11 @@ keeping incomplete copies.
 | Command | Use when |
 |---|---|
 | `/execute-goal` | You want one outcome carried through the canonical goal-to-PR lifecycle. See [At a glance](#at-a-glance) for the automation boundary. |
+| `/execute-goal self-correcting-review` | Same as `/execute-goal`, plus eligible self-verified handoff (you still merge). |
+| `/execute-goal self-correcting-review auto-merge` | Same as self-correcting-review, plus eligible Goal Executor squash merge. |
 | `/execute-project` | GitHub comment on a **Project Execution** issue authorizing whole-project automation and starting the first step. Setup: [`.ai/automation/project-executor-production-setup.md`](../automation/project-executor-production-setup.md). |
+| `/execute-project self-correcting-review` | Same as `/execute-project`, plus self-correcting mode on delegated goals (you still merge). |
+| `/execute-project self-correcting-review auto-merge` | Same as self-correcting-review, plus eligible Goal Executor squash merge on delegated goals. |
 | `/continue-project` | Optional GitHub comment on an authorized **Project Execution** issue after material-decision answers or when CI was pending at merge time. |
 | `/project-intake` | Starting a new project and you want AI to ask questions. |
 | `/define-project` | You already have a rough description and want AI to organize it. |

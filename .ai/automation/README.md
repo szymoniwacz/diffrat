@@ -23,8 +23,9 @@ GitHub issue by the authorized repository owner.
 
 That comment authorizes the canonical `/execute-goal` lifecycle in
 `.ai/skills/execute-goal.md`. Goal Executor automation implements Slice 2
-through review-ready handoff as a bounded prefix of that lifecycle, not an
-alternative command.
+through review-ready handoff as a bounded prefix of that lifecycle, and under
+`/execute-goal self-correcting-review auto-merge` continues through authorized
+squash merge when eligible. It is not an alternative command.
 
 Authorization meaning and question timing:
 `.ai/policies/autonomy-and-authorization.md`.
@@ -58,7 +59,8 @@ and a completed-without-PR result. A remote write includes:
 
 - push or remote branch publication;
 - pull request creation or metadata update;
-- issue or pull request comment creation or edit.
+- issue or pull request comment creation or edit;
+- authorized squash merge of a pull request.
 
 ### Durable evidence
 
@@ -172,14 +174,22 @@ that is not GitHub Verified is an immediate blocker.
 
 **Slice 1 (superseded):** stopped after a validated draft pull request.
 
-**Slice 2 (current):** continues through remote CI stabilization, diff-risk
-recording, and marking the pull request ready for review. Automation still
-stops before merge.
+**Slice 2 (current default):** continues through remote CI stabilization,
+diff-risk recording, and marking the pull request ready for review. Default and
+escalated paths stop before merge.
 
-Report the stopping point when blocked. Do not claim merge authorization.
+**Self-correcting extension:** when `self-correcting-review auto-merge` is
+authorized and eligible, Goal Executor continues from Slice 2 through authorized
+squash merge per `.ai/git/branch-and-pr-workflow.md`.
 
-## Never merge
+Report the stopping point when blocked. Claim merge authorization only for that
+`auto-merge` eligible path.
 
-Agents and automations must never merge pull requests. Only humans merge after
-review.
+## Merge policy
+
+Agents and automations must never merge pull requests except under authorized
+eligible `self-correcting-review auto-merge` (Goal Executor squash merge).
+Default, self-correcting-without-auto-merge, and escalated paths: only humans
+merge after review. Do not enable GitHub auto-merge queue. Project Executor
+never merges.
 

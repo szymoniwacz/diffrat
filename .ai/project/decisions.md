@@ -92,6 +92,27 @@ dependencies. Absent config preserves pre-config behavior.
 `checks.py` with dogfood rules in this repo's `pyproject.toml`. Remote/shared
 rule packs and `--config PATH` remain deferred.
 
+---
+
+### D-007 — Self-correcting `auto-merge` option (2026-08-01)
+
+**Decision:** Squash merge by Goal Executor requires an explicit
+`auto-merge` suffix on top of self-correcting review:
+
+- `/execute-goal self-correcting-review auto-merge`
+- `/execute-project self-correcting-review auto-merge`
+
+Bare `self-correcting-review` still skips human CR when eligible but leaves
+merge to a human.
+
+**Kept:** material-decision, dangerous-action, and high/security-sensitive stops;
+default modes still never agent-merge; no GitHub auto-merge queue; no
+force-push or protection bypass.
+
+**Status:** confirmed (synced from ai-project-template #115)
+
+**Context:** See `.ai/ideas/implemented/002-self-correcting-auto-merge.md`.
+
 > Reusable workflow rules (for example, documentation before implementation)
 > live in the canonical workflow documents under `.ai/`, not in this product
 > decision log.

@@ -61,11 +61,12 @@ body:
 
         - `/execute-project` — authorize project and start/resume (default: human CR per delegated PR, then you merge)
         - `/execute-project self-correcting-review` — same + self-correcting review mode on eligible delegated goals (skip human CR when eligible; you still merge)
+        - `/execute-project self-correcting-review auto-merge` — same + Goal Executor squash-merges when eligible
         - `/continue-project` — optional nudge after material-decision answers or when automation stopped with CI pending (does not authorize by itself)
 
-        Merging a delegated PR continues the project when the merge trigger is configured. Agents never merge.
+        Merging a delegated PR continues the project when the merge trigger is configured. Project Executor never merges; Goal Executor may squash-merge only with `self-correcting-review auto-merge` when eligible.
 
-        After editing the title or scope fields (Product outcome, Completion criteria, Constraints, Out of scope, Relevant context), re-comment `/execute-project` or `/execute-project self-correcting-review` (authorization resets). Editing Commands alone does not reset authorization.
+        After editing the title or scope fields (Product outcome, Completion criteria, Constraints, Out of scope, Relevant context), re-comment `/execute-project`, `/execute-project self-correcting-review`, or `/execute-project self-correcting-review auto-merge` (authorization resets). Editing Commands alone does not reset authorization.
 
         Details: `.ai/policies/autonomy-and-authorization.md`, `.ai/review/self-correcting-review-loop.md`
     validations:

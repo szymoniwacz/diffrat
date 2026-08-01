@@ -33,7 +33,8 @@ high-risk test work requires a task packet and plan.
 11. Complete via the canonical lifecycle (`.ai/docs/full-workflow.md`). Prefer
     independent review when available; otherwise self-review with
     `.ai/review/ai-review-checklist.md`. Prepare a review handoff noting
-    coverage gaps intentionally left open. Agents never merge.
+    coverage gaps intentionally left open. Merge rules:
+    `.ai/policies/autonomy-and-authorization.md`.
 
 ## Validation
 

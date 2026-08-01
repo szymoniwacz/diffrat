@@ -5,7 +5,9 @@ Canonical workflow instructions for AI-assisted work in this repository.
 ## Default operating model
 
 Work is **goal-oriented**. Prefer `/execute-goal`. Autonomous mode is the
-default; supervised mode is an explicit override. Agents never merge.
+default; supervised mode is an explicit override. Agents never merge except
+under authorized eligible `self-correcting-review auto-merge`
+(`.ai/policies/autonomy-and-authorization.md`).
 
 Canonical rules:
 
@@ -37,7 +39,9 @@ implementation-ready when applicable. Follow the matching workflow in
 - After changes, verify scope, docs, and quality gates before starting the next task.
 - Prepare changes that a human can review without chat history.
 - Under `/execute-goal`, continue through commit, push, PR, and CI
-  stabilization without extra confirmation. Do not merge pull requests.
+  stabilization without extra confirmation. Merge only when
+  `self-correcting-review auto-merge` is authorized and eligible; otherwise do
+  not merge.
 - Put workstream execution state in the agent's internal plan during the run.
   Do not commit `.ai/plans/plan-*.md` or `.ai/packets/task-*.md` to the PR
   branch.

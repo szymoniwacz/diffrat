@@ -40,9 +40,12 @@ requests when:
 
 A request such as "implement this and prepare a PR" authorizes the routine
 branch, commit, push, and PR actions needed for that outcome. It does not
-authorize merge or other dangerous actions.
+authorize merge or other dangerous actions unless
+`self-correcting-review auto-merge` is opted in and eligible per
+`.ai/policies/autonomy-and-authorization.md`.
 
-Agents must never push directly to `main` and must never merge a pull request.
+Agents must never push directly to `main`. Agents must never merge a pull
+request except under authorized eligible `self-correcting-review auto-merge`.
 
 See `.ai/git/branch-and-pr-workflow.md` and
 `.ai/policies/autonomy-and-authorization.md`.

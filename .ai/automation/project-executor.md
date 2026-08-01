@@ -2,9 +2,13 @@
 
 Project Executor is an event-driven orchestrator around the existing Goal
 Executor. It selects at most one goal, invokes Goal Executor, and then waits
-for human merge (default: after human CR; with self-correcting review mode:
-after an eligible self-verified handoff, or human CR if escalated). It does not
-copy the goal lifecycle or merge pull requests.
+for the delegated pull request to merge: human merge after human CR (default);
+human merge after an eligible self-verified handoff
+(`/execute-project self-correcting-review`); Goal Executor authorized squash
+merge after an eligible self-verified handoff
+(`/execute-project self-correcting-review auto-merge`); or human merge after
+human CR if escalated. It does not copy the goal lifecycle or merge pull
+requests itself.
 
 ## Trigger events
 
@@ -20,11 +24,16 @@ issue:
   edit to its title or scope fields) and starts or resumes when state
   permits.
 - `/execute-project self-correcting-review` is the same authorization and also
-  opts eligible delegated goals into self-correcting review mode. Same mode
-  rules as `/execute-goal self-correcting-review`:
+  opts eligible delegated goals into self-correcting review mode (skip human CR
+  when eligible; human still merges). Same mode rules as
+  `/execute-goal self-correcting-review`:
   `.ai/policies/autonomy-and-authorization.md` and
   `.ai/review/self-correcting-review-loop.md`. Ineligible goals escalate to
-  human CR.
+  human CR (no agent merge).
+- `/execute-project self-correcting-review auto-merge` is the same as
+  `self-correcting-review` and also opts eligible delegated goals into
+  authorized squash merge by Goal Executor (same as
+  `/execute-goal self-correcting-review auto-merge`).
 - `/continue-project` is an optional manual nudge on an already authorized
   project: after material-decision answers, when applicable CI was pending, or
   when the owner wants to retry sooner. It does not authorize a project by
@@ -44,9 +53,9 @@ When this run was triggered by a merged pull request:
    `<!-- project-executor:goal project=OWNER/REPOSITORY#PROJECT_NUMBER -->`
    marker from this automation identity, stop as a no-op without writing.
 4. Resolve the Project Execution issue `#PROJECT_NUMBER` from that marker.
-5. Verify `/execute-project` or `/execute-project self-correcting-review`
-   authorization on that project issue after the most recent edit to its title
-   or scope fields.
+5. Verify `/execute-project`, `/execute-project self-correcting-review`, or
+   `/execute-project self-correcting-review auto-merge` authorization on that
+   project issue after the most recent edit to its title or scope fields.
 6. Run the same state resolution and actions as for a comment trigger on that
    project issue.
 
@@ -65,25 +74,29 @@ An active project is one open **Project Execution** issue that:
 
 - starts with `[Project Execution]:`;
 - contains Product outcome and Completion criteria;
-- has an exact `/execute-project` or `/execute-project self-correcting-review`
-  comment by the authorized repository owner posted after the most recent edit
-  to its title or any **scope field** (Product outcome, Completion criteria,
-  Constraints, Out of scope, Relevant context).
+- has an exact `/execute-project`, `/execute-project self-correcting-review`,
+  or `/execute-project self-correcting-review auto-merge` comment by the
+  authorized repository owner posted after the most recent edit to its title
+  or any **scope field** (Product outcome, Completion criteria, Constraints,
+  Out of scope, Relevant context).
 
 Edits to the **Commands** section alone do **not** invalidate authorization.
 **Commands** is human reference only: ignore it for product boundary, goal
 selection, planning, and implementation.
 
-The `self-correcting-review` form also opts eligible delegated goals into
-self-correcting review mode. Each goal still fails closed to human CR when
-ineligible. See `.ai/policies/autonomy-and-authorization.md`.
+The `self-correcting-review` form opts eligible delegated goals into
+self-correcting review mode (human still merges). The
+`self-correcting-review auto-merge` form also opts them into authorized squash
+merge by Goal Executor when eligible. Each goal still fails closed to human CR
+(no agent merge) when ineligible. See
+`.ai/policies/autonomy-and-authorization.md`.
 
 The scope fields are the project boundary. If there is no active project, stop
 as a no-op. If more than one exists, list them and stop without writing. Any
 later title or scope-field edit invalidates the authorization until the owner
-comments exactly `/execute-project` or `/execute-project self-correcting-review`
-again. If edit ordering cannot be verified, treat the project as unauthorized
-and make no write.
+comments exactly `/execute-project`, `/execute-project self-correcting-review`,
+or `/execute-project self-correcting-review auto-merge` again. If edit ordering
+cannot be verified, treat the project as unauthorized and make no write.
 
 Before any write, verify that the live loader read this file and
 `.ai/automation/goal-executor.md` from the current default branch. Otherwise
@@ -226,16 +239,22 @@ project authorization replaces a separate `/execute-goal` comment only for this
 delegated issue. When project authorization was
 `/execute-project self-correcting-review`, the delegated Goal Executor run
 inherits self-correcting review mode (equivalent to
-`/execute-goal self-correcting-review`).
+`/execute-goal self-correcting-review`). When project authorization was
+`/execute-project self-correcting-review auto-merge`, the delegated run also
+inherits authorized squash merge (equivalent to
+`/execute-goal self-correcting-review auto-merge`).
 
 Goal Executor retains ownership of planning, implementation, validation,
-branches, commits, pull requests, idempotency, and its Slice 2 stopping point
-before merge.
-After it stops, Project Executor also stops. Merging a delegated pull request
-triggers the next run automatically when the pull request merged trigger is
-configured. The owner may comment `/continue-project` as an optional nudge after
-material-decision answers or when state resolution entered `WAIT` (for example
-applicable CI still pending on the default branch).
+branches, commits, pull requests, idempotency, review-ready handoff, and — when
+`self-correcting-review auto-merge` is active and eligible — authorized squash
+merge. After Goal Executor stops (review-ready without merge, escalated,
+blocked, or after a successful auto-merge), Project Executor also stops. Merging
+a delegated pull request (human or Goal Executor) triggers the next run
+automatically when the pull request merged trigger is configured. The owner may
+comment `/continue-project` as an optional nudge after material-decision answers
+or when state resolution entered `WAIT` (for example applicable CI still pending
+on the default branch).
 
-Never merge, enable auto-merge, force push, rewrite published history, or push
-directly to the protected default branch.
+Project Executor never merges, never enables GitHub auto-merge queue, never
+force pushes, never rewrites published history, and never pushes directly to the
+protected default branch.

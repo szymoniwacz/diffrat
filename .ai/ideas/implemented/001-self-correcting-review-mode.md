@@ -158,6 +158,8 @@ Resolved 2026-07-31 / 2026-08-01 (see `.ai/project/decisions.md`):
 
 - [x] Mode name: **self-correcting review mode**; triggers documented in autonomy policy
 - [x] Human merge still mandatory in v1; auto-merge out of scope
+  *(superseded 2026-08-01 by idea 002 — optional
+  `self-correcting-review auto-merge` may squash-merge when eligible)*
 - [x] v1 eligibility: low + medium; high and security-sensitive require human CR
 - [x] Hard max iterations: 3
 - [x] Project Executor: `/execute-project self-correcting-review` opts eligible delegated goals into the same mode
