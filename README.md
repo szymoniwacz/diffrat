@@ -12,7 +12,8 @@ scripting.
 
 ## Status
 
-v1 core and Phase 3 (optional LLM) are complete on `main`:
+**1.0.0** is the first product release on `main` — v1 review CLI core plus Phase 3
+optional LLM:
 
 - `numbat review` with unstaged, `--staged`, `--base`, and `--range` modes; optional `--json`
 - Bounded diff hunks, git context, file categories, deterministic Focus/Risk hints
