@@ -10,13 +10,17 @@ from the working tree and is unaffected by the live loader.
 
 Run in either of these cases:
 
-1. an authorized repository owner comments exactly `/execute-goal` on an
-   ordinary GitHub issue in this repository;
+1. an authorized repository owner comments exactly `/execute-goal` or
+   `/execute-goal self-correcting-review` on an ordinary GitHub issue in this
+   repository;
 2. Project Executor invokes one delegated Agent Goal under an active,
-   in-scope `/execute-project` authorization.
+   in-scope `/execute-project` or `/execute-project self-correcting-review`
+   authorization.
 
 For case 2, require the exact project marker and reverify the parent issue and
-authorization before every write.
+authorization before every write. When the parent authorization is
+`/execute-project self-correcting-review`, treat the delegated run as
+self-correcting review mode (same as `/execute-goal self-correcting-review`).
 
 ## Live loader precondition (automation only)
 
@@ -42,11 +46,16 @@ Manual `/execute-goal` usage outside Cursor Automation is unaffected.
 
 1. The triggering issue and its structured fields (Goal, Acceptance criteria,
    Constraints, Out of scope, Relevant context). For delegated work, also read
-   the parent Project Execution issue.
+   the parent Project Execution issue (Product outcome, Completion criteria,
+   Constraints, Out of scope, Relevant context only).
 2. `.ai/README.md` and follow `/execute-goal` through canonical documents.
 3. `.ai/policies/autonomy-and-authorization.md` for authorization and question
    timing.
 4. `.ai/automation/README.md` for automation-specific boundaries.
+
+**Ignore the issue `Commands` section entirely** for scope, planning,
+implementation, validation, and Done. It is human cheat-sheet text only. Do not
+treat it as a goal, constraint, acceptance criterion, or relevant context.
 
 ## Preconditions
 
@@ -76,9 +85,12 @@ duplicate lifecycle or quality-gate content here.
 2. Implement only the authorized scope.
 3. Run applicable validation per `.ai/quality/quality-gates.md`.
 4. Prefer independent review when available; otherwise perform explicit
-   self-review per `.ai/review/ai-review-checklist.md`.
+   self-review per `.ai/review/ai-review-checklist.md`. When self-correcting
+   review mode is active (direct opt-in or inherited from Project Executor),
+   follow `.ai/review/self-correcting-review-loop.md`.
 5. Limit implementation, review, and fix iterations to three. Stop when the limit
-   is reached.
+   is reached. The self-correcting review loop uses the same hard max of three
+   review passes.
 6. Stop for an immediate blocker or unresolved material decision per
    `.ai/policies/autonomy-and-authorization.md`.
 

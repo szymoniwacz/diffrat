@@ -27,9 +27,11 @@ Start disabled and enable the automation only after this change is merged.
 ## Comment filter
 
 ```text
-^/(execute-project|continue-project)$
+^/(execute-project( self-correcting-review)?|continue-project)$
 ```
 
+Accepts `/execute-project`, `/execute-project self-correcting-review`, and
+`/continue-project` only.
 ## Pull request merged trigger
 
 GitHub **pull request merged** on this repository. Use the same automation name,
@@ -60,7 +62,9 @@ a Cursor Runtime Secret; never commit or print it.
 
 1. Create a **Project Execution** issue.
 2. Fill its outcome, completion criteria, constraints, and context.
-3. Comment exactly `/execute-project` as the authorized owner.
+3. Comment exactly `/execute-project` as the authorized owner (or
+   `/execute-project self-correcting-review` for the same run with
+   self-correcting review mode on eligible delegated goals).
 4. Verify that it creates at most one delegated goal and one review-ready pull
    request (or an explicit blocker comment when review-ready criteria are not
    met).

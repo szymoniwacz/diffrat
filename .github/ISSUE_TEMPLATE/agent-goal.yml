@@ -8,9 +8,7 @@ body:
       value: |
         Describe the outcome you want. Do not provide file names, architecture, or an implementation plan.
 
-        When you are ready to authorize work, comment exactly `/execute-goal` on this issue.
-
-        That comment authorizes branch creation, scoped repository changes, validation, commits, push, pull request creation, CI stabilization, and review-ready handoff. Merge is never authorized.
+        Leave the **Commands** section at the bottom as-is so it stays visible on the created issue. Agents ignore it for scope.
 
   - type: textarea
     id: goal
@@ -50,3 +48,22 @@ body:
       label: Relevant context
       description: Links, prior decisions, or background the agent should read.
       placeholder: Optional.
+
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands
+      description: Human cheat sheet only. Agents must ignore this section for scope. Comment exactly one option (repository owner).
+      value: |
+        REFERENCE ONLY — agents must ignore this entire section for scope, planning, implementation, validation, and Done.
+
+        Comment exactly (repository owner):
+
+        - `/execute-goal` — default: authorize work through a review-ready PR (human CR, then you merge)
+        - `/execute-goal self-correcting-review` — same + self-correcting review mode when eligible (skip human CR; you still merge)
+
+        Authorizes branch, scoped changes, validation, commits, push, PR, CI stabilization, and handoff. Never merge.
+
+        Details: `.ai/policies/autonomy-and-authorization.md`, `.ai/review/self-correcting-review-loop.md`
+    validations:
+      required: true

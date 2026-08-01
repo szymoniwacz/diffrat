@@ -55,9 +55,17 @@ validation or Done for the PR workflow path.
 
 When using the GitHub PR workflow, the created pull request was assessed before human review using `.ai/review/diff-risk-checklist.md`. The risk level, evidence, and required reviewer focus were recorded in the PR description or a top-level PR comment.
 
+### Self-correcting review mode (opt-in)
+
+When authorized per `.ai/policies/autonomy-and-authorization.md`, complete
+`.ai/review/self-correcting-review-loop.md` instead of human CR if eligible.
+Record mode use in the PR handoff. A human still merges. Escalate to human CR
+when the loop does not converge or eligibility fails.
+
 ### No merge by agent
 
-Agents never merge pull requests. Human review owns the final merge.
+Agents never merge pull requests. Human review owns the final merge, except that
+an eligible self-verified handoff may skip human CR before that merge.
 
 ## Done checklist
 
@@ -71,6 +79,7 @@ Agents never merge pull requests. Human review owns the final merge.
 - [ ] branch and PR created (when applicable)
 - [ ] applicable CI checks pass after CI stabilization (when using the GitHub PR workflow)
 - [ ] diff-risk assessed on the PR before human review, when applicable (`.ai/review/diff-risk-checklist.md`)
+- [ ] human CR completed, or eligible self-verified handoff when self-correcting review mode was used
 - [ ] agent did not merge the PR
 
 ## Not done
@@ -92,3 +101,4 @@ A task is not done when:
 - `.ai/packets/task-packet.template.md`
 - `.ai/packets/review-packet.template.md`
 - `.ai/review/README.md`
+- `.ai/review/self-correcting-review-loop.md`

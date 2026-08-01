@@ -24,7 +24,7 @@ remain in their canonical files. Slice boundaries:
 | Trigger event | GitHub **issue comment** | Ordinary GitHub issues only. Pull request review threads and pull request comments are out of scope. |
 | Repository scope | **This repository** | Configure the automation against the repository that contains this documentation. |
 | Author filter | **Me** | Cursor UI value. Restricts execution to comments from the authorized repository owner. |
-| Comment filter regex | `^/execute-goal$` | Exact match on the full comment body. No leading or trailing text, whitespace, or punctuation. |
+| Comment filter regex | `^/execute-goal( self-correcting-review)?$` | Exact match on the full comment body. Accepts `/execute-goal` and `/execute-goal self-correcting-review`. No leading or trailing text, whitespace, or punctuation. |
 | Live automation prompt | See **Live automation prompt** below | Small stable loader. Loads `.ai/automation/goal-executor.md` from the repository default branch at the start of every run. |
 
 Authorization meaning: `.ai/policies/autonomy-and-authorization.md`.

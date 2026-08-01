@@ -10,7 +10,7 @@ override, not the default.
 
 This policy owns:
 
-- autonomous versus supervised mode,
+- autonomous, supervised, and self-correcting review modes,
 - `/execute-goal` authorization,
 - `/execute-project` authorization,
 - `/continue-project` resume,
@@ -42,17 +42,49 @@ Use only when the user explicitly requests an earlier stop. Supervised mode may
 override default goal-to-PR authorization. When the requested stop is before
 commit or push, do not commit and do not push until authorized.
 
+### Self-correcting review mode (explicit opt-in only)
+
+Opt-in only. Default remains: review-ready PR → human CR → human merge.
+
+When opted in, run the closed review→fix loop in
+`.ai/review/self-correcting-review-loop.md` and skip human CR if eligible.
+
+**How to opt in:** name **self-correcting review mode** with `/execute-goal`,
+clearly request the same outcome, comment exactly
+`/execute-goal self-correcting-review` on a goal issue, or comment exactly
+`/execute-project self-correcting-review` on a **Project Execution** issue
+(trusted automation). The project form authorizes the project and opts every
+eligible delegated goal into the same mode; ineligible goals still escalate to
+human CR.
+
+**Authorizes:** skipping human CR after a clean eligible self-verified handoff;
+claiming that Done boundary in `.ai/quality/definition-of-done.md`.
+
+**Does not authorize:** merge, auto-merge, force push, history rewrite,
+bypassing protection, disabling validation, secret disclosure, out-of-scope
+destructive changes, or skipping stops for material decisions / dangerous
+actions / immediate blockers.
+
+**v1 eligibility:** low or medium diff-risk only. High diff-risk,
+security-sensitive, or review-before-merge changes escalate to human CR.
+
+After a clean self-verified PR, a human still merges (solo-author Approve =
+merge that head).
+
 ## `/execute-goal` authorization
 
 Invoking `/execute-goal`, or an equivalent request to carry a goal through to
-human review, authorizes branch or worktree creation, scoped changes, tests,
-validation, commits, push, final PR creation or update, CI stabilization, and
-in-scope CI fixes after PR creation.
+human review (default) or self-verified completion (when self-correcting
+review mode is opted in), authorizes branch or worktree creation, scoped
+changes, tests, validation, commits, push, final PR creation or update, CI
+stabilization, and in-scope CI fixes after PR creation.
 
 For a configured trusted automation, an exact `/execute-goal` comment by the
 authorized repository owner on an ordinary GitHub issue is equivalent to
-invoking `/execute-goal`. Automation-specific trigger and boundary details live
-in `.ai/automation/README.md`.
+invoking `/execute-goal`. An exact `/execute-goal self-correcting-review`
+comment opts that run into self-correcting review mode. Other
+automation-specific trigger and boundary details live in
+`.ai/automation/README.md`.
 
 The user does not need to repeat the words "open a PR".
 
@@ -67,10 +99,16 @@ See `.ai/git/branch-and-pr-workflow.md`.
 
 ## `/execute-project` authorization
 
-An exact `/execute-project` comment by the authorized repository owner on one
-open **Project Execution** issue authorizes Project Executor to select and run
-one small goal at a time inside that issue's stated outcome and constraints.
-A separate `/execute-goal` comment is not required for those delegated goals.
+An exact `/execute-project` or `/execute-project self-correcting-review`
+comment by the authorized repository owner on one open **Project Execution**
+issue authorizes Project Executor to select and run one small goal at a time
+inside that issue's stated outcome and constraints. A separate `/execute-goal`
+comment is not required for those delegated goals.
+
+`/execute-project self-correcting-review` additionally opts eligible delegated
+goals into self-correcting review mode (same rules as
+`/execute-goal self-correcting-review`). Ineligible goals still require human
+CR.
 
 It does not authorize concurrent goals, scope expansion, undefined material
 decisions, dangerous actions, force push, direct push to the protected default
@@ -80,12 +118,13 @@ branch, auto-merge, or merge. Runtime details live in
 ## `/continue-project` resume
 
 An exact `/continue-project` comment by the authorized repository owner on an
-open **Project Execution** issue with valid `/execute-project` authorization
-optionally nudges Project Executor to continue after material-decision answers
-or when applicable CI was pending. It is not required after merge when the pull
-request merged trigger is configured. It does not authorize a project by itself
-and does not replace `/execute-project` after issue edits. Runtime details live
-in `.ai/automation/project-executor.md`.
+open **Project Execution** issue with valid `/execute-project` or
+`/execute-project self-correcting-review` authorization optionally nudges
+Project Executor to continue after material-decision answers or when applicable
+CI was pending. It is not required after merge when the pull request merged
+trigger is configured. It does not authorize a project by itself and does not
+replace `/execute-project` after issue edits. Runtime details live in
+`.ai/automation/project-executor.md`.
 
 ## Question timing
 
@@ -176,5 +215,7 @@ branch history after the first push, and never bypass protection rules. See
 - `.ai/docs/full-workflow.md`
 - `.ai/policies/multi-agent-orchestration.md`
 - `.ai/quality/definition-of-ready.md`
+- `.ai/quality/definition-of-done.md`
+- `.ai/review/self-correcting-review-loop.md`
 - `.ai/git/branch-and-pr-workflow.md`
 

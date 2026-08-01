@@ -18,6 +18,7 @@ Review handoff means a review packet created from
 |---|---|---|
 | [ai-review-checklist.md](ai-review-checklist.md) | Independent review agent or self-review | After quality gates, before the decision checkpoint or handoff |
 | [diff-risk-checklist.md](diff-risk-checklist.md) | Both | Assessing change risk from the diff before human review |
+| [self-correcting-review-loop.md](self-correcting-review-loop.md) | Agent | Opt-in self-correcting review mode only |
 | [human-review-checklist.md](human-review-checklist.md) | Human reviewer | Reviewing an existing pull request |
 
 ## How to use
@@ -69,5 +70,5 @@ the checklist files or the review-packet template.
 
 Independent review when available, otherwise self-review, and review handoff are
 required before continuing to the next task. Human review is required before
-merge when using the GitHub PR workflow. See `.ai/docs/full-workflow.md`.
-Agents never merge.
+merge when using the GitHub PR workflow, unless self-correcting review mode is
+authorized and eligible. See `.ai/docs/full-workflow.md`. Agents never merge.

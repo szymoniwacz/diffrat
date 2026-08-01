@@ -2,8 +2,9 @@
 
 Project Executor is an event-driven orchestrator around the existing Goal
 Executor. It selects at most one goal, invokes Goal Executor, and then waits
-for human review and merge. It does not copy the goal lifecycle or merge pull
-requests.
+for human merge (default: after human CR; with self-correcting review mode:
+after an eligible self-verified handoff, or human CR if escalated). It does not
+copy the goal lifecycle or merge pull requests.
 
 ## Trigger events
 
@@ -16,8 +17,14 @@ When this run was triggered by an owner comment on a **Project Execution**
 issue:
 
 - `/execute-project` authorizes the project (initially or after the most recent
-  edit to its title or structured fields) and starts or resumes when state
+  edit to its title or scope fields) and starts or resumes when state
   permits.
+- `/execute-project self-correcting-review` is the same authorization and also
+  opts eligible delegated goals into self-correcting review mode. Same mode
+  rules as `/execute-goal self-correcting-review`:
+  `.ai/policies/autonomy-and-authorization.md` and
+  `.ai/review/self-correcting-review-loop.md`. Ineligible goals escalate to
+  human CR.
 - `/continue-project` is an optional manual nudge on an already authorized
   project: after material-decision answers, when applicable CI was pending, or
   when the owner wants to retry sooner. It does not authorize a project by
@@ -37,8 +44,9 @@ When this run was triggered by a merged pull request:
    `<!-- project-executor:goal project=OWNER/REPOSITORY#PROJECT_NUMBER -->`
    marker from this automation identity, stop as a no-op without writing.
 4. Resolve the Project Execution issue `#PROJECT_NUMBER` from that marker.
-5. Verify `/execute-project` authorization on that project issue after the most
-   recent edit to its title or structured fields.
+5. Verify `/execute-project` or `/execute-project self-correcting-review`
+   authorization on that project issue after the most recent edit to its title
+   or scope fields.
 6. Run the same state resolution and actions as for a comment trigger on that
    project issue.
 
@@ -57,14 +65,25 @@ An active project is one open **Project Execution** issue that:
 
 - starts with `[Project Execution]:`;
 - contains Product outcome and Completion criteria;
-- has an exact `/execute-project` comment by the authorized repository owner
-  posted after the most recent edit to its title or any structured field.
+- has an exact `/execute-project` or `/execute-project self-correcting-review`
+  comment by the authorized repository owner posted after the most recent edit
+  to its title or any **scope field** (Product outcome, Completion criteria,
+  Constraints, Out of scope, Relevant context).
 
-The issue fields are the project boundary. If there is no active project, stop
+Edits to the **Commands** section alone do **not** invalidate authorization.
+**Commands** is human reference only: ignore it for product boundary, goal
+selection, planning, and implementation.
+
+The `self-correcting-review` form also opts eligible delegated goals into
+self-correcting review mode. Each goal still fails closed to human CR when
+ineligible. See `.ai/policies/autonomy-and-authorization.md`.
+
+The scope fields are the project boundary. If there is no active project, stop
 as a no-op. If more than one exists, list them and stop without writing. Any
-later field or title edit invalidates the authorization until the owner comments
-exactly `/execute-project` again. If edit ordering cannot be verified, treat the
-project as unauthorized and make no write.
+later title or scope-field edit invalidates the authorization until the owner
+comments exactly `/execute-project` or `/execute-project self-correcting-review`
+again. If edit ordering cannot be verified, treat the project as unauthorized
+and make no write.
 
 Before any write, verify that the live loader read this file and
 `.ai/automation/goal-executor.md` from the current default branch. Otherwise
@@ -77,6 +96,9 @@ Read the active project issue and comments, the current default branch,
 `.ai/docs/architecture-direction.md`, every ADR linked from
 `.ai/project/decisions.md`, and `.ai/automation/goal-executor.md`. Never resume
 from chat history or a stale working branch.
+
+**Ignore the issue `Commands` section entirely** for product boundary, goal
+selection, planning, and implementation. It is human cheat-sheet text only.
 
 Use this exact marker in every delegated Agent Goal issue:
 
@@ -201,7 +223,10 @@ before continuing.
 Repeat state resolution. Only if that exact issue is the sole `RESUME` goal,
 invoke `.ai/automation/goal-executor.md` for it in the same run. The verified
 project authorization replaces a separate `/execute-goal` comment only for this
-delegated issue.
+delegated issue. When project authorization was
+`/execute-project self-correcting-review`, the delegated Goal Executor run
+inherits self-correcting review mode (equivalent to
+`/execute-goal self-correcting-review`).
 
 Goal Executor retains ownership of planning, implementation, validation,
 branches, commits, pull requests, idempotency, and its Slice 2 stopping point

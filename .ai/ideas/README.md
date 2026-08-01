@@ -26,4 +26,4 @@ This folder stores project ideas before they become implementation work.
 
 | ID | Title | Status | Notes |
 |---|---|---|---|
-| 001 | Self-correcting review mode | expanded | Opt-in mode: review→fix loop replaces human CR; default human-CR path unchanged |
+| 001-self-correcting-review-mode | Self-correcting review mode | implemented | Opt-in review→fix loop; human merge still required |

@@ -570,7 +570,7 @@ def test_missing_project_executor_comment_filter_is_detected() -> None:
         original = setup.read_text(encoding="utf-8")
         setup.write_text(
             original.replace(
-                "^/(execute-project|continue-project)$",
+                "^/(execute-project( self-correcting-review)?|continue-project)$",
                 "^/execute-project$",
             ),
             encoding="utf-8",
@@ -579,7 +579,7 @@ def test_missing_project_executor_comment_filter_is_detected() -> None:
         assert result.returncode != 0
         assert (
             "production setup must document comment filter "
-            "'^/(execute-project|continue-project)$'"
+            "'^/(execute-project( self-correcting-review)?|continue-project)$'"
         ) in result.stderr
 
 

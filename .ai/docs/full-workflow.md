@@ -60,7 +60,9 @@ Primary command: `/execute-goal`. Modes, authorization, and question timing:
 The pull request is normally the main human review boundary. CI stabilization,
 diff-risk assessment, human review, and manual merge stages apply when using
 the GitHub PR workflow. Otherwise, review handoff is the final required handoff
-artifact.
+artifact. Opt-in self-correcting review mode may skip human CR when authorized
+and eligible; see `.ai/policies/autonomy-and-authorization.md` and
+`.ai/review/self-correcting-review-loop.md`. Humans still merge.
 
 A pull request is not review-ready while applicable CI is pending or failing.
 Procedure: `.ai/git/branch-and-pr-workflow.md`.

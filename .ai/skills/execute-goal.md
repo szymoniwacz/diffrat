@@ -7,6 +7,8 @@
 ## Purpose
 
 Carry one authorized goal from analysis through a review-ready pull request.
+With explicit **self-correcting review mode**, target a self-verified PR instead
+(see `.ai/policies/autonomy-and-authorization.md`).
 
 Invoking `/execute-goal` authorizes branch or worktree creation, scoped changes,
 tests, validation, commits, push, final PR creation or update, CI
@@ -17,6 +19,7 @@ requested. Question timing and authorization details:
 `.ai/policies/autonomy-and-authorization.md`.
 
 Canonical lifecycle: `.ai/docs/full-workflow.md`.
+Self-correcting loop when opted in: `.ai/review/self-correcting-review-loop.md`.
 
 ## Completion by execution surface
 
@@ -31,12 +34,15 @@ review-ready handoff. Details: `.ai/automation/README.md`.
 Run when the user writes `/execute-goal`, or clearly asks for an end-to-end
 outcome ready for human review.
 
-## Always read
+Always read:
 
 - `.ai/policies/autonomy-and-authorization.md`
 - `.ai/instructions/workflow.md`
 - relevant project context and scope
 - triggering issue, explicit brief, or accepted requirement
+
+Ignore any issue **Commands** section for scope — it is human reference only
+(see `.ai/automation/goal-executor.md`).
 
 ## Read when applicable
 
@@ -75,6 +81,9 @@ Rules:
 - after PR creation, complete CI stabilization per
   `.ai/git/branch-and-pr-workflow.md`; pending or failing applicable CI means
   not review-ready,
+- when self-correcting review mode is active, complete
+  `.ai/review/self-correcting-review-loop.md` before claiming self-verified
+  Done; still stop before merge,
 - if CI cannot be inspected, report the limitation and do not claim full
   validation.
 

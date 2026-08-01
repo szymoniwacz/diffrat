@@ -2,7 +2,7 @@
 
 ## Status
 
-expanded
+implemented
 
 ## Problem
 
@@ -154,14 +154,14 @@ Stop the loop and require a human when:
 
 ## Open questions
 
-- [ ] Exact mode name and `/execute-goal` / comment trigger wording?
-- [ ] After a clean self-verified PR, is human merge still mandatory, or is a
-      separate auto-merge authorization in scope for a later phase?
-- [ ] Which risk classes are eligible in v1 (docs-only / low only / low+medium)?
-- [ ] Hard max iterations for the review→fix loop (proposed: 3)?
-- [ ] Must Project Execution issues opt in per project, per goal, or both?
-- [ ] Solo-author repos: does “skip human CR” change how Approve is recorded
-      today (manual merge of reviewed head)?
+Resolved 2026-07-31 / 2026-08-01 (see `.ai/project/decisions.md`):
+
+- [x] Mode name: **self-correcting review mode**; triggers documented in autonomy policy
+- [x] Human merge still mandatory in v1; auto-merge out of scope
+- [x] v1 eligibility: low + medium; high and security-sensitive require human CR
+- [x] Hard max iterations: 3
+- [x] Project Executor: `/execute-project self-correcting-review` opts eligible delegated goals into the same mode
+- [x] Solo-author: merge of self-verified head records Approve without separate CR
 
 ## Possible next step
 

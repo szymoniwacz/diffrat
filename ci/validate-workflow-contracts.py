@@ -360,7 +360,9 @@ PROJECT_EXECUTOR_PROMPT = ".ai/automation/project-executor.md"
 PROJECT_EXECUTOR_PRODUCTION_SETUP = ".ai/automation/project-executor-production-setup.md"
 PROJECT_EXECUTOR_LIVE_LOADER_HEADING = "Live automation prompt"
 PROJECT_EXECUTOR_AUTOMATION_NAME = "Project Executor"
-PROJECT_EXECUTOR_COMMENT_FILTER = "^/(execute-project|continue-project)$"
+PROJECT_EXECUTOR_COMMENT_FILTER = (
+    "^/(execute-project( self-correcting-review)?|continue-project)$"
+)
 PROJECT_EXECUTOR_MATERIAL_DECISION_REQUIRED_PHRASES = (
     "Material decision questions on GitHub",
     "lettered options",
