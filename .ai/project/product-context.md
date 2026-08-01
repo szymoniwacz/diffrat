@@ -14,29 +14,32 @@ Before planning or changing anything, an AI assistant should read this file.
   someone else's diff
 - **Core problem:** Diff review is slow, inconsistent, and context-poor without
   structured assistance grounded in git changes
-- **Current phase:** Phase 2 complete — v1 static core on `main`
+- **Current phase:** Phase 3 complete — **1.0.0** first product release on `main`
 - **Important constraints:** Local-first; diff-scoped analysis only; no web UI in v1;
-  no LLM in v1 (D-005); humans merge; agents never merge
+  optional LLM when `NUMBAT_LLM_*` env vars are set (diff-scoped prompts only);
+  humans merge; agents never merge
 
 ## Current phase
 
-Phase 2 complete (v1 close bar). Optional Phase 3 LLM is deferred / out of v1
-per D-005.
+Phase 3 complete (optional LLM layer on `main` per D-005 / ADR-0001). Phase 4
+integrations (CI bots, GitHub App) remain deferred.
 
 ## What exists today
 
 - AI workflow working system (`.ai/`) from `ai-project-template`
 - Project definition and requirements documentation
-- Installable `numbat` CLI (`pip install -e ".[dev]"`)
+- Installable `numbat` CLI (`pip install -e ".[dev]"`) at version **1.0.0**
 - `numbat review` — unstaged, `--staged`, `--base` (merge-base), `--range` (two-ref), `--json`
 - Human-readable report with file categories and deterministic Focus/Risk hints
   (including git-context hints: `many_commits`, `wip_commits`, `mixed_concerns`)
 - Git context on branch-vs-base and commit-range reviews
+- Optional LLM-backed analysis when `NUMBAT_LLM_*` env vars are set; heuristics-only
+  report remains the default without API keys
+- `CHANGELOG.md` for the 1.0.0 release
 - pytest / ruff / mypy green on main
 
 ## What does not exist yet
 
-- Optional LLM-backed analysis layer (out of v1; D-005)
 - CI bots, GitHub App, PyPI publication (Phase 4 / later)
 
 ## Core workflows (intended)
@@ -60,7 +63,8 @@ per D-005.
 - Respect scope in `.ai/project/scope.md`
 - Prefer small, reviewable changes; one Agent Goal at a time
 - Do not invent stack commands — use recorded README / pyproject commands
-- Local git data only in v1; do not send repo contents to external services
+- Local git data only by default; optional LLM sends diff-scoped prompts only when
+  explicitly configured via `NUMBAT_LLM_*`
 
 ## References
 
@@ -68,3 +72,4 @@ per D-005.
 - Scope: `.ai/project/scope.md`
 - Architecture direction: `.ai/docs/architecture-direction.md`
 - Decisions: `.ai/project/decisions.md` (D-005)
+- ADR: `.ai/architecture/adr-0001-llm-analysis-layer.md`
