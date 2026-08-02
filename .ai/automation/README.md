@@ -36,9 +36,10 @@ Production setup: `.ai/automation/goal-executor-production-setup.md`.
 
 Delegated goals may instead inherit one active `/execute-project`
 authorization. Merging a delegated pull request with `Closes #<goal-number>`
-may trigger Project Executor when that trigger is configured; post-merge
-default-branch CI completion resumes it (green → next/finalize; red → CI
-repair first). Project-level state and setup live in
+may trigger Project Executor when that trigger is configured; PR-head CI
+completion resumes incomplete Goal Executor handoff; post-merge default-branch
+CI completion resumes the project (green → next/finalize; red → CI repair
+first). Project-level state and setup live in
 `.ai/automation/project-executor.md` and
 `.ai/automation/project-executor-production-setup.md`.
 

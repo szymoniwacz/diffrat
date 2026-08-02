@@ -8,7 +8,7 @@ from the working tree and is unaffected by the live loader.
 
 ## Trigger
 
-Run in either of these cases:
+Run in any of these cases:
 
 1. an authorized repository owner comments exactly `/execute-goal`,
    `/execute-goal self-correcting-review`, or
@@ -16,7 +16,12 @@ Run in either of these cases:
    issue in this repository;
 2. Project Executor invokes one delegated Agent Goal under an active,
    in-scope `/execute-project`, `/execute-project self-correcting-review`, or
-   `/execute-project self-correcting-review auto-merge` authorization.
+   `/execute-project self-correcting-review auto-merge` authorization;
+3. applicable CI or workflow completion on a **non-default** branch that is the
+   head of an open pull request whose body contains exact `Closes #<issue>` for
+   an Agent Goal that this automation may continue (standalone prior
+   `/execute-goal…` authorization still valid, or delegated Project Executor
+   goal with trusted marker and valid parent authorization).
 
 For case 2, require the exact project marker and reverify the parent issue and
 authorization before every write. When the parent authorization is
@@ -24,6 +29,12 @@ authorization before every write. When the parent authorization is
 `/execute-project self-correcting-review auto-merge`, treat the delegated run as
 self-correcting review mode (same as the matching `/execute-goal` form). When
 the parent form includes `auto-merge`, inherit authorized squash merge as well.
+
+For case 3, resolve the pull request from the CI head branch or SHA, read
+`Closes #<issue>`, reverify authorization, then continue from **CI
+stabilization and review-ready handoff** (or authorized merge) for that issue
+only. If resolution or authorization fails, stop as a no-op without writing.
+Do not start a new unrelated goal from a PR CI event.
 
 ## Live loader precondition (automation only)
 
@@ -112,21 +123,45 @@ duplicate lifecycle or quality-gate content here.
 ## CI stabilization and review-ready handoff
 
 After the draft pull request exists, complete Slice 2 through review-ready
-handoff per `.ai/git/branch-and-pr-workflow.md`:
+handoff per `.ai/git/branch-and-pr-workflow.md` **in the same automation run**
+whenever the run can still observe CI. Do not treat "draft PR created" as a
+successful terminal stop.
 
 1. Verify remote commit attribution and PR metadata.
-2. Wait for applicable CI on the pull request.
+2. Wait for applicable CI on the pull request to reach a terminal state (poll
+   or re-check until green, failed, cancelled, or uninspectable). Do not end
+   the run while applicable CI is still pending.
 3. Fix clear in-scope CI failures caused by this branch; push forward commits
-   only.
+   only; then wait for CI again.
 4. Rerun affected local validation and review when fixes change behavior.
 5. Record the initial diff-risk assessment in the PR description or a top-level
    PR comment per `.ai/review/diff-risk-checklist.md`.
 6. Mark the pull request **ready for review** only when applicable CI passes,
    attribution is clean, and the handoff is complete.
 
+If the automation platform ends the run before CI finishes despite the rule
+above, the CI/workflow completed trigger on that PR head branch must resume
+Goal Executor (case 3 in **Trigger**) so handoff and merge still complete
+without a human comment.
+
 If applicable CI cannot be inspected, or attribution cannot be fixed without
 rewriting published history, stop with an explicit blocker. Do not claim
 review-ready status.
+
+### Run completion boundary
+
+A Goal Executor automation run may stop only when one of these is true:
+
+- the pull request is **ready for review** and merge is human-owned (no
+  `auto-merge`, or escalated / ineligible);
+- authorized `self-correcting-review auto-merge` squash completed and tip
+  verification passed;
+- an explicit blocker or unresolved material decision was reported;
+- bounded iteration limits were reached and reported.
+
+Stopping after opening or updating a **draft** while applicable CI is pending,
+or before review-ready handoff when CI is already green, is a contract
+violation. Do not report automation success for that outcome.
 
 ## Authorized self-correcting merge
 

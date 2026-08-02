@@ -159,11 +159,12 @@ open **Project Execution** issue with valid `/execute-project`,
 `/execute-project self-correcting-review`, or
 `/execute-project self-correcting-review auto-merge` authorization optionally
 nudges Project Executor to continue after material-decision answers or after an
-unexpected stop. It is not required after merge when the pull request merged
-and CI/workflow completed triggers are configured: pending post-merge CI
-auto-resumes on completion; failed post-merge CI enters repair before the next
-product goal. It does not authorize a project by itself and does not replace
-`/execute-project` after issue edits. Runtime details live in
+unexpected stop. It is not required for ordinary automation progress when the
+pull request merged and CI/workflow completed triggers are configured: PR-head
+CI completion resumes draft / auto-merge handoff; pending post-merge CI on the
+default branch auto-resumes on completion; failed post-merge CI enters repair
+before the next product goal. It does not authorize a project by itself and does
+not replace `/execute-project` after issue edits. Runtime details live in
 `.ai/automation/project-executor.md`.
 
 ## Question timing

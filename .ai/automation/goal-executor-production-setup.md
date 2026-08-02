@@ -25,13 +25,36 @@ remain in their canonical files. Slice boundaries:
 |---|---|---|
 | Automation name | `Goal Executor` | Display name in Cursor Automations. |
 | Model | `Composer 2.5` | Model used for Goal Executor runs. |
-| Trigger event | GitHub **issue comment** | Ordinary GitHub issues only. Pull request review threads and pull request comments are out of scope. |
+| Trigger events | GitHub **issue comment** and **CI/workflow completed** on non-default (pull request head) branches | See **Comment filter** and **CI/workflow completed trigger** below. Issue comments authorize and start work; PR-head CI completion resumes Slice 2 / merge when a prior run stopped early. |
 | Repository scope | **This repository** | Configure the automation against the repository that contains this documentation. |
-| Author filter | **Me** | Cursor UI value. Restricts execution to comments from the authorized repository owner. |
-| Comment filter regex | `^/execute-goal( self-correcting-review( auto-merge)?)?$` | Exact match on the full comment body. Accepts `/execute-goal`, `/execute-goal self-correcting-review`, and `/execute-goal self-correcting-review auto-merge`. No leading or trailing text, whitespace, or punctuation. |
+| Author filter | **Me** | Cursor UI value. Restricts issue-comment execution to the authorized repository owner. |
+| Comment filter regex | Exact match; see **Comment filter** below | No leading or trailing text, whitespace, or punctuation. Prefer one filter or split exact filters per command. |
 | Live automation prompt | See **Live automation prompt** below | Small stable loader. Loads `.ai/automation/goal-executor.md` from the repository default branch at the start of every run. |
 
+Prefer one automation with both triggers and the same live prompt. If the UI
+requires separate entries, duplicate the same configuration and prompt.
+
 Authorization meaning: `.ai/policies/autonomy-and-authorization.md`.
+
+## Comment filter
+
+```text
+^/execute-goal( self-correcting-review( auto-merge)?)?$
+```
+
+Accepts `/execute-goal`, `/execute-goal self-correcting-review`, and
+`/execute-goal self-correcting-review auto-merge`. Exact match on the full
+comment body.
+
+## CI/workflow completed trigger
+
+GitHub **CI/workflow completed** (or equivalent check-suite / workflow-run
+completed event) for **non-default branches** that are open pull request heads
+in this repository. Fire on both success and failure so Goal Executor can
+finish review-ready handoff, fix in-scope CI failures, or stop with a blocker.
+Ignore the default branch here (Project Executor owns default-branch CI resume).
+Use the same automation name, model, repository scope, and live automation
+prompt as the issue-comment trigger.
 
 ## Live automation prompt
 
@@ -46,6 +69,7 @@ Before any repository mutation or remote write:
 2. Read .ai/automation/goal-executor.md from that default branch.
 3. If the default branch or canonical file cannot be resolved and read, fail closed: make no repository change and perform no remote write.
 4. Follow the loaded file as the complete canonical Goal Executor instructions for this run.
+5. If this run was triggered by CI or workflow completion on a non-default branch, resolve the open pull request for that head branch, read Closes #<issue>, reverify authorization, and resume that goal only. If resolution fails, no-op.
 ```
 
 Later edits to `.ai/automation/goal-executor.md` do not require editing the live
@@ -96,17 +120,21 @@ GitHub issue before relying on production execution.
    /execute-goal
    ```
 
-3. Expect a cloud agent run that opens a pull request and, when Slice 2
-   criteria pass, marks it ready for review. Default `/execute-goal` and
-   `/execute-goal self-correcting-review` never merge. With
+3. Expect a cloud agent run that opens a pull request, **waits for applicable
+   PR CI**, and when Slice 2 criteria pass, marks it ready for review. Default
+   `/execute-goal` and `/execute-goal self-correcting-review` never merge. With
    `/execute-goal self-correcting-review auto-merge`, when eligible, Goal
-   Executor squash-merges after that handoff.
+   Executor squash-merges after that handoff. If a run still ends while the PR
+   is draft and CI later completes, the PR-head CI/workflow completed trigger
+   must resume Goal Executor without a human comment.
 4. For an auto-merge smoke test: authorize with
    `/execute-goal self-correcting-review auto-merge` on a low-risk docs-only
    goal, confirm the PR merges with an explicit clean squash title/body from
    Goal Executor, and confirm the default-branch tip passes **Commits on
    `main`** in `.ai/git/branch-and-pr-workflow.md` (platform-injected
    `Co-authored-by: Cursor Agent` / user `Co-authored-by` alone are allowed).
+   Also confirm that ending a run at draft is not treated as success when CI is
+   still pending, and that PR-head CI completion resumes handoff/merge.
 
 Repeated `/execute-goal` comments must not create duplicate work. See
 `.ai/automation/README.md`.
@@ -123,3 +151,9 @@ Repeated `/execute-goal` comments must not create duplicate work. See
       test merges with an explicit clean squash message and tip attribution
       that passes **Commits on `main`** (platform-injected Cursor Agent / user
       `Co-authored-by` alone allowed).
+- [ ] CI/workflow completed trigger is configured for non-default PR head
+      branches (success and failure) with the loader step that resumes via
+      `Closes #<issue>`.
+- [ ] A draft PR whose first run ends early is resumed by PR-head CI completion
+      through ready-for-review (and squash when auto-merge eligible) without
+      `/continue-project` or a second `/execute-goal`.

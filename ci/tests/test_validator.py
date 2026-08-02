@@ -556,8 +556,8 @@ def test_missing_project_executor_merge_trigger_is_detected() -> None:
         original = setup.read_text(encoding="utf-8")
         setup.write_text(
             original.replace(
-                "GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** on the default branch",
-                "GitHub **issue comment** and **CI/workflow completed** on the default branch",
+                "GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** (default branch and PR head branches)",
+                "GitHub **issue comment** and **CI/workflow completed** (default branch and PR head branches)",
             ),
             encoding="utf-8",
         )
@@ -576,8 +576,28 @@ def test_missing_project_executor_ci_trigger_is_detected() -> None:
         original = setup.read_text(encoding="utf-8")
         setup.write_text(
             original.replace(
-                "GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** on the default branch",
+                "GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** (default branch and PR head branches)",
                 "GitHub **issue comment** and **pull request merged**",
+            ),
+            encoding="utf-8",
+        )
+        result = run_validator(root, "template")
+        assert result.returncode != 0
+        assert (
+            "configuration table row 'Trigger events' must require CI/workflow completed"
+        ) in result.stderr
+
+
+def test_missing_goal_executor_ci_trigger_is_detected() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        copy_template_skeleton(root)
+        setup = root / ".ai/automation/goal-executor-production-setup.md"
+        original = setup.read_text(encoding="utf-8")
+        setup.write_text(
+            original.replace(
+                "GitHub **issue comment** and **CI/workflow completed** on non-default (pull request head) branches",
+                "GitHub **issue comment**",
             ),
             encoding="utf-8",
         )
@@ -729,6 +749,7 @@ def main() -> int:
         test_missing_goal_executor_automation_name_is_detected,
         test_missing_project_executor_merge_trigger_is_detected,
         test_missing_project_executor_ci_trigger_is_detected,
+        test_missing_goal_executor_ci_trigger_is_detected,
         test_missing_project_executor_comment_filter_is_detected,
         test_missing_project_executor_material_decision_section_is_detected,
         test_missing_project_executor_status_comment_section_is_detected,
