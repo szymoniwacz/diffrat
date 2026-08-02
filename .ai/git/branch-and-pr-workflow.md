@@ -289,8 +289,9 @@ environments will pass.
    rewriting published history, stop as an immediate blocker.
 4. Identify applicable CI checks for the PR (required and otherwise configured
    checks that this change triggers).
-5. Wait until those checks complete. Pending applicable CI means not
-   review-ready.
+5. Wait until those checks complete. Prefer `gh pr checks <n> --watch` (or
+   equivalent status polling) until every applicable check is terminal. Pending
+   applicable CI means not review-ready.
 6. If any applicable check fails:
    - inspect the failure logs,
    - fix clear in-scope failures caused by this branch,
@@ -321,11 +322,15 @@ agent attribution) can only be removed by rewriting published history, report an
 immediate blocker. If CI cannot be inspected, report the limitation and do not
 claim full validation or review-ready status.
 
-### Goal Executor automation (Slice 2)
+### Goal Executor automation
 
 Goal Executor automation creates a draft pull request, completes remote CI
 stabilization, records diff-risk, and marks the pull request ready for review
-when criteria pass. It still stops before merge.
+when criteria pass. A draft without terminal applicable CI (or without
+review-ready handoff when CI is already green) is an incomplete run, not a
+successful stop. Default and escalated paths still stop before merge; eligible
+`self-correcting-review auto-merge` continues through squash merge. Contract:
+`.ai/automation/goal-executor.md`.
 
 ## Review handoff
 

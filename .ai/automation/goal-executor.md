@@ -122,15 +122,16 @@ duplicate lifecycle or quality-gate content here.
 
 ## CI stabilization and review-ready handoff
 
-After the draft pull request exists, complete Slice 2 through review-ready
+After the draft pull request exists, complete review-ready
 handoff per `.ai/git/branch-and-pr-workflow.md` **in the same automation run**
 whenever the run can still observe CI. Do not treat "draft PR created" as a
 successful terminal stop.
 
 1. Verify remote commit attribution and PR metadata.
-2. Wait for applicable CI on the pull request to reach a terminal state (poll
-   or re-check until green, failed, cancelled, or uninspectable). Do not end
-   the run while applicable CI is still pending.
+2. Wait for applicable CI on the pull request to reach a terminal state. Prefer
+   `gh pr checks <n> --watch` (or equivalent status polling) until green, failed,
+   cancelled, or uninspectable. Do not end the run while applicable CI is still
+   pending.
 3. Fix clear in-scope CI failures caused by this branch; push forward commits
    only; then wait for CI again.
 4. Rerun affected local validation and review when fixes change behavior.

@@ -53,11 +53,10 @@ whole product (comment- and merge-triggered automation)
 
 This walkthrough describes the complete canonical `/execute-goal` lifecycle.
 Direct or interactive execution continues through CI stabilization to a
-review-ready pull request. Cursor Automation uses a bounded prefix of that
-lifecycle; see [`.ai/automation/README.md`](../automation/README.md) for the
-current stopping point. Goal Executor Cursor Automation implements Slice 2
-through review-ready handoff per
-[`.ai/automation/README.md`](../automation/README.md).
+review-ready pull request. Goal Executor Cursor Automation implements the same
+lifecycle through review-ready handoff (never stopping successfully on draft
+alone) per [`.ai/automation/README.md`](../automation/README.md) and
+[`.ai/automation/goal-executor.md`](../automation/goal-executor.md).
 Project Executor Cursor Automation selects at most one delegated goal per run
 (issue comment or merged delegated pull request) and stops after Goal
 Executor review-ready handoff for human merge per
@@ -213,9 +212,9 @@ delegated PRs are squash-merged by Goal Executor.
 | | |
 |---|---|
 | **You** | Create a **Project Execution** issue. Fill product outcome and completion criteria. Comment exactly `/execute-project`, `/execute-project self-correcting-review`, or `/execute-project self-correcting-review auto-merge`. Configure Project Executor per [`.ai/automation/project-executor-production-setup.md`](../automation/project-executor-production-setup.md). |
-| **AI** | Project Executor reads the project issue and repository state, selects at most one next goal, and delegates to Goal Executor. Goal Executor must wait for PR CI (or resume via PR-head CI completion) through review-ready and eligible auto-merge. After merge, PE waits only for default-branch CI; green continues, red repairs first. Project Executor never merges; Goal Executor may squash-merge only under `self-correcting-review auto-merge` when eligible. |
-| **Result** | A sequence of pull requests, one scoped goal at a time. Goal Executor stopping point: [`.ai/automation/README.md`](../automation/README.md). |
-| **You next** | Default / self-correcting-review: review and merge each PR. Auto-merge eligible: answer material decisions only; draft→ready→merge and green post-merge CI continue automatically. Use `/continue-project` only after material decisions or an unexpected stop. |
+| **AI** | Project Executor selects at most one next goal and delegates to Goal Executor. Handoff/merge rules: [`.ai/automation/goal-executor.md`](../automation/goal-executor.md). Post-merge continuation: [`.ai/automation/project-executor.md`](../automation/project-executor.md). |
+| **Result** | A sequence of pull requests, one scoped goal at a time. |
+| **You next** | Default / self-correcting-review: review and merge each PR. Auto-merge eligible: answer material decisions only. Use `/continue-project` only after material decisions or an unexpected stop. |
 
 Runtime: [`.ai/automation/project-executor.md`](../automation/project-executor.md)
 
@@ -315,7 +314,7 @@ keeping incomplete copies.
 | `/execute-project` | GitHub comment on a **Project Execution** issue authorizing whole-project automation and starting the first step. Setup: [`.ai/automation/project-executor-production-setup.md`](../automation/project-executor-production-setup.md). |
 | `/execute-project self-correcting-review` | Same as `/execute-project`, plus self-correcting mode on delegated goals (you still merge). |
 | `/execute-project self-correcting-review auto-merge` | Same as self-correcting-review, plus eligible Goal Executor squash merge on delegated goals. |
-| `/continue-project` | Optional GitHub comment on an authorized **Project Execution** issue after material-decision answers or an unexpected stop. Ordinary PR-head CI and post-merge default-branch CI resume via CI/workflow completed triggers. |
+| `/continue-project` | Optional nudge after material-decision answers or an unexpected stop. Ordinary resume: Goal Executor PR-head CI; Project Executor merge + default-branch CI. |
 | `/project-intake` | Starting a new project and you want AI to ask questions. |
 | `/define-project` | You already have a rough description and want AI to organize it. |
 | `/add-idea` | You want to add a new idea to the backlog. |

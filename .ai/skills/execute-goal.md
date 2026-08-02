@@ -29,10 +29,10 @@ Self-correcting loop when opted in: `.ai/review/self-correcting-review-loop.md`.
 `/execute-goal` names one canonical goal-to-PR lifecycle (Steps below). Direct
 or interactive execution targets a review-ready PR through CI stabilization.
 Under `self-correcting-review auto-merge`, continue through authorized squash
-merge when eligible. A bounded automation slice may stop earlier at an explicit
-prefix of the same lifecycle; Goal Executor implements through review-ready
-handoff and, when `auto-merge` is authorized and eligible, through squash merge.
-Details: `.ai/automation/README.md`.
+merge when eligible. Goal Executor automation implements the same lifecycle
+through review-ready handoff and, when `auto-merge` is authorized and eligible,
+through squash merge. It must not stop successfully on a draft PR alone.
+Details: `.ai/automation/README.md` and `.ai/automation/goal-executor.md`.
 
 ## Trigger
 

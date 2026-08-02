@@ -9,7 +9,7 @@ remain in their canonical files. Slice boundaries:
 
 ## Prerequisites
 
-- Slice 2 contract present: `.ai/automation/README.md` and
+- Goal Executor contract present: `.ai/automation/README.md` and
   `.ai/automation/goal-executor.md`
 - Maintainer access to Cursor Automations for this GitHub repository
 - Repository connected to Cursor with permission to create branches and pull
@@ -25,7 +25,7 @@ remain in their canonical files. Slice boundaries:
 |---|---|---|
 | Automation name | `Goal Executor` | Display name in Cursor Automations. |
 | Model | `Composer 2.5` | Model used for Goal Executor runs. |
-| Trigger events | GitHub **issue comment** and **CI/workflow completed** on non-default (pull request head) branches | See **Comment filter** and **CI/workflow completed trigger** below. Issue comments authorize and start work; PR-head CI completion resumes Slice 2 / merge when a prior run stopped early. |
+| Trigger events | GitHub **issue comment** and **CI/workflow completed** on non-default (pull request head) branches | See **Comment filter** and **CI/workflow completed trigger** below. Issue comments authorize and start work; PR-head CI completion resumes review-ready handoff / merge when a prior run stopped early. |
 | Repository scope | **This repository** | Configure the automation against the repository that contains this documentation. |
 | Author filter | **Me** | Cursor UI value. Restricts issue-comment execution to the authorized repository owner. |
 | Comment filter regex | Exact match; see **Comment filter** below | No leading or trailing text, whitespace, or punctuation. Prefer one filter or split exact filters per command. |
@@ -70,6 +70,7 @@ Before any repository mutation or remote write:
 3. If the default branch or canonical file cannot be resolved and read, fail closed: make no repository change and perform no remote write.
 4. Follow the loaded file as the complete canonical Goal Executor instructions for this run.
 5. If this run was triggered by CI or workflow completion on a non-default branch, resolve the open pull request for that head branch, read Closes #<issue>, reverify authorization, and resume that goal only. If resolution fails, no-op.
+6. Never treat "draft PR created" as success. If the authorized PR is still draft, finish CI stabilization through ready-for-review (and auto-merge when eligible) in this run, or stop only with an explicit blocker.
 ```
 
 Later edits to `.ai/automation/goal-executor.md` do not require editing the live
@@ -84,6 +85,18 @@ manually after any change.
 Apply the configuration table in Cursor Automations for this repository: create
 or open the Goal Executor automation, set each required value, paste the live
 automation prompt block above into the prompt field, then save and enable.
+
+## Required live UI update after this change
+
+Repository docs alone do not update Cursor Automations. After merging a change
+to this loader or to the trigger table:
+
+1. Open the live **Goal Executor** automation for this repository.
+2. Confirm **CI/workflow completed** is enabled for non-default / PR head
+   branches (success and failure), in addition to issue comment.
+3. Replace the saved prompt with the **Live automation prompt** block above
+   (including step 6).
+4. Save and run one draft-handoff smoke test before relying on production.
 
 ## Post-merge loader migration
 
@@ -121,7 +134,7 @@ GitHub issue before relying on production execution.
    ```
 
 3. Expect a cloud agent run that opens a pull request, **waits for applicable
-   PR CI**, and when Slice 2 criteria pass, marks it ready for review. Default
+   PR CI**, and when review-ready criteria pass, marks it ready for review. Default
    `/execute-goal` and `/execute-goal self-correcting-review` never merge. With
    `/execute-goal self-correcting-review auto-merge`, when eligible, Goal
    Executor squash-merges after that handoff. If a run still ends while the PR

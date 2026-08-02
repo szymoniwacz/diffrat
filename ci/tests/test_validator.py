@@ -556,8 +556,8 @@ def test_missing_project_executor_merge_trigger_is_detected() -> None:
         original = setup.read_text(encoding="utf-8")
         setup.write_text(
             original.replace(
-                "GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** (default branch and PR head branches)",
-                "GitHub **issue comment** and **CI/workflow completed** (default branch and PR head branches)",
+                "GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** on the default branch",
+                "GitHub **issue comment** and **CI/workflow completed** on the default branch",
             ),
             encoding="utf-8",
         )
@@ -576,7 +576,7 @@ def test_missing_project_executor_ci_trigger_is_detected() -> None:
         original = setup.read_text(encoding="utf-8")
         setup.write_text(
             original.replace(
-                "GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** (default branch and PR head branches)",
+                "GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** on the default branch",
                 "GitHub **issue comment** and **pull request merged**",
             ),
             encoding="utf-8",

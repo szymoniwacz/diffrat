@@ -160,12 +160,11 @@ open **Project Execution** issue with valid `/execute-project`,
 `/execute-project self-correcting-review auto-merge` authorization optionally
 nudges Project Executor to continue after material-decision answers or after an
 unexpected stop. It is not required for ordinary automation progress when the
-pull request merged and CI/workflow completed triggers are configured: PR-head
-CI completion resumes draft / auto-merge handoff; pending post-merge CI on the
-default branch auto-resumes on completion; failed post-merge CI enters repair
-before the next product goal. It does not authorize a project by itself and does
-not replace `/execute-project` after issue edits. Runtime details live in
-`.ai/automation/project-executor.md`.
+configured triggers fire: Goal Executor PR-head CI resume
+(`.ai/automation/goal-executor.md`); Project Executor pull-request-merged and
+default-branch CI resume (`.ai/automation/project-executor.md`). It does not
+authorize a project by itself and does not replace `/execute-project` after
+issue edits.
 
 ## Question timing
 

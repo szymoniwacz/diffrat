@@ -356,7 +356,8 @@ Before any repository mutation or remote write:
 2. Read .ai/automation/goal-executor.md from that default branch.
 3. If the default branch or canonical file cannot be resolved and read, fail closed: make no repository change and perform no remote write.
 4. Follow the loaded file as the complete canonical Goal Executor instructions for this run.
-5. If this run was triggered by CI or workflow completion on a non-default branch, resolve the open pull request for that head branch, read Closes #<issue>, reverify authorization, and resume that goal only. If resolution fails, no-op."""
+5. If this run was triggered by CI or workflow completion on a non-default branch, resolve the open pull request for that head branch, read Closes #<issue>, reverify authorization, and resume that goal only. If resolution fails, no-op.
+6. Never treat "draft PR created" as success. If the authorized PR is still draft, finish CI stabilization through ready-for-review (and auto-merge when eligible) in this run, or stop only with an explicit blocker."""
 PROJECT_EXECUTOR_PROMPT = ".ai/automation/project-executor.md"
 PROJECT_EXECUTOR_PRODUCTION_SETUP = ".ai/automation/project-executor-production-setup.md"
 PROJECT_EXECUTOR_LIVE_LOADER_HEADING = "Live automation prompt"
@@ -379,7 +380,7 @@ PROJECT_EXECUTOR_MATERIAL_DECISION_REQUIRED_PHRASES = (
     "Status comments before stop",
     "platform-injected",
     "Commits on `main`",
-    "Non-default branch",
+    "Do not handle PR-head",
 )
 PROJECT_EXECUTOR_EXPECTED_LOADER = """You are running the Project Executor automation.
 
@@ -390,8 +391,7 @@ Before any repository mutation or remote write:
 4. If the default branch or either file cannot be read, make no change or remote write and report the blocker.
 5. Follow project-executor.md for orchestration and goal-executor.md for the delegated goal.
 6. If this run was triggered by a merged pull request, resolve the parent Project Execution issue via Closes #<goal> and the project-executor:goal marker before state resolution. If resolution fails, no-op.
-7. If this run was triggered by CI or workflow completion on the default branch, resolve the single active authorized Project Execution issue (prefer the project linked from the latest merged delegated goal on that tip). If resolution fails or is ambiguous, no-op.
-8. If this run was triggered by CI or workflow completion on a non-default branch, resolve the open pull request for that head, read Closes #<goal> and the project-executor:goal marker, authorize the parent project, and RESUME Goal Executor when the PR is still draft or auto-merge handoff is incomplete. If resolution fails, no-op."""
+7. If this run was triggered by CI or workflow completion on the default branch, resolve the single active authorized Project Execution issue (prefer the project linked from the latest merged delegated goal on that tip). If resolution fails or is ambiguous, no-op."""
 EXACT_LOADER_MATCH_ERROR = (
     "live automation prompt must exactly match the canonical loader block"
 )

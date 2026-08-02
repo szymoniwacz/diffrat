@@ -3,8 +3,9 @@
 Configure one native Cursor Automation that runs
 `.ai/automation/project-executor.md` on **Project Execution** issue comments,
 on merged pull requests for delegated goals, and on applicable CI/workflow
-completion for the **default branch** and for **open pull request head**
-branches. The repository does not configure or verify the live Cursor UI.
+completion for the **default branch** only. Goal Executor owns PR-head CI
+resume (see `.ai/automation/goal-executor-production-setup.md`). The repository
+does not configure or verify the live Cursor UI.
 
 ## Configuration parameters
 
@@ -12,7 +13,7 @@ branches. The repository does not configure or verify the live Cursor UI.
 |---|---|---|
 | Automation name | `Project Executor` | Display name in Cursor Automations. |
 | Model | Choose a model capable of repository and GitHub tool use | |
-| Trigger events | GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** (default branch and PR head branches) | See **Comment filter**, **Pull request merged trigger**, and **CI/workflow completed trigger** below. |
+| Trigger events | GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** on the default branch | See **Comment filter**, **Pull request merged trigger**, and **CI/workflow completed trigger** below. |
 | Repository scope | **This repository** | Configure the automation against the repository that contains this documentation. |
 | Author filter | **Me** | Cursor UI value. Applies to the issue-comment trigger only. |
 | Comment filter regex | Exact match; see **Comment filter** below | No leading or trailing text, whitespace, or punctuation. |
@@ -24,6 +25,19 @@ requires separate entries, duplicate the same configuration and prompt.
 Authorization and resume meaning: `.ai/policies/autonomy-and-authorization.md`.
 
 Start disabled and enable the automation only after this change is merged.
+
+## Required live UI update after this change
+
+Repository docs alone do not update Cursor Automations. After merging a change
+to this loader or to the trigger table:
+
+1. Open the live **Project Executor** automation for this repository.
+2. Confirm triggers are issue comment, pull request merged, and **CI/workflow
+   completed on the default branch only** (remove any PR-head CI trigger from
+   Project Executor; Goal Executor owns that path).
+3. Replace the saved prompt with the **Live automation prompt** block above
+   (seven steps; no non-default CI step).
+4. Save before the next `/execute-project` run.
 
 ## Comment filter
 
@@ -43,17 +57,13 @@ trigger.
 ## CI/workflow completed trigger
 
 GitHub **CI/workflow completed** (or equivalent check-suite / workflow-run
-completed event) for **this repository**:
-
-1. **Default branch** — fire on success and failure so Project Executor can
-   enter `NEXT`/`FINALIZE` when green or `REPAIR` when red after merge.
-2. **Open pull request head branches** — fire on success and failure so an early
-   Goal Executor stop at draft can `RESUME` through review-ready handoff and
-   eligible auto-merge without `/continue-project`.
+completed event) for the **default branch** only. Fire on success and failure
+so Project Executor can enter `NEXT`/`FINALIZE` when green or `REPAIR` when red
+after merge. Ignore non-default / pull request head branches here — Goal
+Executor owns that resume path.
 
 Use the same automation name, model, repository scope, and live automation
-prompt. If the UI needs two CI entries (default vs non-default), duplicate the
-same prompt.
+prompt as the other Project Executor triggers.
 
 ## Live automation prompt
 
@@ -70,7 +80,6 @@ Before any repository mutation or remote write:
 5. Follow project-executor.md for orchestration and goal-executor.md for the delegated goal.
 6. If this run was triggered by a merged pull request, resolve the parent Project Execution issue via Closes #<goal> and the project-executor:goal marker before state resolution. If resolution fails, no-op.
 7. If this run was triggered by CI or workflow completion on the default branch, resolve the single active authorized Project Execution issue (prefer the project linked from the latest merged delegated goal on that tip). If resolution fails or is ambiguous, no-op.
-8. If this run was triggered by CI or workflow completion on a non-default branch, resolve the open pull request for that head, read Closes #<goal> and the project-executor:goal marker, authorize the parent project, and RESUME Goal Executor when the PR is still draft or auto-merge handoff is incomplete. If resolution fails, no-op.
 ```
 
 Keep repository access limited to the issues, branches, commits, pull requests,
@@ -87,11 +96,10 @@ a Cursor Runtime Secret; never commit or print it.
    self-correcting review plus authorized squash merge on eligible delegated
    goals).
 4. Verify that it creates at most one delegated goal and that Goal Executor
-   opens a pull request, waits for applicable PR CI, and reaches review-ready
-   (or an explicit blocker). Under `self-correcting-review auto-merge`, when
-   eligible, Goal Executor also squash-merges that pull request. If a run still
-   ends at draft, verify PR-head CI completion resumes handoff/merge without
-   `/continue-project`.
+   opens a pull request, waits for applicable PR CI (or resumes via Goal
+   Executor PR-head CI), and reaches review-ready (or an explicit blocker).
+   Under `self-correcting-review auto-merge`, when eligible, Goal Executor also
+   squash-merges that pull request.
 5. Comment `/continue-project` while the pull request is still open on the
    human-merge path (default or self-correcting-review without auto-merge) and
    verify that it makes no change when state is already `WAIT` for human merge.

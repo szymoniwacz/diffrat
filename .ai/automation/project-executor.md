@@ -38,8 +38,9 @@ issue:
   project: after material-decision answers, or when the owner wants to retry
   sooner after an unexpected stop. It does not authorize a project by itself
   and does not replace `/execute-project` after issue edits. It is not required
-  for ordinary PR-head CI pending after a draft, or for ordinary post-merge CI
-  pending or failed CI, when the CI/workflow completed triggers are configured.
+  for ordinary post-merge CI pending or failed CI when the default-branch
+  CI/workflow completed trigger is configured, or for draft / incomplete
+  Goal Executor handoff when Goal Executor's PR-head CI resume is configured.
   If no valid authorization exists, stop as a no-op without writing.
 
 Use the commented Project Execution issue as the active project.
@@ -73,12 +74,11 @@ CI/workflow completed trigger resumes automatically. The owner does not need
 
 ### CI or workflow completed
 
-When this run was triggered by applicable CI or workflow completion:
-
-**Default branch (post-merge tip):**
+When this run was triggered by applicable CI or workflow completion on the
+**default branch** (post-merge tip):
 
 1. Confirm the event is for the current default-branch tip (ignore other
-   branches for this path).
+   branches).
 2. Resolve exactly one active authorized Project Execution issue: prefer the
    project linked from the latest merged delegated goal that produced this tip
    (`Closes #<goal>` + trusted `project-executor:goal` marker); otherwise the
@@ -92,21 +92,9 @@ Green applicable CI on the default branch permits `NEXT` or `FINALIZE`. Failed
 applicable CI enters `REPAIR` (fix CI first) rather than advancing product
 goals. Cancelled or uninspectable CI remains `BLOCKED`.
 
-**Non-default branch (open pull request head):**
-
-1. Resolve the open pull request whose head branch (or head SHA) matches the CI
-   event.
-2. Extract exact `Closes #<goal-number>` from the PR body.
-3. Read the goal issue. If it lacks the trusted exact
-   `<!-- project-executor:goal project=OWNER/REPOSITORY#PROJECT_NUMBER -->`
-   marker from this automation identity, stop as a no-op without writing (a
-   standalone Goal Executor CI resume may still apply outside Project Executor).
-4. Resolve and authorize the Project Execution issue `#PROJECT_NUMBER`.
-5. Run state resolution on that project. An open draft or not-yet-merged
-   auto-merge-eligible PR must resolve to `RESUME` (invoke Goal Executor), not
-   `WAIT`.
-
-Do not select a new product goal from a PR-head CI event.
+Do not handle PR-head (non-default) CI here. Goal Executor owns PR-head CI
+resume through review-ready handoff and eligible auto-merge:
+`.ai/automation/goal-executor.md`.
 
 ## Authorization
 
@@ -213,9 +201,10 @@ The comment must include:
    cannot complete);
 2. concrete evidence (pull request number, CI conclusion or pending checks,
    conflicting goal numbers, or the missing/contradictory completion criterion);
-3. what resumes the run (pull request merged trigger, CI/workflow completed on
-   the default branch or on the PR head branch, owner `/continue-project` after
-   a material-decision reply, or an owner action for a hard blocker).
+3. what resumes the run (pull request merged trigger, default-branch
+   CI/workflow completed, Goal Executor PR-head CI resume for draft handoff,
+   owner `/continue-project` after a material-decision reply, or an owner
+   action for a hard blocker).
 
 That status comment is the only allowed write for those stops. Do not create
 goals, edit scope fields, remove or replace markers, or close the project in
@@ -339,14 +328,14 @@ inherits authorized squash merge (equivalent to
 `/execute-goal self-correcting-review auto-merge`).
 
 Goal Executor retains ownership of planning, implementation, validation,
-branches, commits, pull requests, idempotency, review-ready handoff, and — when
-`self-correcting-review auto-merge` is active and eligible — authorized squash
-merge. After Goal Executor stops (review-ready without merge, escalated,
-blocked, or after a successful auto-merge), Project Executor also stops. When
-Goal Executor leaves a draft or incomplete handoff, PR-head CI/workflow
-completed must resume Goal Executor (directly or via Project Executor `RESUME`)
+branches, commits, pull requests, idempotency, review-ready handoff, PR-head
+CI resume, and — when `self-correcting-review auto-merge` is active and
+eligible — authorized squash merge. After Goal Executor stops (review-ready
+without merge, escalated, blocked, or after a successful auto-merge), Project
+Executor also stops. When Goal Executor leaves a draft or incomplete handoff,
+Goal Executor's PR-head CI/workflow completed trigger must resume that handoff
 without `/continue-project`. Merging a delegated pull request (human or Goal
-Executor) triggers the next run automatically when the pull request merged
+Executor) triggers the next Project Executor run when the pull request merged
 trigger is configured. When that run enters `WAIT` because applicable
 default-branch CI is pending, the default-branch CI/workflow completed trigger
 resumes Project Executor automatically. The owner may comment
