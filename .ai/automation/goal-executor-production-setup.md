@@ -103,8 +103,10 @@ GitHub issue before relying on production execution.
    Executor squash-merges after that handoff.
 4. For an auto-merge smoke test: authorize with
    `/execute-goal self-correcting-review auto-merge` on a low-risk docs-only
-   goal, confirm the PR merges, and confirm the `main` tip commit has clean
-   attribution.
+   goal, confirm the PR merges with an explicit clean squash title/body from
+   Goal Executor, and confirm the default-branch tip passes **Commits on
+   `main`** in `.ai/git/branch-and-pr-workflow.md` (platform-injected
+   `Co-authored-by: Cursor Agent` / user `Co-authored-by` alone are allowed).
 
 Repeated `/execute-goal` comments must not create duplicate work. See
 `.ai/automation/README.md`.
@@ -118,4 +120,6 @@ Repeated `/execute-goal` comments must not create duplicate work. See
 - [ ] A test Agent Goal issue can be authorized with exact `/execute-goal`.
 - [ ] For auto-merge: automation identity can squash-merge to the protected
       default branch; a `/execute-goal self-correcting-review auto-merge` smoke
-      test merges with clean `main` tip attribution.
+      test merges with an explicit clean squash message and tip attribution
+      that passes **Commits on `main`** (platform-injected Cursor Agent / user
+      `Co-authored-by` alone allowed).

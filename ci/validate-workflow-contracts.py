@@ -375,6 +375,9 @@ PROJECT_EXECUTOR_MATERIAL_DECISION_REQUIRED_PHRASES = (
     "Closes #",
     "project-executor:goal project=",
     "does not need",
+    "Status comments before stop",
+    "platform-injected",
+    "Commits on `main`",
 )
 PROJECT_EXECUTOR_EXPECTED_LOADER = """You are running the Project Executor automation.
 
@@ -384,7 +387,8 @@ Before any repository mutation or remote write:
 3. Read .ai/automation/goal-executor.md from that default branch.
 4. If the default branch or either file cannot be read, make no change or remote write and report the blocker.
 5. Follow project-executor.md for orchestration and goal-executor.md for the delegated goal.
-6. If this run was triggered by a merged pull request, resolve the parent Project Execution issue via Closes #<goal> and the project-executor:goal marker before state resolution. If resolution fails, no-op."""
+6. If this run was triggered by a merged pull request, resolve the parent Project Execution issue via Closes #<goal> and the project-executor:goal marker before state resolution. If resolution fails, no-op.
+7. If this run was triggered by CI or workflow completion on the default branch, resolve the single active authorized Project Execution issue (prefer the project linked from the latest merged delegated goal on that tip). If resolution fails or is ambiguous, no-op."""
 EXACT_LOADER_MATCH_ERROR = (
     "live automation prompt must exactly match the canonical loader block"
 )
@@ -964,6 +968,14 @@ class Validator:
                 self.add_error(
                     PROJECT_EXECUTOR_PRODUCTION_SETUP,
                     "configuration table row 'Trigger events' must require pull request merged",
+                )
+            if (
+                "ci/workflow completed" not in trigger_lower
+                and "workflow completed" not in trigger_lower
+            ):
+                self.add_error(
+                    PROJECT_EXECUTOR_PRODUCTION_SETUP,
+                    "configuration table row 'Trigger events' must require CI/workflow completed",
                 )
 
         comment_filter = config_map.get("Comment filter regex", "")

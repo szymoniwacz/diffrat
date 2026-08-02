@@ -556,8 +556,8 @@ def test_missing_project_executor_merge_trigger_is_detected() -> None:
         original = setup.read_text(encoding="utf-8")
         setup.write_text(
             original.replace(
-                "GitHub **issue comment** and **pull request merged**",
-                "GitHub **issue comment**",
+                "GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** on the default branch",
+                "GitHub **issue comment** and **CI/workflow completed** on the default branch",
             ),
             encoding="utf-8",
         )
@@ -565,6 +565,26 @@ def test_missing_project_executor_merge_trigger_is_detected() -> None:
         assert result.returncode != 0
         assert (
             "configuration table row 'Trigger events' must require pull request merged"
+        ) in result.stderr
+
+
+def test_missing_project_executor_ci_trigger_is_detected() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        copy_template_skeleton(root)
+        setup = root / ".ai/automation/project-executor-production-setup.md"
+        original = setup.read_text(encoding="utf-8")
+        setup.write_text(
+            original.replace(
+                "GitHub **issue comment**, **pull request merged**, and **CI/workflow completed** on the default branch",
+                "GitHub **issue comment** and **pull request merged**",
+            ),
+            encoding="utf-8",
+        )
+        result = run_validator(root, "template")
+        assert result.returncode != 0
+        assert (
+            "configuration table row 'Trigger events' must require CI/workflow completed"
         ) in result.stderr
 
 
@@ -659,6 +679,24 @@ def test_project_executor_loader_missing_fail_closed_is_detected() -> None:
         assert EXACT_LOADER_ERROR in result.stderr
 
 
+def test_missing_project_executor_status_comment_section_is_detected() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        copy_template_skeleton(root)
+        prompt = root / ".ai/automation/project-executor.md"
+        original = prompt.read_text(encoding="utf-8")
+        prompt.write_text(
+            original.replace("Status comments before stop", "Silent stops"),
+            encoding="utf-8",
+        )
+        result = run_validator(root, "template")
+        assert result.returncode != 0
+        assert (
+            "material decision section is missing required phrase: "
+            "Status comments before stop"
+        ) in result.stderr
+
+
 def main() -> int:
     tests = [
         test_current_repository_passes_template_mode,
@@ -690,8 +728,10 @@ def main() -> int:
         test_goal_executor_loader_appends_contradictory_continue_after_failure_is_detected,
         test_missing_goal_executor_automation_name_is_detected,
         test_missing_project_executor_merge_trigger_is_detected,
+        test_missing_project_executor_ci_trigger_is_detected,
         test_missing_project_executor_comment_filter_is_detected,
         test_missing_project_executor_material_decision_section_is_detected,
+        test_missing_project_executor_status_comment_section_is_detected,
         test_missing_project_executor_live_loader_block_is_detected,
         test_missing_project_executor_loader_block_content_is_detected,
         test_project_executor_loader_missing_fail_closed_is_detected,

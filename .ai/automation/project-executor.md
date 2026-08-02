@@ -35,10 +35,12 @@ issue:
   authorized squash merge by Goal Executor (same as
   `/execute-goal self-correcting-review auto-merge`).
 - `/continue-project` is an optional manual nudge on an already authorized
-  project: after material-decision answers, when applicable CI was pending, or
-  when the owner wants to retry sooner. It does not authorize a project by
-  itself and does not replace `/execute-project` after issue edits. If no valid
-  authorization exists, stop as a no-op without writing.
+  project: after material-decision answers, or when the owner wants to retry
+  sooner after an unexpected stop. It does not authorize a project by itself
+  and does not replace `/execute-project` after issue edits. It is not required
+  for ordinary post-merge CI pending or failed CI when the CI/workflow completed
+  trigger is configured. If no valid authorization exists, stop as a no-op
+  without writing.
 
 Use the commented Project Execution issue as the active project.
 
@@ -64,9 +66,30 @@ goal is not a delegated Project Executor goal, authorization is missing or
 invalid, or the merge cannot be linked to an active authorized project.
 
 Merging a delegated pull request continues the project automatically when the
-pull request merged trigger is configured. The owner does not need
-`/continue-project` after merge unless state resolution enters `WAIT` (for
-example applicable CI still pending on the default branch).
+pull request merged trigger is configured. When applicable CI on the default
+branch is still pending, enter `WAIT`, post one status comment, and stop; the
+CI/workflow completed trigger resumes automatically. The owner does not need
+`/continue-project` after merge for that ordinary pending-CI path.
+
+### CI or workflow completed
+
+When this run was triggered by applicable CI or workflow completion on the
+**default branch**:
+
+1. Confirm the event is for the current default-branch tip (ignore other
+   branches).
+2. Resolve exactly one active authorized Project Execution issue: prefer the
+   project linked from the latest merged delegated goal that produced this tip
+   (`Closes #<goal>` + trusted `project-executor:goal` marker); otherwise the
+   single open authorized Project Execution issue in the repository.
+3. If none or more than one active authorized project resolves, stop as a no-op
+   without writing.
+4. Run the same state resolution and actions as for a comment trigger on that
+   project issue.
+
+Green applicable CI permits `NEXT` or `FINALIZE`. Failed applicable CI enters
+`REPAIR` (fix CI first) rather than advancing product goals. Cancelled or
+uninspectable CI remains `BLOCKED`.
 
 ## Authorization
 
@@ -122,14 +145,16 @@ Use this exact marker in every delegated Agent Goal issue:
 Resolve the exact GitHub login of the authenticated automation identity. The
 marker is discovery evidence only: treat an issue as delegated only when its
 author login exactly matches that identity. A marker-bearing issue with another
-or unverifiable author is conflicting evidence; enter `CONFLICT` and make no
-write. Never infer identity from a display name.
+or unverifiable author is conflicting evidence; enter `CONFLICT`, post one
+status comment, and make no other write. Never infer identity from a display
+name.
 
 Trust a completed-without-PR or project completion marker only when its exact
 remote comment has been read from GitHub, its author login exactly matches the
 authenticated automation identity, and its repository and issue reference
 matches the expected goal or project. Any other or unverifiable marker is
-conflicting evidence; enter `CONFLICT` and make no write.
+conflicting evidence; enter `CONFLICT`, post one status comment, and make no
+other write.
 
 Resolve state before any repository mutation and again immediately before the
 first remote write. Find every goal with that exact marker and its pull request
@@ -139,22 +164,66 @@ Apply the first matching state:
 
 | State | Evidence | Action |
 |---|---|---|
-| `CONFLICT` | More than one delegated goal is non-terminal, completion evidence coexists with active work, or evidence is contradictory. | List exact conflicts and make no write. |
-| `WAIT` | One delegated pull request is open, or applicable CI for the latest merged delegated pull request or current default-branch tip is pending. | Stop until the pull request or CI reaches a terminal state. |
-| `BLOCKED` | The current pull request was closed without merge, its goal was closed without successful terminal evidence, or applicable CI failed or cannot be inspected. | Report the blocker; do not replace the goal or repair CI. |
+| `CONFLICT` | More than one delegated goal is non-terminal, completion evidence coexists with active work, or evidence is contradictory. | Post one status comment listing exact conflicts; make no other write. |
+| `WAIT` | One delegated pull request is open, or applicable CI for the latest merged delegated pull request or current default-branch tip is pending. | Post one status comment; stop. Do not select the next product goal. Resume automatically when the PR merges or when the CI/workflow completed trigger fires on the default branch. |
 | `RESUME` | One delegated goal has no merged pull request and no trusted Goal Executor completion marker. | Invoke Goal Executor only for that issue. |
+| `REPAIR` | All other non-terminal delegated work is absent, and applicable CI for the latest merged delegated pull request or current default-branch tip failed. | Select at most one CI-repair goal scoped to fixing that failure on the default-branch tip; create it if needed; invoke Goal Executor. Do not advance unrelated product goals while CI is red. |
+| `BLOCKED` | The current pull request was closed without merge, its goal was closed without successful terminal evidence, applicable CI is cancelled or cannot be inspected, or a CI-repair path cannot proceed safely. | Post one status comment reporting the blocker; do not invent product work. |
 | `FINALIZE` | The project issue has the trusted exact completion marker below. | Reverify all completion criteria, close the project as completed, and stop. |
 | `NEXT` | All delegated goals are terminal, the project has no trusted completion marker, and applicable CI for the latest merged delegated pull request and current default-branch tip passed. | Re-read the default branch, check completion, then select at most one next goal. |
 
 A delegated goal is terminal only when its pull request was merged or its issue
 has Goal Executor's trusted exact completed-without-PR marker. Previous terminal
 goals are normal history. A branch belonging to a pull request is not a second
-goal.
+goal. An open CI-repair goal counts as the sole `RESUME` goal.
 
-Before `NEXT`, inspect applicable CI using
+Before `NEXT` or `FINALIZE` completion close, inspect applicable CI using
 `.ai/git/branch-and-pr-workflow.md`. No configured applicable CI is not a
-failure. Pending CI means `WAIT`; failed, cancelled, or unavailable CI status
-means `BLOCKED`. Only passed CI, or no applicable CI, permits `NEXT`.
+failure. Pending CI means `WAIT`; failed CI means `REPAIR`; cancelled or
+unavailable CI status means `BLOCKED`. Only passed CI, or no applicable CI,
+permits `NEXT`.
+
+### Status comments before stop
+
+After state resolution identifies an active authorized Project Execution issue,
+do not stop silently on `CONFLICT`, `WAIT`, `BLOCKED`, or a failed `FINALIZE`
+reverify. Post **exactly one** status comment on that project issue before
+stopping.
+
+The comment must include:
+
+1. the resolved state name (`CONFLICT`, `WAIT`, `BLOCKED`, or why `FINALIZE`
+   cannot complete);
+2. concrete evidence (pull request number, CI conclusion or pending checks,
+   conflicting goal numbers, or the missing/contradictory completion criterion);
+3. what resumes the run (pull request merged trigger, CI/workflow completed
+   trigger, owner `/continue-project` after a material-decision reply, or an
+   owner action for a hard blocker).
+
+That status comment is the only allowed write for those stops. Do not create
+goals, edit scope fields, remove or replace markers, or close the project in
+the same stop.
+
+Still make **no write** (true no-ops) when: no active authorized project
+resolves; `/continue-project` without valid authorization; a merge or CI
+trigger cannot link to exactly one project; or the live-loader precondition
+fails before a project is resolved.
+
+`RESUME`, `REPAIR`, and `NEXT` that proceed do not need a separate status
+comment before their goal-creation or Goal Executor writes. A material-decision
+stop uses the decision-batch comment (that counts as the required status).
+Successful `FINALIZE` uses the completion-marker comment.
+
+### CI-repair goals
+
+In `REPAIR`:
+
+1. Scope the goal strictly to restoring green applicable CI on the current
+   default-branch tip (fix the failing checks; no product-feature expansion).
+2. Keep one reviewable pull request; inherit the project's self-correcting /
+   auto-merge authorization the same way as other delegated goals.
+3. After that repair PR merges, wait for CI again (`WAIT` while pending;
+   `REPAIR` again if still red; `NEXT`/`FINALIZE` only when green).
 
 These rules prevent ordinary duplicate work and support interrupted runs. They
 do not claim an atomic lock or transactional exactly-once execution.
@@ -163,6 +232,13 @@ do not claim an atomic lock or transactional exactly-once execution.
 
 In `NEXT`, evaluate every Completion criterion against evidence on the current
 default branch. A roadmap checkbox or closed issue alone is insufficient.
+
+When evaluating Constraints that mention commit attribution on the default
+branch, apply **Attribution by surface** / **Commits on `main`** in
+`.ai/git/branch-and-pr-workflow.md`. Do not fail completion solely because of
+platform-injected `Co-authored-by: Cursor Agent` or platform-added user
+`Co-authored-by` trailers on a tip produced by authorized
+`self-correcting-review auto-merge` squash.
 
 When all criteria are proven and no delegated work is active, comment with the
 evidence and:
@@ -175,8 +251,9 @@ Read the comment back. If correct, close the Project Execution issue as
 completed. If a later run finds the trusted marker on an open issue, reverify
 the criteria. If all remain proven and the marker is correct, finish only the
 close. If any criterion is no longer proven or the evidence is contradictory,
-enter `CONFLICT`, report the exact gap, and make no write. Do not close the
-project, select another goal, or remove or replace the marker.
+enter `CONFLICT`, post one status comment with the exact gap, and make no other
+write. Do not close the project, select another goal, or remove or replace the
+marker.
 
 ## Select and execute one goal
 
@@ -250,10 +327,11 @@ branches, commits, pull requests, idempotency, review-ready handoff, and — whe
 merge. After Goal Executor stops (review-ready without merge, escalated,
 blocked, or after a successful auto-merge), Project Executor also stops. Merging
 a delegated pull request (human or Goal Executor) triggers the next run
-automatically when the pull request merged trigger is configured. The owner may
-comment `/continue-project` as an optional nudge after material-decision answers
-or when state resolution entered `WAIT` (for example applicable CI still pending
-on the default branch).
+automatically when the pull request merged trigger is configured. When that run
+enters `WAIT` because applicable CI is pending, the CI/workflow completed
+trigger resumes Project Executor automatically. The owner may comment
+`/continue-project` as an optional nudge after material-decision answers or
+after an unexpected stop.
 
 Project Executor never merges, never enables GitHub auto-merge queue, never
 force pushes, never rewrites published history, and never pushes directly to the

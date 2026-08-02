@@ -36,8 +36,9 @@ Production setup: `.ai/automation/goal-executor-production-setup.md`.
 
 Delegated goals may instead inherit one active `/execute-project`
 authorization. Merging a delegated pull request with `Closes #<goal-number>`
-may trigger Project Executor when that trigger is configured. Project-level
-state and setup live in
+may trigger Project Executor when that trigger is configured; post-merge
+default-branch CI completion resumes it (green → next/finalize; red → CI
+repair first). Project-level state and setup live in
 `.ai/automation/project-executor.md` and
 `.ai/automation/project-executor-production-setup.md`.
 
@@ -169,6 +170,11 @@ platform-added footer markup when possible. Procedure:
 
 When signed cloud commits are expected, any commit in the pull request range
 that is not GitHub Verified is an immediate blocker.
+
+After authorized `self-correcting-review auto-merge` squash, Goal Executor must
+supply a clean squash title/body and verify the default-branch tip per
+**Commits on `main`** (platform-injected `Co-authored-by: Cursor Agent` and
+platform-added user `Co-authored-by` on that tip are allowed).
 
 ## Slice boundaries
 

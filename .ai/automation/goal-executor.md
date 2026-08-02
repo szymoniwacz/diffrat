@@ -105,8 +105,9 @@ duplicate lifecycle or quality-gate content here.
 - Create or update a **draft** pull request only after local validation and
   review are current.
 - The pull request body must contain exact `Closes #<issue-number>` for the
-  triggering issue. When Project Executor's pull request merged trigger is
-  configured, merging that pull request continues the parent project.
+  triggering issue. When Project Executor's pull request merged and CI/workflow
+  completed triggers are configured, merging that pull request continues the
+  parent project (after post-merge CI is green, or via CI repair when red).
 
 ## CI stabilization and review-ready handoff
 
@@ -135,6 +136,16 @@ from Project Executor) and all merge preconditions in
 perform the authorized squash merge and verification in
 `.ai/git/branch-and-pr-workflow.md`. Report the merge SHA and pull request URL.
 
+Required for that squash:
+
+1. Pass an explicit clean commit title and clean commit body (no AI badges and
+   no trailers in the message the agent supplies).
+2. Read back the merged PR and the default-branch tip.
+3. Treat only agent-added / non-platform prohibited attribution as a tip
+   blocker. Platform-injected `Co-authored-by: Cursor Agent` and platform-added
+   user `Co-authored-by` on that tip after an authorized auto-merge squash are
+   allowed per `.ai/git/branch-and-pr-workflow.md`.
+
 When `auto-merge` was not authorized, the run escalated to human CR, or any
 merge precondition fails, stop before merge. Do not enable GitHub auto-merge
 queue.
@@ -155,7 +166,9 @@ Before stopping:
 3. Read the remote pull request back and confirm it is marked ready for review
    when review-ready criteria are met.
 4. When an authorized self-correcting merge ran, confirm the pull request is
-   merged and the `main` tip commit attribution is clean.
+   merged and the default-branch tip attribution passes **Commits on `main`**
+   in `.ai/git/branch-and-pr-workflow.md` (including the authorized-squash
+   platform-injected trailer exception).
 
 ## Prohibited actions
 
