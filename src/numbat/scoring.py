@@ -8,6 +8,9 @@ from numbat.diff_parser import FileChange
 
 HintSeverity = Literal["info", "warn", "risk"]
 
+# Public severity label (JSON/API contract); not a credential.
+SEVERITY_RISK: HintSeverity = "risk"  # nosec B105
+
 # Per-file risk_score weights (Project Execution #32). Non-negative integer scale;
 # files sort by descending score, ties by path name.
 RISK_WEIGHT_LINE_SHARE_MAX = 50
@@ -20,10 +23,10 @@ RISK_WEIGHT_BINARY = 5
 # Default severities for built-in hint codes (Project Execution #32).
 HINT_SEVERITY_REGISTRY: dict[str, HintSeverity] = {
     # risk
-    "security_sensitive_paths": "risk",
-    "ci_workflow_paths": "risk",
-    "possible_secret": "risk",
-    "dangerous_call": "risk",
+    "security_sensitive_paths": SEVERITY_RISK,
+    "ci_workflow_paths": SEVERITY_RISK,
+    "possible_secret": SEVERITY_RISK,
+    "dangerous_call": SEVERITY_RISK,
     # warn
     "large_diff": "warn",
     "large_single_file": "warn",
