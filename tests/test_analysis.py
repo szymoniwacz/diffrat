@@ -282,11 +282,13 @@ def test_analyze_diff_workflow_without_ci_validator_hint() -> None:
 
     result = analyze_diff(summary)
 
-    hints = [
-        hint for hint in result.hints if hint.code == "workflow_without_ci_validator"
-    ]
-    assert len(hints) == 1
-    assert ".github/workflows/validate-workflow-contracts.yml" in hints[0].message
+    assert not any(
+        hint.code == "workflow_without_ci_validator" for hint in result.hints
+    )
+    ci_hints = [hint for hint in result.hints if hint.code == "ci_workflow_paths"]
+    assert len(ci_hints) == 1
+    assert ".github/workflows/validate-workflow-contracts.yml" in ci_hints[0].message
+    assert "confirm workflow contracts are validated" in ci_hints[0].message
 
 
 def test_analyze_diff_no_workflow_without_ci_validator_when_ci_changed() -> None:
@@ -313,6 +315,28 @@ def test_analyze_diff_no_workflow_without_ci_validator_when_ci_changed() -> None
         hint.code == "workflow_without_ci_validator" for hint in result.hints
     )
     assert any(hint.code == "ci_workflow_paths" for hint in result.hints)
+
+
+def test_analyze_diff_workflow_only_single_ci_hint() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path=".github/workflows/validate-workflow-contracts.yml",
+                additions=1,
+                deletions=0,
+                binary=False,
+            ),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    ci_hints = [hint for hint in result.hints if hint.code == "ci_workflow_paths"]
+    assert len(ci_hints) == 1
+    assert not any(hint.code == "config_or_deps" for hint in result.hints)
+    assert not any(
+        hint.code == "workflow_without_ci_validator" for hint in result.hints
+    )
 
 
 def test_analyze_diff_large_single_file_hint() -> None:

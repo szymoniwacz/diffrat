@@ -358,8 +358,13 @@ def _build_hints(
             )
         )
 
-    if any(category == "config" for category in categories):
-        if any(is_pyproject_path(file_change.path) for file_change in summary.files):
+    config_files = [
+        file_change
+        for file_change, category in zip(summary.files, categories, strict=True)
+        if category == "config" and not _is_github_workflow_path(file_change.path)
+    ]
+    if config_files:
+        if any(is_pyproject_path(file_change.path) for file_change in config_files):
             hints.append(
                 focus_risk_hint(
                     code="config_or_deps",
@@ -413,13 +418,26 @@ def _build_hints(
         preview = ", ".join(ci_workflow_paths[:3])
         if len(ci_workflow_paths) > 3:
             preview = f"{preview}, +{len(ci_workflow_paths) - 3} more"
+        has_ci_validator_in_diff = any(
+            _is_ci_directory_path(file_change.path)
+            or file_change.path.endswith("validate-workflow-contracts.py")
+            for file_change in summary.files
+        )
+        if has_ci_validator_in_diff:
+            message = (
+                f"CI/workflow paths changed ({preview}) — run: "
+                f"{_CI_WORKFLOW_VALIDATOR_COMMAND}"
+            )
+        else:
+            message = (
+                f"CI/workflow paths changed ({preview}) — "
+                "confirm workflow contracts are validated; run: "
+                f"{_CI_WORKFLOW_VALIDATOR_COMMAND}"
+            )
         hints.append(
             focus_risk_hint(
                 code="ci_workflow_paths",
-                message=(
-                    f"CI/workflow paths changed ({preview}) — run: "
-                    f"{_CI_WORKFLOW_VALIDATOR_COMMAND}"
-                ),
+                message=message,
             )
         )
 
@@ -492,29 +510,6 @@ def _build_hints(
                 message=(
                     f"CI files changed without tests in diff ({preview}) — "
                     "confirm CI changes are validated"
-                ),
-            )
-        )
-
-    workflow_paths = [
-        file_change.path
-        for file_change in summary.files
-        if _is_github_workflow_path(file_change.path)
-    ]
-    if workflow_paths and not any(
-        _is_ci_directory_path(file_change.path)
-        or file_change.path.endswith("validate-workflow-contracts.py")
-        for file_change in summary.files
-    ):
-        preview = ", ".join(workflow_paths[:3])
-        if len(workflow_paths) > 3:
-            preview = f"{preview}, +{len(workflow_paths) - 3} more"
-        hints.append(
-            focus_risk_hint(
-                code="workflow_without_ci_validator",
-                message=(
-                    f"Workflow changed without CI validator paths ({preview}) — "
-                    "confirm workflow contracts are validated"
                 ),
             )
         )
