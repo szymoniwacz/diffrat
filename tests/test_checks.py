@@ -282,7 +282,8 @@ def test_plan_checks_skips_ruff_for_other_config() -> None:
         )
     )
 
-    specs = plan_checks(summary)
+    with patch("numbat.checks.shutil.which", return_value=None):
+        specs = plan_checks(summary)
 
     assert [spec.code for spec in specs] == ["pip-audit"]
     assert specs[0].skip_reason == "pip-audit not found on PATH"
