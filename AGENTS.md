@@ -26,7 +26,9 @@ Do not duplicate workflow content here. Follow the documents in `.ai/`.
 - Product context: `.ai/project/product-context.md`.
 - Roadmap and deferred work: `.ai/project/roadmap.md`, `.ai/project/decisions.md`.
 - For an end-to-end goal, follow `.ai/skills/execute-goal.md`.
-- Never merge pull requests.
+- Never merge pull requests except under authorized eligible
+  `self-correcting-review auto-merge`
+  (`.ai/policies/autonomy-and-authorization.md`).
 
 ## Workflow rules
 
