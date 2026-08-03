@@ -379,9 +379,10 @@ See D-006 in `.ai/project/decisions.md` for format scope and precedence.
 
 ## How this project is built
 
-Numbat is shipped with a documentation-first AI delivery workflow used to plan,
-review, and land changes in small steps. That system is private and not part of
-the installable CLI — you only need the Setup section above to run `numbat`.
+This repository is developed with a documentation-first AI delivery workflow
+used to plan, review, and land changes in small steps. That system is private
+and not part of the installable CLI — you only need the Setup section above to
+run `numbat`.
 
 ## Limitations
 
