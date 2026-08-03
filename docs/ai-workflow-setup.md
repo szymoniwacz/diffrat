@@ -28,18 +28,11 @@ and related paths.
 ./scripts/validate-ai-workflow.sh
 ```
 
-## GitHub Actions (one-time)
+## GitHub Actions
 
-CI must read the private submodule. Add a repository secret:
-
-| Name | Value |
-|---|---|
-| `PRIVATE_SUBMODULE_TOKEN` | GitHub PAT with read access to `ai-project-template` |
-
-Fine-grained PAT: Contents → Read-only on `ai-project-template`.
-
-Without this secret, public CI cannot checkout the submodule and workflow
-validation will fail.
+CI reads the private submodule via deploy key secret `SUBMODULE_DEPLOY_KEY`
+(read-only key on `ai-project-template`). Repository maintainers configure this
+once in numbat Settings → Secrets and variables → Actions.
 
 ## What stays public in numbat
 

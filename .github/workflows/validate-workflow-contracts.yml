@@ -12,9 +12,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Load submodule deploy key
+        uses: webfactory/ssh-agent@v0.9.1
         with:
-          submodules: recursive
-          token: ${{ secrets.PRIVATE_SUBMODULE_TOKEN }}
+          ssh-private-key: ${{ secrets.SUBMODULE_DEPLOY_KEY }}
+
+      - name: Checkout private submodule
+        run: |
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
+          git submodule update --init --recursive .ai-template
 
       - name: Set up Python
         uses: actions/setup-python@v7
