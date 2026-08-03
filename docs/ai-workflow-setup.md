@@ -1,7 +1,9 @@
 # Private AI workflow setup
 
-Numbat keeps product code public. The reusable AI workflow lives in the
-private submodule `.ai-template/` (`szymoniwacz/ai-project-template`).
+Owner/maintainer runbook. The reusable AI workflow lives in the private
+submodule `.ai-template/` (`szymoniwacz/ai-project-template`) and is not
+shared. Product users install and run Numbat via the Setup section in
+`README.md` only — they do not need this document or submodule access.
 
 ## Local setup
 
