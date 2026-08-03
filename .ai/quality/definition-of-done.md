@@ -2,13 +2,17 @@
 
 ## Purpose
 
-A task is **done** when the scoped work is complete, validated, documented, and ready for human review. It is not done when code merely exists.
+A task is **done** when the scoped work is complete, validated, documented, and
+ready for human review (default), self-verified for human merge
+(`self-correcting-review`), or self-verified and squash-merged under
+`self-correcting-review auto-merge` when eligible. It is not done when code
+merely exists.
 
 Independent review when available, otherwise self-review, and the review
 handoff are required for all meaningful work. PR creation and diff-risk
 assessment apply only when using the GitHub PR workflow. Local or
-documentation-only work can reach Done without creating a PR. Agents never
-merge PRs.
+documentation-only work can reach Done without creating a PR. Agents merge PRs
+only under authorized eligible `self-correcting-review auto-merge`.
 
 ## Required for completion
 
@@ -55,9 +59,24 @@ validation or Done for the PR workflow path.
 
 When using the GitHub PR workflow, the created pull request was assessed before human review using `.ai/review/diff-risk-checklist.md`. The risk level, evidence, and required reviewer focus were recorded in the PR description or a top-level PR comment.
 
-### No merge by agent
+### Self-correcting review mode (opt-in)
 
-Agents never merge pull requests. Human review owns the final merge.
+When authorized per `.ai/policies/autonomy-and-authorization.md`, complete
+`.ai/review/self-correcting-review-loop.md` instead of human CR if eligible.
+Record mode use in the PR handoff. When `auto-merge` was also authorized and
+merge preconditions pass, Goal Executor performs authorized squash merge per
+`.ai/git/branch-and-pr-workflow.md`. Without `auto-merge`, a human merges.
+Escalate to human CR (no agent merge) when the loop does not converge or
+eligibility fails.
+
+### Merge ownership
+
+- **Default mode:** agents never merge; human CR and human merge.
+- **Self-correcting-review (no auto-merge):** skip human CR when eligible;
+  human merges.
+- **Self-correcting-review auto-merge (eligible):** agent squash-merges after
+  self-verified handoff and green applicable CI.
+- **Escalated / ineligible:** human CR and human merge; agents must not merge.
 
 ## Done checklist
 
@@ -71,7 +90,8 @@ Agents never merge pull requests. Human review owns the final merge.
 - [ ] branch and PR created (when applicable)
 - [ ] applicable CI checks pass after CI stabilization (when using the GitHub PR workflow)
 - [ ] diff-risk assessed on the PR before human review, when applicable (`.ai/review/diff-risk-checklist.md`)
-- [ ] agent did not merge the PR
+- [ ] human CR completed (default / escalated), or eligible self-verified handoff when self-correcting review mode was used
+- [ ] default / self-correcting without auto-merge / escalated: agent did not merge; `self-correcting-review auto-merge` eligible: authorized squash merge verified on `main`
 
 ## Not done
 
@@ -82,7 +102,8 @@ A task is not done when:
 - CI could not be inspected but full validation was claimed,
 - scope expanded beyond the brief, task packet, or plan without approval,
 - docs contradict the implementation,
-- the reviewer would need chat history to understand the change.
+- the reviewer would need chat history to understand the change,
+- self-correcting merge was claimed but remote verification failed.
 
 ## Related documents
 
@@ -92,3 +113,6 @@ A task is not done when:
 - `.ai/packets/task-packet.template.md`
 - `.ai/packets/review-packet.template.md`
 - `.ai/review/README.md`
+- `.ai/review/self-correcting-review-loop.md`
+- `.ai/policies/autonomy-and-authorization.md`
+- `.ai/git/branch-and-pr-workflow.md`

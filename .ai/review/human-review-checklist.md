@@ -82,7 +82,8 @@ Findings: <actionable findings or rejection reason>
 ```
 
 A solo PR author's Approve decision is recorded by the human merge itself after
-independent review of the current remote head. Agents must never merge.
+independent review of the current remote head. Merge rules:
+`.ai/policies/autonomy-and-authorization.md`.
 
 Immediately before merge, the human must read the current remote pull request
 head SHA and confirm it is the revision they reviewed. Any later commit

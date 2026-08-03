@@ -7,36 +7,49 @@
 ## Purpose
 
 Carry one authorized goal from analysis through a review-ready pull request.
+With explicit **self-correcting review mode**, target a self-verified PR.
+With additional **`auto-merge`**, when eligible, perform an authorized squash
+merge (see `.ai/policies/autonomy-and-authorization.md`).
 
 Invoking `/execute-goal` authorizes branch or worktree creation, scoped changes,
 tests, validation, commits, push, final PR creation or update, CI
 stabilization, and clear in-scope CI fixes after PR creation.
+`/execute-goal self-correcting-review auto-merge` also authorizes squash merge
+when eligible.
 
 Autonomous mode is the default. Supervised mode applies only when explicitly
 requested. Question timing and authorization details:
 `.ai/policies/autonomy-and-authorization.md`.
 
 Canonical lifecycle: `.ai/docs/full-workflow.md`.
+Self-correcting loop when opted in: `.ai/review/self-correcting-review-loop.md`.
 
 ## Completion by execution surface
 
 `/execute-goal` names one canonical goal-to-PR lifecycle (Steps below). Direct
-or interactive execution targets a review-ready PR through CI stabilization. A
-bounded automation slice may stop earlier at an explicit prefix of the same
-lifecycle; the current Goal Executor automation implements Slice 2 through
-review-ready handoff. Details: `.ai/automation/README.md`.
+or interactive execution targets a review-ready PR through CI stabilization.
+Under `self-correcting-review auto-merge`, continue through authorized squash
+merge when eligible. Goal Executor automation implements the same lifecycle
+through review-ready handoff and, when `auto-merge` is authorized and eligible,
+through squash merge. It must not stop successfully on a draft PR alone.
+Details: `.ai/automation/README.md` and `.ai/automation/goal-executor.md`.
 
 ## Trigger
 
 Run when the user writes `/execute-goal`, or clearly asks for an end-to-end
-outcome ready for human review.
+outcome ready for human review (default), self-verified handoff
+(`self-correcting-review`), or self-verified merge
+(`self-correcting-review auto-merge`).
 
-## Always read
+Always read:
 
 - `.ai/policies/autonomy-and-authorization.md`
 - `.ai/instructions/workflow.md`
 - relevant project context and scope
 - triggering issue, explicit brief, or accepted requirement
+
+Ignore any issue **Commands** section for scope — it is human reference only
+(see `.ai/automation/goal-executor.md`).
 
 ## Read when applicable
 
@@ -44,7 +57,8 @@ outcome ready for human review.
 - `.ai/onboarding/bootstrap-checklist.md` during bootstrap
 - the matching task workflow for the actual change type
 - security and dangerous-action policies when relevant
-- `.ai/git/branch-and-pr-workflow.md` before commit, push, or PR operations
+- `.ai/git/branch-and-pr-workflow.md` before commit, push, PR, or merge
+  operations
 - `.ai/quality/quality-gates.md` before validation
 - `.ai/quality/definition-of-ready.md` when preparing a packet or plan
 
@@ -62,7 +76,9 @@ resolve state
   -> push
   -> create or update PR
   -> CI stabilization
-  -> stop before merge
+  -> then exactly one of:
+       stop before merge (default / self-correcting-review)
+       authorized squash merge (self-correcting-review auto-merge when eligible)
 ```
 
 Rules:
@@ -75,17 +91,22 @@ Rules:
 - after PR creation, complete CI stabilization per
   `.ai/git/branch-and-pr-workflow.md`; pending or failing applicable CI means
   not review-ready,
+- when self-correcting review mode is active, complete
+  `.ai/review/self-correcting-review-loop.md` before claiming self-verified
+  Done; perform authorized squash merge only when `auto-merge` was also
+  authorized and merge preconditions pass; otherwise stop before merge,
 - if CI cannot be inspected, report the limitation and do not claim full
-  validation.
+  validation or merge.
 
 ## Output
 
 Report phase, decisions asked or deferred, validation, commits, PR URL,
-CI stabilization result, remaining follow-ups, and confirmation that nothing
-was merged.
+CI stabilization result, remaining follow-ups, and either the merge SHA/URL or
+confirmation that nothing was merged.
 
 ## Stop conditions
 
 Stop for immediate blockers, dangerous actions requiring prior approval,
 unrelated dirty working-tree risk, readiness blocking product behaviour,
-supervised early stops, or out-of-scope blockers.
+supervised early stops, out-of-scope blockers, or self-correcting escalation
+(ineligible / human CR required).

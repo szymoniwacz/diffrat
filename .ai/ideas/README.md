@@ -26,4 +26,5 @@ This folder stores project ideas before they become implementation work.
 
 | ID | Title | Status | Notes |
 |---|---|---|---|
-| — | — | — | — |
+| 001-self-correcting-review-mode | Self-correcting review mode | implemented | Opt-in review→fix loop; merge rule superseded by 002 |
+| 002-self-correcting-auto-merge | Self-correcting auto-merge | implemented | Optional `auto-merge` suffix; Goal Executor squash-merge when eligible |

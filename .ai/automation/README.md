@@ -22,9 +22,10 @@ Production authorization is an exact `/execute-goal` comment on an ordinary
 GitHub issue by the authorized repository owner.
 
 That comment authorizes the canonical `/execute-goal` lifecycle in
-`.ai/skills/execute-goal.md`. Goal Executor automation implements Slice 2
-through review-ready handoff as a bounded prefix of that lifecycle, not an
-alternative command.
+`.ai/skills/execute-goal.md`. Goal Executor automation implements that
+lifecycle through review-ready handoff, and under
+`/execute-goal self-correcting-review auto-merge` continues through authorized
+squash merge when eligible. It is not an alternative command.
 
 Authorization meaning and question timing:
 `.ai/policies/autonomy-and-authorization.md`.
@@ -34,10 +35,10 @@ Instruction payload: `.ai/automation/goal-executor.md`.
 Production setup: `.ai/automation/goal-executor-production-setup.md`.
 
 Delegated goals may instead inherit one active `/execute-project`
-authorization. Merging a delegated pull request with `Closes #<goal-number>`
-may trigger Project Executor when that trigger is configured. Project-level
-state and setup live in
-`.ai/automation/project-executor.md` and
+authorization. Goal Executor owns PR-head CI resume; Project Executor owns
+merged-PR and default-branch CI continuation. Runtimes:
+`.ai/automation/goal-executor.md`, `.ai/automation/project-executor.md`.
+Setup: `.ai/automation/goal-executor-production-setup.md`,
 `.ai/automation/project-executor-production-setup.md`.
 
 ## Execution-state resolution
@@ -58,7 +59,8 @@ and a completed-without-PR result. A remote write includes:
 
 - push or remote branch publication;
 - pull request creation or metadata update;
-- issue or pull request comment creation or edit.
+- issue or pull request comment creation or edit;
+- authorized squash merge of a pull request.
 
 ### Durable evidence
 
@@ -154,8 +156,8 @@ Default limits for one authorized goal run:
 
 When a limit is reached, preserve evidence, explain the blocker, and stop.
 
-Remote CI repair loops are in scope for the current Goal Executor automation
-(Slice 2). Stop when bounded iteration limits are reached.
+Remote CI repair loops are in scope for the current Goal Executor automation.
+Stop when bounded iteration limits are reached.
 
 ## Attribution verification
 
@@ -168,18 +170,32 @@ platform-added footer markup when possible. Procedure:
 When signed cloud commits are expected, any commit in the pull request range
 that is not GitHub Verified is an immediate blocker.
 
+After authorized `self-correcting-review auto-merge` squash, Goal Executor must
+supply a clean squash title/body and verify the default-branch tip per
+**Commits on `main`** (platform-injected `Co-authored-by: Cursor Agent` and
+platform-added user `Co-authored-by` on that tip are allowed).
+
 ## Slice boundaries
 
-**Slice 1 (superseded):** stopped after a validated draft pull request.
+**Current Goal Executor automation** continues through remote CI
+stabilization, diff-risk recording, and marking the pull request ready for
+review. Default and escalated paths stop before merge. Ending on a draft PR
+while applicable CI is pending, or before review-ready handoff when CI is
+green, is not a successful stop. Contract:
+`.ai/automation/goal-executor.md`.
 
-**Slice 2 (current):** continues through remote CI stabilization, diff-risk
-recording, and marking the pull request ready for review. Automation still
-stops before merge.
+**Self-correcting extension:** when `self-correcting-review auto-merge` is
+authorized and eligible, Goal Executor continues through authorized squash
+merge per `.ai/git/branch-and-pr-workflow.md`.
 
-Report the stopping point when blocked. Do not claim merge authorization.
+Report the stopping point when blocked. Claim merge authorization only for that
+`auto-merge` eligible path.
 
-## Never merge
+## Merge policy
 
-Agents and automations must never merge pull requests. Only humans merge after
-review.
+Agents and automations must never merge pull requests except under authorized
+eligible `self-correcting-review auto-merge` (Goal Executor squash merge).
+Default, self-correcting-without-auto-merge, and escalated paths: only humans
+merge after review. Do not enable GitHub auto-merge queue. Project Executor
+never merges.
 

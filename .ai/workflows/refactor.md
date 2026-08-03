@@ -40,7 +40,7 @@ material decisions not already approved.
 8. Run existing tests or manual checks to confirm behavior is unchanged.
 9. Update docs only if structure names or boundaries changed.
 10. Complete through the canonical lifecycle in `.ai/docs/full-workflow.md`.
-    Agents never merge.
+    Merge rules: `.ai/policies/autonomy-and-authorization.md`.
 
 ## Validation
 

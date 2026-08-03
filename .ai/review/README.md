@@ -18,6 +18,7 @@ Review handoff means a review packet created from
 |---|---|---|
 | [ai-review-checklist.md](ai-review-checklist.md) | Independent review agent or self-review | After quality gates, before the decision checkpoint or handoff |
 | [diff-risk-checklist.md](diff-risk-checklist.md) | Both | Assessing change risk from the diff before human review |
+| [self-correcting-review-loop.md](self-correcting-review-loop.md) | Agent | Opt-in self-correcting review mode only |
 | [human-review-checklist.md](human-review-checklist.md) | Human reviewer | Reviewing an existing pull request |
 
 ## How to use
@@ -36,9 +37,11 @@ Review handoff means a review packet created from
    description or a top-level PR comment.
 7. When using the GitHub PR workflow, the human reviewer applies
    `.ai/review/human-review-checklist.md` and concludes with Approve, Request
-   changes, or Reject.
-8. When using the GitHub PR workflow, a human merges the approved PR. Agents
-   never merge.
+   changes, or Reject — unless self-correcting review mode skipped human CR.
+8. When using the GitHub PR workflow, a human merges the approved or
+   self-verified PR by default. Under authorized eligible
+   `self-correcting-review auto-merge`, Goal Executor squash-merges. Agents must
+   not merge otherwise.
 
 The review packet is supporting input for human review, not an alternative
 review surface. Post-PR review results are not written back into the repository
@@ -69,5 +72,6 @@ the checklist files or the review-packet template.
 
 Independent review when available, otherwise self-review, and review handoff are
 required before continuing to the next task. Human review is required before
-merge when using the GitHub PR workflow. See `.ai/docs/full-workflow.md`.
-Agents never merge.
+merge when using the GitHub PR workflow, unless self-correcting review mode is
+authorized and eligible. See `.ai/docs/full-workflow.md`. Agents never merge
+except under authorized eligible `self-correcting-review auto-merge`.

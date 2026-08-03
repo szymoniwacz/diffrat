@@ -97,10 +97,47 @@ Open one pull request per branch targeting `main`.
 
 Agents and automated workflows must not push directly to `main`. Use a branch and pull request.
 
-## No merge by agent
+## No merge by agent except auto-merge
 
 Agents may create branches, commits, and pull requests. Agents must never merge
-pull requests. Only humans merge after review.
+pull requests except under authorized eligible
+`self-correcting-review auto-merge`. Default, self-correcting-without-auto-merge,
+and escalated paths: only humans merge after review. Mode and preconditions:
+`.ai/policies/autonomy-and-authorization.md`.
+
+## Authorized self-correcting merge
+
+Use only when all merge preconditions in
+`.ai/policies/autonomy-and-authorization.md` are met
+(`self-correcting-review auto-merge` authorization; loop clean; eligible
+low/medium; applicable CI green or none; no open material, dangerous, or
+immediate blockers).
+
+Procedure (Goal Executor):
+
+1. Confirm the pull request is ready for review, applicable CI is green (or no
+   applicable CI is configured), attribution and PR metadata are clean, and the
+   self-correcting handoff records eligibility.
+2. Squash-merge only (for example `gh pr merge --squash`). Do not use merge
+   commit or rebase merge. Do not enable GitHub auto-merge queue.
+3. When squash-merging, pass an explicit **clean commit title** and **clean
+   commit body** (subject + optional body only). Do not include AI badges,
+   generation footers, or any `Co-authored-by` / `Signed-off-by` trailers in
+   the message the agent supplies. Prefer the GitHub API / `gh` flags that set
+   `commit_title` and `commit_message` (or equivalent) so the default squash
+   text from PR commits is not used as-is.
+4. Read back the remote pull request and confirm it is merged.
+5. Read the resulting default-branch tip commit. Confirm the title and body
+   follow **Commits on `main`** below (including the authorized-squash
+   platform-injected trailer exception).
+6. If merge is denied (permissions, branch protection, required reviews) or
+   verification fails, stop with an explicit blocker. Do not bypass protection,
+   force push, or retry with a different merge strategy.
+7. Report the merge SHA and pull request URL. On success under Project Executor,
+   the existing pull request merged trigger continues the project; when
+   applicable CI on the default branch is still pending, the CI/workflow
+   completed trigger resumes after that CI finishes (green → next/finalize;
+   red → CI repair first).
 
 ## Attribution by surface
 
@@ -155,10 +192,30 @@ the locally prepared text or write response.
 
 ### Commits on `main`
 
-Final commits on `main` must not contain prohibited attribution. A human
-performs a squash merge and verifies that the resulting `main` commit has a
-clean title, an empty or clean body, and no AI attribution trailers. Agents
-never merge.
+Final commits on `main` must not contain agent-added prohibited attribution.
+Squash merge onto `main` is performed by a human (default, self-correcting
+without `auto-merge`, or escalated) or by Goal Executor under authorized
+eligible `self-correcting-review auto-merge`. Agents must not merge outside
+that authorized path.
+
+The merger verifies the resulting default-branch tip:
+
+1. Clean title and an empty or clean body (no AI badges or generation footers).
+2. No agent-supplied AI attribution trailers in the squash message the merger
+   sent.
+3. **Authorized-squash tip exception:** after Goal Executor squash-merges under
+   eligible `self-correcting-review auto-merge`, GitHub may still append
+   platform-injected `Co-authored-by: Cursor Agent <…>` and the platform-added
+   user `Co-authored-by` trailer on the tip (derived from verified native cloud
+   agent PR commits). Those platform-injected trailers alone are **not**
+   blockers and are **not** a Project Executor FINALIZE failure. Same rationale
+   as **Temporary PR branch commits**: the platform owns that metadata.
+4. Any other prohibited attribution on the tip (for example "Made with Cursor",
+   agent-invented trailers, or generation badges) remains an immediate blocker.
+
+Human squash merges should still supply a clean squash message in the UI when
+possible. Agents must not rewrite published history to strip platform-injected
+trailers.
 
 ## Pre-push metadata gate
 
@@ -232,8 +289,9 @@ environments will pass.
    rewriting published history, stop as an immediate blocker.
 4. Identify applicable CI checks for the PR (required and otherwise configured
    checks that this change triggers).
-5. Wait until those checks complete. Pending applicable CI means not
-   review-ready.
+5. Wait until those checks complete. Prefer `gh pr checks <n> --watch` (or
+   equivalent status polling) until every applicable check is terminal. Pending
+   applicable CI means not review-ready.
 6. If any applicable check fails:
    - inspect the failure logs,
    - fix clear in-scope failures caused by this branch,
@@ -264,11 +322,15 @@ agent attribution) can only be removed by rewriting published history, report an
 immediate blocker. If CI cannot be inspected, report the limitation and do not
 claim full validation or review-ready status.
 
-### Goal Executor automation (Slice 2)
+### Goal Executor automation
 
 Goal Executor automation creates a draft pull request, completes remote CI
 stabilization, records diff-risk, and marks the pull request ready for review
-when criteria pass. It still stops before merge.
+when criteria pass. A draft without terminal applicable CI (or without
+review-ready handoff when CI is already green) is an incomplete run, not a
+successful stop. Default and escalated paths still stop before merge; eligible
+`self-correcting-review auto-merge` continues through squash merge. Contract:
+`.ai/automation/goal-executor.md`.
 
 ## Review handoff
 

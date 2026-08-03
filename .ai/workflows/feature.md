@@ -98,7 +98,7 @@ Complete the remaining stages in canonical order via
 answers and rerun affected validation and review, prepare the review handoff,
 then commit, push, and create or update the pull request.
 
-Agents never merge.
+Merge rules: `.ai/policies/autonomy-and-authorization.md`.
 
 ## Idea lifecycle update
 

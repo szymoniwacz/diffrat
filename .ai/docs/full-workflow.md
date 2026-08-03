@@ -41,8 +41,8 @@ authorized goal
   -> create or update PR
   -> CI stabilization
   -> diff-risk assessment
-  -> human review
-  -> manual human merge
+  -> human review (default) or self-correcting loop (opt-in)
+  -> human merge (default / self-correcting-review / escalated) or authorized squash merge (`self-correcting-review auto-merge` eligible)
 ```
 
 This document owns the full lifecycle order. Other docs may summarize and link
@@ -60,12 +60,18 @@ Primary command: `/execute-goal`. Modes, authorization, and question timing:
 The pull request is normally the main human review boundary. CI stabilization,
 diff-risk assessment, human review, and manual merge stages apply when using
 the GitHub PR workflow. Otherwise, review handoff is the final required handoff
-artifact.
+artifact. Opt-in self-correcting review mode may skip human CR when authorized
+and eligible; with the additional `auto-merge` option, Goal Executor may
+perform an authorized squash merge when eligible. See
+`.ai/policies/autonomy-and-authorization.md` and
+`.ai/review/self-correcting-review-loop.md`. Paths without `auto-merge` still
+require human merge.
 
 A pull request is not review-ready while applicable CI is pending or failing.
 Procedure: `.ai/git/branch-and-pr-workflow.md`.
 
-Agents must never merge pull requests.
+Agents must never merge pull requests except under authorized eligible
+`self-correcting-review auto-merge`.
 
 ## Stages
 
@@ -330,8 +336,9 @@ are not review sources of truth.
 
 **Rule:** when the authorized outcome is a review-ready pull request, commit,
 push, and PR creation are allowed without additional confirmation. Agents may
-create branches and PRs; agents must not merge PRs. Creating the PR alone does
-not make the task review-ready; CI stabilization must still pass.
+create branches and PRs; agents must not merge PRs except under authorized
+eligible `self-correcting-review auto-merge`. Creating the PR alone does not
+make the task review-ready; CI stabilization must still pass.
 
 ---
 
@@ -379,19 +386,24 @@ triggering issue or explicit brief, related canonical docs
 
 **Gate:** reviewer confirms scope, documentation, and applicable quality gates
 
-**Rule:** read and apply the checklist; do not edit the checklist file to record results
+**Rule:** read and apply the checklist; do not edit the checklist file to record results. When self-correcting review mode is authorized and eligible, human CR is skipped; see `.ai/review/self-correcting-review-loop.md`. Escalated work still requires this stage.
 
 ---
 
-### 16. Manual merge
+### 16. Merge
 
-**Goal:** Integrate approved work into the main line under human control.
+**Goal:** Integrate approved or self-verified work into the main line.
 
-**Typical inputs:** approved PR
+**Typical inputs:** approved PR (default / escalated), self-verified PR awaiting
+human merge (`self-correcting-review`), or eligible self-verified PR with
+`auto-merge`
 
-**Typical outputs:** merged commit on `main`
+**Typical outputs:** squash-merged commit on `main`
 
-**Rule:** only humans merge. No direct push to `main` by agents.
+**Rule:** default, self-correcting-without-auto-merge, and escalated paths —
+only humans merge. `self-correcting-review auto-merge` eligible — Goal Executor
+squash-merges per `.ai/git/branch-and-pr-workflow.md`. No direct push to `main`
+by agents.
 
 ## Artifact map
 
@@ -414,8 +426,8 @@ The "Checklist or procedure" column is the reusable input applied at a stage. Th
 | Commit / push / PR | `.ai/git/branch-and-pr-workflow.md` | commits, remote branch, GitHub pull request |
 | CI stabilization | `.ai/git/branch-and-pr-workflow.md` | green applicable CI, clean remote attribution, or documented inspectability limit |
 | Diff-risk assessment | `.ai/review/diff-risk-checklist.md` | PR description or top-level PR comment |
-| Human review | `.ai/review/human-review-checklist.md` | GitHub PR review, solo-author merge for Approve, or top-level PR comment for Request changes or Reject |
-| Merge | — | human-approved merge to `main` |
+| Human review | `.ai/review/human-review-checklist.md` | GitHub PR review, solo-author merge for Approve, or top-level PR comment for Request changes or Reject; skipped when self-correcting eligible |
+| Merge | `.ai/git/branch-and-pr-workflow.md` | human squash merge (default / self-correcting-review / escalated) or Goal Executor authorized squash merge (`self-correcting-review auto-merge` eligible) |
 
 ## Resumability
 
@@ -438,7 +450,8 @@ These invariants summarize constraints that span the lifecycle. Operational inst
 4. Autonomous mode continues through routine phases; deferred decisions wait for
    the grouped checkpoint; immediate blockers still stop early.
 5. Preserve context in files, not only in conversations.
-6. The pull request is the normal review boundary; humans merge.
+6. The pull request is the normal review boundary; humans merge by default.
+   Authorized eligible `self-correcting-review auto-merge` may squash-merge.
 
 ## What this document does not cover
 

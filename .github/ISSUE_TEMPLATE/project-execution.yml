@@ -8,13 +8,7 @@ body:
       value: |
         Describe the product outcome once. The Project Executor will select and execute one small goal at a time.
 
-        When the brief is complete, comment exactly `/execute-project`.
-
-        Merging a delegated pull request automatically continues the project.
-        Use `/continue-project` only to resume after answering material-decision
-        questions or when automation stopped with CI pending.
-
-        You still review and manually merge every pull request. Agents never merge.
+        Leave the **Commands** section at the bottom as-is so it stays visible on the created issue. Agents ignore it for scope.
 
   - type: textarea
     id: product_outcome
@@ -54,3 +48,26 @@ body:
       label: Relevant context
       description: Additional context not already recorded in the repository, such as external references or instructions specific to this execution.
       placeholder: Optional.
+
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands
+      description: Human cheat sheet only. Agents must ignore this section for scope. Comment exactly one option (repository owner).
+      value: |
+        REFERENCE ONLY — agents must ignore this entire section for scope, planning, implementation, validation, and Done.
+
+        Comment exactly (repository owner):
+
+        - `/execute-project` — authorize project and start/resume (default: human CR per delegated PR, then you merge)
+        - `/execute-project self-correcting-review` — same + self-correcting review mode on eligible delegated goals (skip human CR when eligible; you still merge)
+        - `/execute-project self-correcting-review auto-merge` — same + Goal Executor squash-merges when eligible
+        - `/continue-project` — optional nudge after material-decision answers or an unexpected stop (does not authorize by itself)
+
+        Ordinary resume: Goal Executor PR-head CI for draft handoff; Project Executor on merge and default-branch CI (green → next; red → repair). Project Executor never merges; Goal Executor may squash-merge only with `self-correcting-review auto-merge` when eligible.
+
+        After editing the title or scope fields (Product outcome, Completion criteria, Constraints, Out of scope, Relevant context), re-comment `/execute-project`, `/execute-project self-correcting-review`, or `/execute-project self-correcting-review auto-merge` (authorization resets). Editing Commands alone does not reset authorization.
+
+        Details: `.ai/policies/autonomy-and-authorization.md`, `.ai/review/self-correcting-review-loop.md`
+    validations:
+      required: true

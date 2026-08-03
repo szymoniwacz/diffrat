@@ -10,7 +10,8 @@ Define how assisted project work should happen in this repository.
 - small steps
 - documentation first
 - self-review and review handoff for meaningful work
-- human review before merge when using the PR workflow
+- human review before merge when using the PR workflow, unless self-correcting
+  review mode is authorized and eligible
 - explicit approval before controlled or structural changes
 - no blind generation
 - no large hidden rewrites
@@ -42,7 +43,8 @@ Check:
 - decisions are recorded
 - scope is still correct
 - self-review and review handoff are complete
-- human review happens before merge when using the PR workflow
+- human review happens before merge when using the PR workflow, unless
+  self-correcting review mode is authorized and eligible
 - a session log is created or appended when required by `.ai/observability/session-log-spec.md`
 - next step is clear
 
