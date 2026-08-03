@@ -1,0 +1,3 @@
+[submodule ".ai-template"]
+	path = .ai-template
+	url = https://github.com/szymoniwacz/ai-project-template.git
