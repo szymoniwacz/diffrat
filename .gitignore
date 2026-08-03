@@ -26,17 +26,20 @@ venv/
 !.ai/project/
 !.ai/project/**
 !.ai/stack-profiles/
+.ai/stack-profiles/*
 !.ai/stack-profiles/numbat-cli.md
 !.ai/architecture/
+.ai/architecture/*
 !.ai/architecture/adr-0001-llm-analysis-layer.md
 !.ai/docs/
+.ai/docs/*
 !.ai/docs/architecture-direction.md
 !.ai/docs/project-requirements.md
 
 # Template-owned paths (symlinked by scripts/setup-ai-workflow.sh)
-/ci/
-/examples/
+/ci
+/examples
 .cursorrules
 .github/copilot-instructions.md
 .github/pull_request_template.md
-.github/PULL_REQUEST_TEMPLATE/
+.github/PULL_REQUEST_TEMPLATE
