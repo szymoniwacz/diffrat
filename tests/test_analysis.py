@@ -28,6 +28,8 @@ def test_categorize_path_assigns_expected_buckets() -> None:
     assert categorize_path("README.md") == "docs"
     assert categorize_path("docs/guide.md") == "docs"
     assert categorize_path("ci/validate-workflow-contracts.py") == "ci"
+    assert categorize_path(".github/workflows/ci.yml") == "ci"
+    assert categorize_path("config/app.yaml") == "config"
     assert categorize_path("assets/logo.png") == "other"
 
 

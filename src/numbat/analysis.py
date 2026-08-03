@@ -234,12 +234,12 @@ def categorize_path(path: str) -> FileCategory:
 
     if _is_tests_path(name_lower, parts_lower):
         return "tests"
+    if _is_ci_path(parts_lower):
+        return "ci"
     if _is_config_path(name_lower, suffix, parts_lower):
         return "config"
     if _is_docs_path(name_lower, suffix, parts_lower):
         return "docs"
-    if _is_ci_path(parts_lower):
-        return "ci"
     if suffix in _SOURCE_EXTENSIONS or "src" in parts_lower:
         return "source"
     return "other"
@@ -807,7 +807,13 @@ def _is_config_path(
 
 
 def _is_ci_path(parts_lower: tuple[str, ...]) -> bool:
-    return bool(parts_lower and parts_lower[0] == "ci")
+    if parts_lower and parts_lower[0] == "ci":
+        return True
+    return (
+        len(parts_lower) >= 2
+        and parts_lower[0] == ".github"
+        and parts_lower[1] == "workflows"
+    )
 
 
 def _is_ci_directory_path(path: str) -> bool:
