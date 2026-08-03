@@ -42,8 +42,7 @@ Phase 4 (integrations) is deferred. See `.ai/project/roadmap.md`.
 
 ## Setup
 
-Requires Python 3.11+ and git on PATH. The CLI does **not** need the private
-AI workflow submodule.
+Requires Python 3.11+ and git on PATH.
 
 ```bash
 git clone https://github.com/szymoniwacz/numbat.git
@@ -57,9 +56,6 @@ For local development (tests, lint, typecheck), install the optional extras:
 ```bash
 pip install -e ".[dev]"
 ```
-
-Maintainers and contributors who need the AI working system (private submodule)
-should follow `docs/ai-workflow-setup.md` instead of the product install above.
 
 ## Run
 
@@ -381,12 +377,11 @@ See D-006 in `.ai/project/decisions.md` for format scope and precedence.
 - `.ai/project/scope.md` — in-scope and deferred work
 - `.ai/docs/architecture-direction.md` — CLI component boundaries
 
-## Working system
+## How this project is built
 
-Product use only needs the Setup section above. Maintainers and contributors
-who work with the AI-assisted delivery system materialize `.ai/` via
-`./scripts/setup-ai-workflow.sh` (private submodule). Details:
-`docs/ai-workflow-setup.md`.
+Numbat is shipped with a documentation-first AI delivery workflow used to plan,
+review, and land changes in small steps. That system is private and not part of
+the installable CLI — you only need the Setup section above to run `numbat`.
 
 ## Limitations
 

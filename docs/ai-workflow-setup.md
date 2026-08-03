@@ -1,13 +1,9 @@
 # Private AI workflow setup
 
-Numbat keeps product code public. The reusable AI workflow lives in the
-private submodule `.ai-template/` (`szymoniwacz/ai-project-template`).
-
-**CLI users and external testers do not need this document.** To install and
-run `numbat review`, follow the product Setup section in `README.md`
-(`git clone` + `pip install -e .`). This page is only for maintainers and
-contributors who need the AI working system or full local CI contract
-validation.
+Owner/maintainer runbook. The reusable AI workflow lives in the private
+submodule `.ai-template/` (`szymoniwacz/ai-project-template`) and is not
+shared. Product users install and run Numbat via the Setup section in
+`README.md` only — they do not need this document or submodule access.
 
 ## Local setup
 
