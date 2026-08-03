@@ -58,9 +58,9 @@ Developer/Reviewer
 
 | Mechanism | Purpose |
 |---|---|
-| CLI flags | Diff target, output format, verbosity |
+| CLI flags | Diff target, output format, checks, fail-on |
 | Env vars | `NUMBAT_LLM_PROVIDER`, `NUMBAT_LLM_API_KEY`, optional `NUMBAT_LLM_BASE_URL` when LLM enabled (ADR-0001) |
-| Config file | Deferred — env + flags sufficient for v1 |
+| Config file | Optional repo-local `[tool.numbat]` in `pyproject.toml` / `.numbat.toml` (D-006) |
 
 ## Open questions
 

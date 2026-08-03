@@ -48,14 +48,26 @@ Requires Python 3.11+ and git on PATH.
 git clone https://github.com/szymoniwacz/numbat.git
 cd numbat
 pip install -e .
+numbat --version
+```
+
+`numbat review` needs a real diff. On a clean `main` with no local changes,
+`--base main` exits `2` (`no changes on branch since main`) — that is expected.
+Use unstaged/staged edits or a feature branch, then:
+
+```bash
+numbat review
 numbat review --base main
 ```
 
-For local development (tests, lint, typecheck), install the optional extras:
+For local development (tests, lint, typecheck), and if you will use
+`numbat review --check`, install the optional extras:
 
 ```bash
 pip install -e ".[dev]"
 ```
+
+External dogfood sessions: `docs/feedback-checklist.md`.
 
 ## Run
 

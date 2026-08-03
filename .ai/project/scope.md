@@ -13,16 +13,18 @@ This file protects the project from uncontrolled expansion.
 - Local git diff ingestion (working tree, staged, branch vs base, commit range)
 - Structured review report: change summary, risk/focus hints, git metadata context
 - Human-readable terminal output with optional `--json` flag
+- Optional LLM analysis when `NUMBAT_LLM_*` is configured (D-005 / ADR-0001);
+  heuristics-only remains the default without API keys
 - Unit and CLI tests for new commands and flags
 - Documentation updates alongside behavior changes
 
 ## Out of scope by default
 
 - Web UI, GitHub App, or hosted review service
-- CI/CD integration and PR comment bots (deferred to post-v1)
+- CI/CD integration and PR comment bots (deferred to Phase 4)
 - Full-repository or cross-repo analysis
 - Automatic merge, approval, or policy enforcement
-- Optional LLM / network analysis backend (out of v1; D-005 skipped)
+- Shared or remote rule packs beyond repo-local TOML (D-006 partial)
 - Large rewrites without explicit approval
 - New frameworks without a decision record
 - Hidden architecture changes
