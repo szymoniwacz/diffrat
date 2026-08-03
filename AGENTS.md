@@ -5,8 +5,12 @@ Root-level adapter for AI coding agents.
 ## Repository role
 
 This repository contains **Numbat**, a local Python CLI for diff and PR review
-assistance. Product code lives under `src/numbat/`. The `.ai/` folder holds the
-AI working system inherited from `ai-project-template`.
+assistance. Product code lives under `src/numbat/`.
+
+The reusable AI workflow is **not** committed here. It comes from the private
+submodule `.ai-template/` (`ai-project-template`). Run
+`./scripts/setup-ai-workflow.sh` after clone to materialize `.ai/`.
+See `docs/ai-workflow-setup.md`.
 
 **1.0.0** on `main` is the first product release: `numbat review` (modes, JSON,
 hunks, Focus/Risk hints, optional `--check`, optional Phase 3 LLM via

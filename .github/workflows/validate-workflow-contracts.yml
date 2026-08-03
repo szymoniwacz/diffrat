@@ -12,23 +12,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          token: ${{ secrets.PRIVATE_SUBMODULE_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
+      - name: Materialize private AI workflow
+        run: ./scripts/setup-ai-workflow.sh
+
       - name: Validate project workflow contracts
         run: python ci/validate-workflow-contracts.py --mode project
 
-      - name: Run validator fixture tests
-        run: python ci/tests/test_validator.py
-
-      - name: Run project validator fixture tests
-        run: python ci/tests/test_project_validator.py
-
-      - name: Run folder map validation tests
-        run: python ci/tests/test_folder_map_validation.py
-
-      - name: Run CI validation mode tests
-        run: python ci/tests/test_ci_validation_mode.py
+      - name: Run product tests
+        run: |
+          pip install -e ".[dev]"
+          pytest tests/ -q

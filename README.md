@@ -45,8 +45,14 @@ Phase 4 (integrations) is deferred. See `.ai/project/roadmap.md`.
 Requires Python 3.11+ and git on PATH.
 
 ```bash
+git clone --recurse-submodules https://github.com/szymoniwacz/numbat.git
+cd numbat
+./scripts/setup-ai-workflow.sh
 pip install -e ".[dev]"
 ```
+
+The AI workflow submodule is private. See `docs/ai-workflow-setup.md` if
+`./scripts/setup-ai-workflow.sh` fails or CI needs `PRIVATE_SUBMODULE_TOKEN`.
 
 ## Run
 
@@ -370,8 +376,9 @@ See D-006 in `.ai/project/decisions.md` for format scope and precedence.
 
 ## Working system
 
-This repository uses `.ai/` as its AI working system. See
-[`.ai/docs/template-flow.md`](.ai/docs/template-flow.md) for workflow rules.
+This repository uses `.ai/` for AI-assisted delivery after
+`./scripts/setup-ai-workflow.sh`. Setup details:
+`docs/ai-workflow-setup.md`.
 
 ## Limitations
 
