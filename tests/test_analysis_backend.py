@@ -6,10 +6,10 @@ from dataclasses import replace
 
 import pytest
 
-from numbat.analysis import analyze_diff
-from numbat.analysis_backend import run_analysis
-from numbat.diff_parser import DiffContent, DiffHunk, DiffSummary, FileChange, FileDiffContent
-from numbat.llm_config import LlmConfig
+from diffrat.analysis import analyze_diff
+from diffrat.analysis_backend import run_analysis
+from diffrat.diff_parser import DiffContent, DiffHunk, DiffSummary, FileChange, FileDiffContent
+from diffrat.llm_config import LlmConfig
 
 
 def test_run_analysis_matches_analyze_diff_when_llm_disabled() -> None:
@@ -17,7 +17,7 @@ def test_run_analysis_matches_analyze_diff_when_llm_disabled() -> None:
         files=(
             FileChange(path="tests/test_cli.py", additions=10, deletions=2, binary=False),
             FileChange(path="pyproject.toml", additions=3, deletions=1, binary=False),
-            FileChange(path="src/numbat/auth.py", additions=5, deletions=0, binary=False),
+            FileChange(path="src/diffrat/auth.py", additions=5, deletions=0, binary=False),
         )
     )
 
@@ -31,7 +31,7 @@ def test_run_analysis_matches_analyze_diff_when_llm_enabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "numbat.analysis_backend.run_llm_analysis",
+        "diffrat.analysis_backend.run_llm_analysis",
         lambda config, *, diff_content=None: None,
     )
 
@@ -67,12 +67,12 @@ def test_run_analysis_invokes_llm_client_when_enabled(
         calls.append((config, diff_content))
         return "llm-output"
 
-    monkeypatch.setattr("numbat.analysis_backend.run_llm_analysis", fake_run_llm)
+    monkeypatch.setattr("diffrat.analysis_backend.run_llm_analysis", fake_run_llm)
 
     diff_content = DiffContent(
         files=(
             FileDiffContent(
-                path="src/numbat/review.py",
+                path="src/diffrat/review.py",
                 hunks=(DiffHunk(header="@@ -1 +1 @@", lines=("+x",)),),
                 binary=False,
                 truncated=False,
@@ -82,7 +82,7 @@ def test_run_analysis_invokes_llm_client_when_enabled(
     )
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
         )
     )
     llm_config = LlmConfig(enabled=True, provider="openai", api_key="sk-test")
@@ -99,13 +99,13 @@ def test_run_analysis_invokes_llm_client_when_enabled(
 def test_run_analysis_loads_llm_config_from_env_by_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("NUMBAT_LLM_PROVIDER", raising=False)
-    monkeypatch.delenv("NUMBAT_LLM_API_KEY", raising=False)
-    monkeypatch.delenv("NUMBAT_LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("DIFFRAT_LLM_PROVIDER", raising=False)
+    monkeypatch.delenv("DIFFRAT_LLM_API_KEY", raising=False)
+    monkeypatch.delenv("DIFFRAT_LLM_BASE_URL", raising=False)
 
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
         )
     )
 

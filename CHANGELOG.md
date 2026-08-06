@@ -11,9 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 First product release: v1 review CLI core plus optional Phase 3 LLM analysis.
 
+Shipped initially as **Numbat**; rebranded to **Diffrat** (D-008) so the PyPI
+project name, CLI command, and import package match (`diffrat`). PyPI held a
+`0.0.1` name-reservation stub before the product `1.0.0` wheel.
+
 ### Added
 
-- `numbat review` — analyze local git diffs and print a human-readable report
+- `diffrat review` — analyze local git diffs and print a human-readable report
 - Review modes: unstaged (default), `--staged`, `--base <ref>` (merge-base through
   HEAD), and `--range <A..B>` (two-dot commit range)
 - `--json` — structured stdout output with `schema_version`; additive `llm_findings`
@@ -26,24 +30,31 @@ First product release: v1 review CLI core plus optional Phase 3 LLM analysis.
   **Review order** (top five paths)
 - Bounded **Changes** diff hunks in text and JSON; `--hunks-for=<path>` for
   single-file deep view
-- `numbat review --check` — path-scoped local validators (pytest, ruff, mypy,
+- `diffrat review --check` — path-scoped local validators (pytest, ruff, mypy,
   bandit, pip-audit, CI workflow contract) with documented exit codes
 - `--fail-on=<codes>` — scriptable gate on Focus/Risk hint codes (exit `4` when
   matched); JSON includes `fail_on.requested` and `fail_on.matched`
-- Optional per-repository config in `pyproject.toml` / `.numbat.toml`:
-  `[tool.numbat.checks]` (v1: `ci_validator` override) and
-  `[tool.numbat.content_rules]` (declarative regex on added hunk lines)
-- Optional LLM-backed analysis when `NUMBAT_LLM_PROVIDER` and `NUMBAT_LLM_API_KEY`
-  are set; optional `NUMBAT_LLM_BASE_URL` for local OpenAI-compatible endpoints
+- Optional per-repository config in `pyproject.toml` / `.diffrat.toml`:
+  `[tool.diffrat.checks]` (v1: `ci_validator` override) and
+  `[tool.diffrat.content_rules]` (declarative regex on added hunk lines)
+- Optional LLM-backed analysis when `DIFFRAT_LLM_PROVIDER` and `DIFFRAT_LLM_API_KEY`
+  are set; optional `DIFFRAT_LLM_BASE_URL` for local OpenAI-compatible endpoints
   (ADR-0001, D-005). Heuristics-only report remains the default without API keys
+
+### Changed
+
+- Product rename Numbat → Diffrat (CLI, import, config keys, `DIFFRAT_LLM_*`)
+- Install via `pip install diffrat` from PyPI (in addition to source install)
 
 ### Known limitations
 
 - Phase 4 integrations (CI bots, PR annotations, GitHub App) are deferred
-- No PyPI publication in this release (`pip install -e` from source)
 - Shared or remote rule packs beyond repo-local TOML are not supported
 - LLM analysis requires explicit opt-in env vars; diff content leaves the machine
   only when configured
+- Migration from Numbat dogfood: update CLI invocations, `[tool.diffrat]` /
+  `.diffrat.toml`, and `DIFFRAT_LLM_*` (old `NUMBAT_*` / `[tool.numbat]` no
+  longer read)
 
-[Unreleased]: https://github.com/szymoniwacz/numbat/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/szymoniwacz/numbat/releases/tag/v1.0.0
+[Unreleased]: https://github.com/szymoniwacz/diffrat/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/szymoniwacz/diffrat/releases/tag/v1.0.0

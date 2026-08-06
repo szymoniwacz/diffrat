@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from numbat.analysis import (
+from diffrat.analysis import (
     DELETIONS_HEAVY_MIN_DELETIONS,
     LARGE_DIFF_FILE_THRESHOLD,
     LARGE_DIFF_LINE_THRESHOLD,
@@ -14,12 +14,12 @@ from numbat.analysis import (
     analyze_diff,
     categorize_path,
 )
-from numbat.diff_parser import DiffSummary, FileChange
-from numbat.git_adapter import GitCommitInfo, GitContext
+from diffrat.diff_parser import DiffSummary, FileChange
+from diffrat.git_adapter import GitCommitInfo, GitContext
 
 
 def test_categorize_path_assigns_expected_buckets() -> None:
-    assert categorize_path("src/numbat/review.py") == "source"
+    assert categorize_path("src/diffrat/review.py") == "source"
     assert categorize_path("tests/test_review.py") == "tests"
     assert categorize_path("test_helpers.py") == "tests"
     assert categorize_path("pyproject.toml") == "config"
@@ -38,7 +38,7 @@ def test_analyze_diff_emits_focus_risk_hints() -> None:
         files=(
             FileChange(path="tests/test_cli.py", additions=10, deletions=2, binary=False),
             FileChange(path="pyproject.toml", additions=3, deletions=1, binary=False),
-            FileChange(path="src/numbat/auth.py", additions=5, deletions=0, binary=False),
+            FileChange(path="src/diffrat/auth.py", additions=5, deletions=0, binary=False),
         )
     )
 
@@ -51,7 +51,7 @@ def test_analyze_diff_emits_focus_risk_hints() -> None:
         "config_or_deps",
         "security_sensitive_paths",
     ]
-    assert "src/numbat/auth.py" in result.hints[2].message
+    assert "src/diffrat/auth.py" in result.hints[2].message
 
 
 def test_analyze_diff_large_diff_hint_by_line_count() -> None:
@@ -114,7 +114,7 @@ def test_analyze_diff_ci_workflow_paths_hint() -> None:
 def test_analyze_diff_no_ci_workflow_hint_for_source_only() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=5, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=5, deletions=0, binary=False),
         )
     )
 
@@ -134,7 +134,7 @@ def test_analyze_diff_rename_or_move_hint() -> None:
                 change_type="R",
             ),
             FileChange(
-                path="src/numbat/review.py",
+                path="src/diffrat/review.py",
                 additions=2,
                 deletions=0,
                 binary=False,
@@ -165,7 +165,7 @@ def test_analyze_diff_no_rename_or_move_hint_for_modify_only() -> None:
 def test_analyze_diff_source_without_tests_hint() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=5, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=5, deletions=0, binary=False),
             FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
         )
     )
@@ -174,13 +174,13 @@ def test_analyze_diff_source_without_tests_hint() -> None:
 
     hints = [hint for hint in result.hints if hint.code == "source_without_tests"]
     assert len(hints) == 1
-    assert "src/numbat/review.py" in hints[0].message
+    assert "src/diffrat/review.py" in hints[0].message
 
 
 def test_analyze_diff_no_source_without_tests_when_tests_in_diff() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=5, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=5, deletions=0, binary=False),
             FileChange(path="tests/test_review.py", additions=3, deletions=0, binary=False),
         )
     )
@@ -221,7 +221,7 @@ def test_analyze_diff_no_tests_only_for_docs_only_diff() -> None:
 def test_analyze_diff_no_tests_only_when_source_present() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=2, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=2, deletions=0, binary=False),
             FileChange(path="tests/test_review.py", additions=3, deletions=0, binary=False),
         )
     )
@@ -489,7 +489,7 @@ def test_analyze_diff_no_docs_touched_when_mixed_with_source() -> None:
     summary = DiffSummary(
         files=(
             FileChange(path="docs/guide.md", additions=5, deletions=0, binary=False),
-            FileChange(path="src/numbat/review.py", additions=2, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=2, deletions=0, binary=False),
         )
     )
 
@@ -499,12 +499,12 @@ def test_analyze_diff_no_docs_touched_when_mixed_with_source() -> None:
 
 
 def test_analyze_diff_missing_test_file_hint_when_test_absent(tmp_path: Path) -> None:
-    (tmp_path / "src" / "numbat").mkdir(parents=True)
-    (tmp_path / "src" / "numbat" / "foo.py").write_text("x = 1\n")
+    (tmp_path / "src" / "diffrat").mkdir(parents=True)
+    (tmp_path / "src" / "diffrat" / "foo.py").write_text("x = 1\n")
 
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/foo.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/foo.py", additions=1, deletions=0, binary=False),
         )
     )
 
@@ -516,14 +516,14 @@ def test_analyze_diff_missing_test_file_hint_when_test_absent(tmp_path: Path) ->
 
 
 def test_analyze_diff_no_missing_test_file_when_test_exists(tmp_path: Path) -> None:
-    (tmp_path / "src" / "numbat").mkdir(parents=True)
+    (tmp_path / "src" / "diffrat").mkdir(parents=True)
     (tmp_path / "tests").mkdir()
-    (tmp_path / "src" / "numbat" / "foo.py").write_text("x = 1\n")
+    (tmp_path / "src" / "diffrat" / "foo.py").write_text("x = 1\n")
     (tmp_path / "tests" / "test_foo.py").write_text("def test_foo() -> None: pass\n")
 
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/foo.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/foo.py", additions=1, deletions=0, binary=False),
         )
     )
 
@@ -535,7 +535,7 @@ def test_analyze_diff_no_missing_test_file_when_test_exists(tmp_path: Path) -> N
 def test_analyze_diff_no_missing_test_file_without_cwd() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/foo.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/foo.py", additions=1, deletions=0, binary=False),
         )
     )
 

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from numbat.analysis import AnalysisResult, sort_hints
-from numbat.analysis_backend import run_analysis
-from numbat.checks import CheckResult
-from numbat.diff_parser import DiffContent, DiffSummary, FileChange
-from numbat.git_adapter import GitContext
-from numbat.scoring import (
+from diffrat.analysis import AnalysisResult, sort_hints
+from diffrat.analysis_backend import run_analysis
+from diffrat.checks import CheckResult
+from diffrat.diff_parser import DiffContent, DiffSummary, FileChange
+from diffrat.git_adapter import GitContext
+from diffrat.scoring import (
     group_entries_by_category,
     review_order_entries,
     sort_file_entries,

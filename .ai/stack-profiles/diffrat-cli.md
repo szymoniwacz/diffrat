@@ -1,11 +1,11 @@
-# Numbat CLI Stack Profile
+# Diffrat CLI Stack Profile
 
-Stack-specific guidance for the Numbat product. Global workflow rules still apply.
+Stack-specific guidance for the Diffrat product. Global workflow rules still apply.
 
 ## Layout
 
 ```txt
-src/numbat/
+src/diffrat/
 tests/
 pyproject.toml
 README.md
@@ -18,8 +18,8 @@ pip install -e ".[dev]"
 pytest
 ruff check .
 mypy .
-python -m numbat --help
-numbat --help
+python -m diffrat --help
+diffrat --help
 ```
 
 ## Testing expectations

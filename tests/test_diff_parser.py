@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from numbat.diff_parser import parse_name_status, parse_numstat, parse_unified_diff
+from diffrat.diff_parser import parse_name_status, parse_numstat, parse_unified_diff
 
 SAMPLE_PATCH = """diff --git a/README.md b/README.md
 index 1234567..abcdef0 100644
@@ -59,7 +59,7 @@ def test_parse_unified_diff_only_paths_filters_to_matching_file() -> None:
 
 
 def test_parse_unified_diff_elevated_per_path_line_limit() -> None:
-    from numbat.diff_parser import HUNKS_FOR_MAX_LINES_PER_FILE
+    from diffrat.diff_parser import HUNKS_FOR_MAX_LINES_PER_FILE
 
     lines = "\n".join(f"+line {index}" for index in range(HUNKS_FOR_MAX_LINES_PER_FILE + 1))
     patch = (

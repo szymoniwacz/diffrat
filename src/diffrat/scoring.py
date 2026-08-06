@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from numbat.diff_parser import FileChange
+from diffrat.diff_parser import FileChange
 
 HintSeverity = Literal["info", "warn", "risk"]
 

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from numbat.analysis import focus_risk_hint, sort_hints
-from numbat.diff_parser import FileChange
-from numbat.scoring import (
+from diffrat.analysis import focus_risk_hint, sort_hints
+from diffrat.diff_parser import FileChange
+from diffrat.scoring import (
     HINT_SEVERITY_REGISTRY,
     RISK_WEIGHT_BINARY,
     RISK_WEIGHT_CI_CATEGORY,

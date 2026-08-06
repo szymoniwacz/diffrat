@@ -5,16 +5,16 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from numbat.analysis_backend import run_analysis
-from numbat.checks import CheckResult, plan_checks, run_checks
-from numbat.config import load_config
-from numbat.diff_parser import (
+from diffrat.analysis_backend import run_analysis
+from diffrat.checks import CheckResult, plan_checks, run_checks
+from diffrat.config import load_config
+from diffrat.diff_parser import (
     HUNKS_FOR_MAX_LINES_PER_FILE,
     DiffSummary,
     parse_numstat,
     parse_unified_diff,
 )
-from numbat.git_adapter import (
+from diffrat.git_adapter import (
     GitContext,
     GitError,
     get_diff_numstat,
@@ -24,8 +24,8 @@ from numbat.git_adapter import (
     get_git_context_for_range,
     parse_range_spec,
 )
-from numbat.json_renderer import render_review_json
-from numbat.report import render_review_report
+from diffrat.json_renderer import render_review_json
+from diffrat.report import render_review_report
 
 EXIT_SUCCESS = 0
 EXIT_ERROR = 1
@@ -128,18 +128,18 @@ def run_review(
             max_lines_per_file_by_path={hunks_for: HUNKS_FOR_MAX_LINES_PER_FILE},
         )
     config_cwd = cwd if cwd is not None else str(Path.cwd())
-    numbat_config = load_config(config_cwd)
+    diffrat_config = load_config(config_cwd)
     analysis = run_analysis(
         summary,
         diff_content=diff_content,
         cwd=cwd,
         git_context=git_context,
-        config=numbat_config,
+        config=diffrat_config,
     )
     check_results: list[CheckResult] | None = None
     if run_checks_flag:
         check_results = run_checks(
-            plan_checks(summary, config=numbat_config),
+            plan_checks(summary, config=diffrat_config),
             cwd=cwd,
         )
 

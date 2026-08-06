@@ -9,17 +9,17 @@ import sys
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-from numbat.analysis import (
+from diffrat.analysis import (
     is_ci_workflow_validator_path,
     is_dependency_manifest_path,
     is_lockfile_path,
     is_pyproject_path,
     is_python_source_or_test_path,
 )
-from numbat.config import NumbatConfig
-from numbat.diff_parser import DiffSummary
+from diffrat.config import DiffratConfig
+from diffrat.diff_parser import DiffSummary
 
-# v1: only ci_validator may be overridden via [tool.numbat.checks].
+# v1: only ci_validator may be overridden via [tool.diffrat.checks].
 
 _CI_VALIDATOR_COMMAND = (
     "python ci/validate-workflow-contracts.py --mode project"
@@ -69,7 +69,7 @@ def pytest_targets_for_paths(paths: list[str]) -> list[str]:
 
 
 def bandit_targets_for_paths(paths: list[str]) -> list[str]:
-    """Map changed source paths to bandit targets under src/numbat/."""
+    """Map changed source paths to bandit targets under src/diffrat/."""
     return mypy_targets_for_paths(paths)
 
 
@@ -83,7 +83,7 @@ def is_pip_audit_dependency_path(path: str) -> bool:
 
 
 def mypy_targets_for_paths(paths: list[str]) -> list[str]:
-    """Map changed source paths to mypy target modules under src/numbat/."""
+    """Map changed source paths to mypy target modules under src/diffrat/."""
     targets: list[str] = []
     seen: set[str] = set()
 
@@ -93,7 +93,7 @@ def mypy_targets_for_paths(paths: list[str]) -> list[str]:
         if (
             len(parts) >= 2
             and parts[0] == "src"
-            and parts[1] == "numbat"
+            and parts[1] == "diffrat"
             and posix.suffix == ".py"
         ):
             target = "/".join(parts)
@@ -108,7 +108,7 @@ def _map_path_to_pytest_target(path: str) -> str | None:
     posix = PurePosixPath(path.replace("\\", "/"))
     parts = posix.parts
 
-    if len(parts) >= 2 and parts[0] == "src" and parts[1] == "numbat":
+    if len(parts) >= 2 and parts[0] == "src" and parts[1] == "diffrat":
         if posix.suffix == ".py":
             return f"tests/test_{posix.stem}.py"
         return "tests"
@@ -131,7 +131,7 @@ def parse_check_argv(display_command: str) -> tuple[str, ...]:
     return tuple(tokens)
 
 
-def _ci_validator_spec(config: NumbatConfig | None) -> CheckSpec:
+def _ci_validator_spec(config: DiffratConfig | None) -> CheckSpec:
     display_command = _CI_VALIDATOR_COMMAND
     argv: tuple[str, ...] = (
         sys.executable,
@@ -152,7 +152,7 @@ def _ci_validator_spec(config: NumbatConfig | None) -> CheckSpec:
 def plan_checks(
     summary: DiffSummary,
     *,
-    config: NumbatConfig | None = None,
+    config: DiffratConfig | None = None,
 ) -> list[CheckSpec]:
     """Select applicable checks from changed paths."""
     paths = [file_change.path for file_change in summary.files]

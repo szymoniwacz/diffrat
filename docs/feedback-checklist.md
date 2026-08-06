@@ -7,11 +7,20 @@ Time budget: about 10–15 minutes.
 
 ## Setup (product only)
 
+Preferred (PyPI):
+
 ```bash
-git clone https://github.com/szymoniwacz/numbat.git
-cd numbat
+pip install diffrat
+diffrat --version
+```
+
+From source:
+
+```bash
+git clone https://github.com/szymoniwacz/diffrat.git
+cd diffrat
 pip install -e .
-numbat --version
+diffrat --version
 ```
 
 Do **not** run `./scripts/setup-ai-workflow.sh` or init the private submodule.
@@ -20,40 +29,41 @@ Optional (only if you will try `--check`):
 
 ```bash
 pip install -e ".[dev]"
+# or: pip install 'diffrat[dev]' after extras are needed from a clone
 ```
 
 ## Commands to try
 
 Run these from inside a git repo that has a real diff (feature branch vs
 `main`, or local unstaged/staged edits). On a clean `main` with no changes,
-`numbat review` / `numbat review --base main` exit `2` — that is expected.
+`diffrat review` / `diffrat review --base main` exit `2` — that is expected.
 
 ```bash
 # Unstaged / staged
-numbat review
-numbat review --staged
+diffrat review
+diffrat review --staged
 
 # Branch vs base
-numbat review --base main
+diffrat review --base main
 
 # JSON for scripting
-numbat review --base main --json
+diffrat review --base main --json
 
 # Optional gates / deep view
-numbat review --base main --fail-on=possible_secret,docs_touched
-numbat review --base main --hunks-for=<path-in-diff>
+diffrat review --base main --fail-on=possible_secret,docs_touched
+diffrat review --base main --hunks-for=<path-in-diff>
 
 # Optional local checks (needs .[dev] for pytest/mypy/ruff)
-numbat review --base main --check
+diffrat review --base main --check
 ```
 
 Optional LLM (only if you choose to send diff-scoped prompts off-machine):
 
 ```bash
-export NUMBAT_LLM_PROVIDER=...
-export NUMBAT_LLM_API_KEY=...
-# optional: export NUMBAT_LLM_BASE_URL=...
-numbat review --base main
+export DIFFRAT_LLM_PROVIDER=...
+export DIFFRAT_LLM_API_KEY=...
+# optional: export DIFFRAT_LLM_BASE_URL=...
+diffrat review --base main
 ```
 
 ## Questions to answer
@@ -67,5 +77,4 @@ numbat review --base main
 ## What not to evaluate
 
 - Private AI delivery workflow / `.ai-template` / maintainer scripts
-- PyPI packaging (not published yet)
 - CI bots / GitHub App (Phase 4 deferred)

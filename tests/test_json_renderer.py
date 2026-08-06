@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 
-from numbat.diff_parser import DiffSummary, FileChange
-from numbat.git_adapter import GitCommitInfo, GitContext
-from numbat.json_renderer import JSON_SCHEMA_VERSION, render_review_json
+from diffrat.diff_parser import DiffSummary, FileChange
+from diffrat.git_adapter import GitCommitInfo, GitContext
+from diffrat.json_renderer import JSON_SCHEMA_VERSION, render_review_json
 
 
 def test_render_review_json_unstaged_mode() -> None:
@@ -42,7 +42,7 @@ def test_render_review_json_unstaged_mode() -> None:
 
 
 def test_render_review_json_includes_changes() -> None:
-    from numbat.diff_parser import DiffContent, DiffHunk, FileDiffContent
+    from diffrat.diff_parser import DiffContent, DiffHunk, FileDiffContent
 
     summary = DiffSummary(
         files=(FileChange(path="README.md", additions=1, deletions=0, binary=False),)
@@ -94,7 +94,7 @@ def test_render_review_json_includes_categories_and_focus_risk() -> None:
 
 
 def test_render_review_json_focus_risk_includes_path_and_line_when_set() -> None:
-    from numbat.analysis import AnalysisResult, focus_risk_hint
+    from diffrat.analysis import AnalysisResult, focus_risk_hint
 
     summary = DiffSummary(
         files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
@@ -223,7 +223,7 @@ def test_render_review_json_includes_review_order_and_files_by_category() -> Non
 def test_render_review_json_includes_llm_findings_when_present() -> None:
     from dataclasses import replace
 
-    from numbat.analysis import analyze_diff
+    from diffrat.analysis import analyze_diff
 
     summary = DiffSummary(
         files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)

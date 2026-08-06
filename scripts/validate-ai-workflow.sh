@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validate numbat against the private workflow template contracts.
+# Validate diffrat against the private workflow template contracts.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

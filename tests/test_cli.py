@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from numbat.__main__ import build_parser, main
+from diffrat.__main__ import build_parser, main
 
 
 def test_help_exits_zero() -> None:
@@ -21,7 +21,7 @@ def test_version_exits_zero() -> None:
 
 def test_parser_program_name() -> None:
     parser = build_parser()
-    assert parser.prog == "numbat"
+    assert parser.prog == "diffrat"
 
 
 def test_review_help_exits_zero() -> None:

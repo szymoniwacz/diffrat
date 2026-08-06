@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import json
 
-from numbat.analysis import AnalysisResult, FocusRiskHint, sort_hints
-from numbat.analysis_backend import run_analysis
-from numbat.checks import CheckResult
-from numbat.diff_parser import (
+from diffrat.analysis import AnalysisResult, FocusRiskHint, sort_hints
+from diffrat.analysis_backend import run_analysis
+from diffrat.checks import CheckResult
+from diffrat.diff_parser import (
     MAX_CHANGE_FILES,
     MAX_LINES_PER_FILE,
     DiffContent,
     DiffSummary,
 )
-from numbat.git_adapter import GitContext
-from numbat.scoring import (
+from diffrat.git_adapter import GitContext
+from diffrat.scoring import (
     files_by_category_mapping,
     review_order_entries,
     sort_file_entries,

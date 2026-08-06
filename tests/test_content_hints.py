@@ -5,10 +5,10 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from numbat.analysis import analyze_diff
-from numbat.config import ContentRule, NumbatConfig, load_config
-from numbat.content_hints import content_focus_risk_hints
-from numbat.diff_parser import (
+from diffrat.analysis import analyze_diff
+from diffrat.config import ContentRule, DiffratConfig, load_config
+from diffrat.content_hints import content_focus_risk_hints
+from diffrat.diff_parser import (
     DiffContent,
     DiffHunk,
     DiffSummary,
@@ -26,13 +26,13 @@ _FILTER_TYPO = (
 _DOGFOOD_CONFIG = load_config(Path(__file__).resolve().parents[1])
 
 
-def _dogfood_regex_typo_config() -> NumbatConfig:
+def _dogfood_regex_typo_config() -> DiffratConfig:
     rules = tuple(
         rule
         for rule in _DOGFOOD_CONFIG.content_rules
         if rule.code == "regex_typo"
     )
-    return NumbatConfig(checks={}, content_rules=rules)
+    return DiffratConfig(checks={}, content_rules=rules)
 
 
 def _single_file_content(path: str, added_line: str) -> DiffContent:
@@ -174,19 +174,19 @@ def test_content_hints_skip_docs_paths() -> None:
 
 def test_content_hints_possible_secret_positive() -> None:
     content = _single_file_content(
-        "src/numbat/auth.py",
+        "src/diffrat/auth.py",
         'api_key = "sk-abcdefghijklmnopqrstuvwxyz"',
     )
 
     hints = content_focus_risk_hints(content)
     assert len(hints) == 1
     assert hints[0].code == "possible_secret"
-    assert "src/numbat/auth.py" in hints[0].message
+    assert "src/diffrat/auth.py" in hints[0].message
 
 
 def test_content_hints_possible_secret_private_key() -> None:
     content = _single_file_content(
-        "src/numbat/crypto.py",
+        "src/diffrat/crypto.py",
         "-----BEGIN PRIVATE KEY-----",
     )
 
@@ -195,13 +195,13 @@ def test_content_hints_possible_secret_private_key() -> None:
 
 
 def test_content_hints_possible_secret_negative() -> None:
-    content = _single_file_content("src/numbat/auth.py", 'name = "short"')
+    content = _single_file_content("src/diffrat/auth.py", 'name = "short"')
 
     assert content_focus_risk_hints(content) == []
 
 
 def test_content_hints_debug_leftover_positive() -> None:
-    content = _single_file_content("src/numbat/review.py", "print(result)")
+    content = _single_file_content("src/diffrat/review.py", "print(result)")
 
     hints = content_focus_risk_hints(content)
     assert len(hints) == 1
@@ -209,20 +209,20 @@ def test_content_hints_debug_leftover_positive() -> None:
 
 
 def test_content_hints_debug_leftover_todo_remove_case_insensitive() -> None:
-    content = _single_file_content("src/numbat/review.py", "# todo: remove before merge")
+    content = _single_file_content("src/diffrat/review.py", "# todo: remove before merge")
 
     hints = content_focus_risk_hints(content)
     assert any(hint.code == "debug_leftover" for hint in hints)
 
 
 def test_content_hints_debug_leftover_negative() -> None:
-    content = _single_file_content("src/numbat/review.py", "logger.info('done')")
+    content = _single_file_content("src/diffrat/review.py", "logger.info('done')")
 
     assert content_focus_risk_hints(content) == []
 
 
 def test_content_hints_dangerous_call_positive() -> None:
-    content = _single_file_content("src/numbat/shell.py", "subprocess.run(cmd, shell=True)")
+    content = _single_file_content("src/diffrat/shell.py", "subprocess.run(cmd, shell=True)")
 
     hints = content_focus_risk_hints(content)
     assert len(hints) == 1
@@ -230,20 +230,20 @@ def test_content_hints_dangerous_call_positive() -> None:
 
 
 def test_content_hints_dangerous_call_eval() -> None:
-    content = _single_file_content("src/numbat/shell.py", "result = eval(user_input)")
+    content = _single_file_content("src/diffrat/shell.py", "result = eval(user_input)")
 
     hints = content_focus_risk_hints(content)
     assert any(hint.code == "dangerous_call" for hint in hints)
 
 
 def test_content_hints_dangerous_call_negative() -> None:
-    content = _single_file_content("src/numbat/shell.py", "subprocess.run(cmd, check=True)")
+    content = _single_file_content("src/diffrat/shell.py", "subprocess.run(cmd, check=True)")
 
     assert content_focus_risk_hints(content) == []
 
 
 def test_content_hints_broad_exception_positive() -> None:
-    content = _single_file_content("src/numbat/review.py", "    except Exception:")
+    content = _single_file_content("src/diffrat/review.py", "    except Exception:")
 
     hints = content_focus_risk_hints(content)
     assert len(hints) == 1
@@ -251,7 +251,7 @@ def test_content_hints_broad_exception_positive() -> None:
 
 
 def test_content_hints_broad_exception_bare_except() -> None:
-    content = _single_file_content("src/numbat/review.py", "    except:")
+    content = _single_file_content("src/diffrat/review.py", "    except:")
 
     hints = content_focus_risk_hints(content)
     assert any(hint.code == "broad_exception" for hint in hints)
@@ -259,7 +259,7 @@ def test_content_hints_broad_exception_bare_except() -> None:
 
 def test_content_hints_broad_exception_negative_with_raise() -> None:
     content = _single_file_content(
-        "src/numbat/review.py",
+        "src/diffrat/review.py",
         "    except Exception: raise",
     )
 
@@ -268,7 +268,7 @@ def test_content_hints_broad_exception_negative_with_raise() -> None:
 
 def test_content_hints_hardcoded_url_positive() -> None:
     content = _single_file_content(
-        "src/numbat/client.py",
+        "src/diffrat/client.py",
         'endpoint = "https://api.example.com/v1"',
     )
 
@@ -277,21 +277,21 @@ def test_content_hints_hardcoded_url_positive() -> None:
 
 
 def test_content_hints_hardcoded_ip_positive() -> None:
-    content = _single_file_content("src/numbat/client.py", 'host = "192.168.1.100"')
+    content = _single_file_content("src/diffrat/client.py", 'host = "192.168.1.100"')
 
     hints = content_focus_risk_hints(content)
     assert any(hint.code == "hardcoded_url_or_ip" for hint in hints)
 
 
 def test_content_hints_hardcoded_url_negative() -> None:
-    content = _single_file_content("src/numbat/client.py", 'version = "1.0.0"')
+    content = _single_file_content("src/diffrat/client.py", 'version = "1.0.0"')
 
     assert content_focus_risk_hints(content) == []
 
 
 def test_content_hints_one_hint_per_code_per_line() -> None:
     content = _single_file_content(
-        "src/numbat/debug.py",
+        "src/diffrat/debug.py",
         "print(eval('x'))",
     )
 
@@ -332,7 +332,7 @@ def test_analyze_diff_merges_content_hints() -> None:
 
 
 def test_content_hints_config_rule_hit() -> None:
-    config = NumbatConfig(
+    config = DiffratConfig(
         checks={},
         content_rules=(
             ContentRule(
@@ -343,7 +343,7 @@ def test_content_hints_config_rule_hit() -> None:
             ),
         ),
     )
-    content = _single_file_content("src/numbat/review.py", "value = foo")
+    content = _single_file_content("src/diffrat/review.py", "value = foo")
 
     hints = content_focus_risk_hints(content, config=config)
 
@@ -353,7 +353,7 @@ def test_content_hints_config_rule_hit() -> None:
 
 
 def test_content_hints_config_rule_miss_when_expected_present() -> None:
-    config = NumbatConfig(
+    config = DiffratConfig(
         checks={},
         content_rules=(
             ContentRule(
@@ -364,13 +364,13 @@ def test_content_hints_config_rule_miss_when_expected_present() -> None:
             ),
         ),
     )
-    content = _single_file_content("src/numbat/review.py", "value = foobar")
+    content = _single_file_content("src/diffrat/review.py", "value = foobar")
 
     assert content_focus_risk_hints(content, config=config) == []
 
 
 def test_content_hints_config_rule_path_scoping() -> None:
-    config = NumbatConfig(
+    config = DiffratConfig(
         checks={},
         content_rules=(
             ContentRule(
@@ -381,7 +381,7 @@ def test_content_hints_config_rule_path_scoping() -> None:
             ),
         ),
     )
-    content = _single_file_content("src/numbat/review.py", "value = foo")
+    content = _single_file_content("src/diffrat/review.py", "value = foo")
 
     assert content_focus_risk_hints(content, config=config) == []
 

@@ -8,7 +8,7 @@ It is the main requirements document for AI-assisted planning and implementation
 
 ## Project summary
 
-Numbat is a local Python CLI that helps developers and reviewers assess pull-request
+Diffrat is a local Python CLI that helps developers and reviewers assess pull-request
 diffs using git context. It targets the repeated pain of inconsistent, slow manual
 diff review by producing a structured report: what changed, what deserves attention,
 and supporting metadata from git.
@@ -45,24 +45,25 @@ optional `--json` flag for scripting. There is no web UI and no CI integration i
 - CI bots, PR comments, or GitHub App integration (v1)
 - Full-repository static analysis
 - Automatic merge/approval decisions
-- PyPI publication before v1 is usable from source
+- PyPI publication blocked only by name reservation / packaging (D-008; product
+  usable from source and as `pip install diffrat`)
 
 ## Core workflows
 
 ### Workflow 1 — Self-review before PR
 
 1. Developer completes changes on a feature branch
-2. Runs Numbat against diff vs base branch (or staged/unstaged)
+2. Runs Diffrat against diff vs base branch (or staged/unstaged)
 3. Reads summary, focus areas, and git context in terminal
 4. Fixes issues and re-runs until satisfied
-5. Opens PR manually (outside Numbat)
+5. Opens PR manually (outside Diffrat)
 
 ### Workflow 2 — Reviewer triage
 
 1. Reviewer checks out branch locally or specifies commit range
-2. Runs Numbat with appropriate diff target
+2. Runs Diffrat with appropriate diff target
 3. Uses report to prioritize files and risk areas
-4. Performs manual code review; Numbat does not approve
+4. Performs manual code review; Diffrat does not approve
 
 ## Functional requirements
 
@@ -113,8 +114,8 @@ optional `--json` flag for scripting. There is no web UI and no CI integration i
 
 ## Technical preferences
 
-- Python CLI per `.ai/stack-profiles/numbat-cli.md`
-- `pyproject.toml` packaging with `src/numbat/` layout
+- Python CLI per `.ai/stack-profiles/diffrat-cli.md`
+- `pyproject.toml` packaging with `src/diffrat/` layout
 - pytest, ruff, mypy for quality (commands recorded at scaffold)
 - Prefer stdlib + minimal dependencies for v1 git interaction
 
@@ -122,7 +123,7 @@ optional `--json` flag for scripting. There is no web UI and no CI integration i
 
 | Active profile | Applies to | Notes |
 |---|---|---|
-| .ai/stack-profiles/numbat-cli.md | CLI, tests, packaging | Project-specific profile; bootstrap 2026-07-27 |
+| .ai/stack-profiles/diffrat-cli.md | CLI, tests, packaging | Project-specific profile; bootstrap 2026-07-27 |
 
 ## Quality requirements
 
@@ -182,7 +183,8 @@ Smallest useful v1 (Phase 2 after bootstrap):
 
 - Optional LLM analysis backend (Phase 3)
 - CI integration and PR annotations (Phase 4)
-- PyPI publish, config profiles, custom rule packs
+- Config profiles expansion, custom/shared rule packs
+- Phase 4 CI bots / GitHub App
 
 ## Project decision status
 
@@ -206,11 +208,11 @@ Record the status of every area from
 | Integrations and failure handling | decided | Local git required; clear errors; LLM deferred | FR-006; Phase 3 |
 | Authentication and authorization | not-applicable | Local CLI; no multi-user access control | v1 |
 | Secrets, privacy, and sensitive data | decided | No default network; Phase 3 keys via env only | Security section |
-| Language, framework, and dependencies | decided | Python CLI; pytest/ruff/mypy | D-002; `.ai/stack-profiles/numbat-cli.md` |
-| Environments and deployment | decided | Local dev install only; PyPI deferred | Roadmap Phase 4 |
+| Language, framework, and dependencies | decided | Python CLI; pytest/ruff/mypy | D-002; `.ai/stack-profiles/diffrat-cli.md` |
+| Environments and deployment | decided | Local + PyPI (`diffrat`); D-008 | Roadmap rebrand/PyPI |
 | Configuration | decided | CLI flags + env for future LLM | Architecture doc |
 | Logging, monitoring, and errors | decided | stderr + exit codes; no remote telemetry v1 | FR-006 |
-| Tests, lint, typecheck, performance | default-accepted | pytest, ruff, mypy per numbat-cli profile | Confirmed at bootstrap 2026-07-27 |
+| Tests, lint, typecheck, performance | default-accepted | pytest, ruff, mypy per diffrat-cli profile | Confirmed at bootstrap 2026-07-27 |
 | Scale, reliability, and cost | decided | Single-user local; no SLA; offline OK | v1 scope |
 | Supported platforms and compatibility | default-accepted | macOS/Linux primary; Windows best-effort | Confirmed at bootstrap 2026-07-27 |
 | Accessibility and localization | not-applicable | Terminal CLI; English output v1 | — |
@@ -230,10 +232,10 @@ Record the result after completing `.ai/onboarding/bootstrap-checklist.md`.
 | No `blocking-question` remains | yes | LLM deferred, not blocking |
 | All `deferred` items have reason and return trigger | yes | LLM → Phase 3 goal |
 | Template customization complete | yes | README, AGENTS, CI, scaffold |
-| Stack profile selected or marked N/A | yes | `.ai/stack-profiles/numbat-cli.md` |
-| Real project commands recorded | yes | `README.md` and `.ai/stack-profiles/numbat-cli.md` |
+| Stack profile selected or marked N/A | yes | `.ai/stack-profiles/diffrat-cli.md` |
+| Real project commands recorded | yes | `README.md` and `.ai/stack-profiles/diffrat-cli.md` |
 | Root README describes the product | yes | Product README replaces template |
-| `AGENTS.md` describes repository role | yes | Describes Numbat CLI repository |
+| `AGENTS.md` describes repository role | yes | Describes Diffrat CLI repository |
 | Bootstrap markers removed | yes | Removed from `.ai/project/*` during intake |
 | License and ownership decided | yes | MIT; Szymon Iwacz 2026 |
 | CI, branch rules, and approvals decided | yes | `--mode project`; manual merge on `main` |
