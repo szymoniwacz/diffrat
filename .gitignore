@@ -43,3 +43,4 @@ venv/
 .github/copilot-instructions.md
 .github/pull_request_template.md
 .github/PULL_REQUEST_TEMPLATE
+.github/ISSUE_TEMPLATE
