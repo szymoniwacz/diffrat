@@ -34,3 +34,6 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Retagging / re-running must not fail when the version is already on PyPI.
+          skip-existing: true

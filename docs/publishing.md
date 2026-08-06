@@ -14,15 +14,20 @@ Maintainer runbook for releases after the Diffrat rebrand (D-008).
 After the GitHub repo is `szymoniwacz/diffrat`:
 
 1. Open https://pypi.org/manage/project/diffrat/settings/publishing/
-2. Add a Trusted Publisher:
+2. Add a Trusted Publisher with **exactly**:
    - Owner: `szymoniwacz`
    - Repository: `diffrat`
-   - Workflow: `publish.yml`
-   - Environment: `pypi`
+   - Workflow name: `publish.yml` (filename only)
+   - Environment name: `pypi`
 3. In GitHub → Settings → Environments, create environment `pypi`
    (optional protection: required reviewers).
 
-Until this is configured, use the manual upload fallback below.
+Until this is configured, tag pushes fail with `invalid-publisher` and the
+failed check appears on the tagged commit (often `main` HEAD). After setup,
+re-run **Publish to PyPI** on the failed run (or re-push the tag).
+
+The publish job uses `skip-existing: true`, so re-publishing an already-uploaded
+version succeeds as a no-op.
 
 ## Preconditions
 
