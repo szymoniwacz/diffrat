@@ -8,9 +8,9 @@ from collections import Counter
 from dataclasses import dataclass
 from fnmatch import fnmatch
 
-from numbat.analysis import FocusRiskHint, categorize_path, focus_risk_hint
-from numbat.config import ContentRule, NumbatConfig
-from numbat.diff_parser import DiffContent, FileDiffContent
+from diffrat.analysis import FocusRiskHint, categorize_path, focus_risk_hint
+from diffrat.config import ContentRule, DiffratConfig
+from diffrat.diff_parser import DiffContent, FileDiffContent
 
 # High-entropy string literal detection (documented threshold).
 _ENTROPY_MIN_LENGTH = 20
@@ -64,7 +64,7 @@ class _AddedLine:
 def content_focus_risk_hints(
     diff_content: DiffContent | None,
     *,
-    config: NumbatConfig | None = None,
+    config: DiffratConfig | None = None,
 ) -> list[FocusRiskHint]:
     """Return content-derived hints from unified-diff hunks."""
     if diff_content is None:
@@ -115,7 +115,7 @@ def _new_file_start_line(header: str) -> int | None:
 def _hints_for_added_line(
     added: _AddedLine,
     *,
-    config: NumbatConfig | None,
+    config: DiffratConfig | None,
 ) -> list[FocusRiskHint]:
     hints: list[FocusRiskHint] = []
 

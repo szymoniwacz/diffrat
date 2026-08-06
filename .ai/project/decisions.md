@@ -113,6 +113,31 @@ force-push or protection bypass.
 
 **Context:** See `.ai/ideas/implemented/002-self-correcting-auto-merge.md`.
 
+---
+
+### D-008 — Rebrand to Diffrat and PyPI name (2026-08-06)
+
+**Decision:** The product is renamed from Numbat to **Diffrat**. PyPI project
+name, CLI entry point, and Python import package are all `diffrat`
+(`pip install diffrat` → `diffrat review`). Config keys use `[tool.diffrat]` /
+`.diffrat.toml`; LLM env vars use `DIFFRAT_LLM_*`.
+
+**Reason:** The PyPI name `numbat` is already taken by an unrelated project
+(quarkslab). Matching PyPI name to the CLI command avoids install/run confusion.
+
+**Migration (breaking for local dogfood):**
+
+| Before | After |
+|---|---|
+| `numbat` CLI / `import numbat` / `src/numbat/` | `diffrat` / `src/diffrat/` |
+| `[tool.numbat]`, `.numbat.toml` | `[tool.diffrat]`, `.diffrat.toml` |
+| `NUMBAT_LLM_*` | `DIFFRAT_LLM_*` |
+
+**Status:** confirmed
+
+**Context:** Name `diffrat` reserved on PyPI as stub `0.0.1` before the rebrand
+landed; first real product upload is `1.0.0`.
+
 > Reusable workflow rules (for example, documentation before implementation)
 > live in the canonical workflow documents under `.ai/`, not in this product
 > decision log.

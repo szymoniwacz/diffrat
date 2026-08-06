@@ -4,18 +4,18 @@ Root-level adapter for AI coding agents.
 
 ## Repository role
 
-This repository contains **Numbat**, a local Python CLI for diff and PR review
-assistance. Product code lives under `src/numbat/`.
+This repository contains **Diffrat**, a local Python CLI for diff and PR review
+assistance. Product code lives under `src/diffrat/`.
 
 The reusable AI workflow is **not** committed here. It comes from the private
 submodule `.ai-template/` (`ai-project-template`). Run
 `./scripts/setup-ai-workflow.sh` after clone to materialize `.ai/`.
 See `docs/ai-workflow-setup.md`.
 
-**1.0.0** on `main` is the first product release: `numbat review` (modes, JSON,
+**1.0.0** on `main` is the first product release: `diffrat review` (modes, JSON,
 hunks, Focus/Risk hints, optional `--check`, optional Phase 3 LLM via
-`NUMBAT_LLM_*` per D-005 / ADR-0001). Phase 4 integrations (CI bots, GitHub App)
-remain deferred. Stack profile: `.ai/stack-profiles/numbat-cli.md`. User-facing
+`DIFFRAT_LLM_*` per D-005 / ADR-0001). Phase 4 integrations (CI bots, GitHub App)
+remain deferred. Stack profile: `.ai/stack-profiles/diffrat-cli.md`. User-facing
 docs: `README.md`.
 
 ## Source of truth

@@ -9,8 +9,8 @@ import urllib.request
 from collections.abc import Callable
 from typing import Any
 
-from numbat.diff_parser import DiffContent
-from numbat.llm_config import LlmConfig
+from diffrat.diff_parser import DiffContent
+from diffrat.llm_config import LlmConfig
 
 _PROVIDER_BASE_URLS: dict[str, str] = {
     "openai": "https://api.openai.com/v1",
@@ -86,7 +86,7 @@ def request_chat_completion(
     url = resolve_chat_completions_url(config)
     if url is None:
         _warn(
-            f"unknown LLM provider {config.provider!r} — set NUMBAT_LLM_BASE_URL "
+            f"unknown LLM provider {config.provider!r} — set DIFFRAT_LLM_BASE_URL "
             "for custom endpoints"
         )
         return None
@@ -168,4 +168,4 @@ def _extract_message_content(payload: dict[str, Any]) -> str | None:
 
 
 def _warn(message: str) -> None:
-    print(f"numbat: warning: {message}", file=sys.stderr)
+    print(f"diffrat: warning: {message}", file=sys.stderr)

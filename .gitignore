@@ -27,7 +27,7 @@ venv/
 !.ai/project/**
 !.ai/stack-profiles/
 .ai/stack-profiles/*
-!.ai/stack-profiles/numbat-cli.md
+!.ai/stack-profiles/diffrat-cli.md
 !.ai/architecture/
 .ai/architecture/*
 !.ai/architecture/adr-0001-llm-analysis-layer.md

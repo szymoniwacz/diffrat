@@ -9,7 +9,7 @@ Owner material decisions on Project Execution issue #71 (2026-07-31):
 
 ## Context
 
-Numbat v1 closed on the Phase 2 static core (deterministic Focus/Risk hints and
+Diffrat v1 closed on the Phase 2 static core (deterministic Focus/Risk hints and
 file categories). D-005 originally skipped Phase 3 LLM work for v1. Project
 Execution #71 reopens optional LLM analysis with explicit owner choices for
 provider architecture, data handling, and secrets contract.
@@ -40,12 +40,12 @@ initial Phase 3 slice.
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `NUMBAT_LLM_PROVIDER` | When LLM enabled | Provider identifier (e.g. `openai`, `ollama`) |
-| `NUMBAT_LLM_API_KEY` | When LLM enabled | API key or token for the configured provider |
-| `NUMBAT_LLM_BASE_URL` | Optional | Custom endpoint for local runtimes or OpenAI-compatible proxies |
+| `DIFFRAT_LLM_PROVIDER` | When LLM enabled | Provider identifier (e.g. `openai`, `ollama`) |
+| `DIFFRAT_LLM_API_KEY` | When LLM enabled | API key or token for the configured provider |
+| `DIFFRAT_LLM_BASE_URL` | Optional | Custom endpoint for local runtimes or OpenAI-compatible proxies |
 
-Cloud provider default endpoints are hardcoded per `NUMBAT_LLM_PROVIDER` value.
-`NUMBAT_LLM_BASE_URL` is for local/custom endpoints only.
+Cloud provider default endpoints are hardcoded per `DIFFRAT_LLM_PROVIDER` value.
+`DIFFRAT_LLM_BASE_URL` is for local/custom endpoints only.
 
 ### Analysis backend boundary
 
@@ -61,8 +61,8 @@ is present.
 | First-class multi-provider adapters (OpenAI + Anthropic, extensible) | Larger surface and maintenance; owner chose smallest single code path (1:A) |
 | Anthropic-only for Phase 3 v1 | Excludes local runtimes and OpenAI-shaped APIs without extra adapters |
 | Local runtime only (no cloud) | Owner wants cloud + local via one OpenAI-compatible client |
-| Provider-specific keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) without shared prefix | Owner chose unified `NUMBAT_LLM_*` prefix with optional base URL (3:B) |
-| `NUMBAT_LLM_*` without base URL env | Cannot reach local/custom endpoints without code changes per runtime |
+| Provider-specific keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) without shared prefix | Owner chose unified `DIFFRAT_LLM_*` prefix with optional base URL (3:B) |
+| `DIFFRAT_LLM_*` without base URL env | Cannot reach local/custom endpoints without code changes per runtime |
 
 ## Consequences
 

@@ -6,14 +6,14 @@ Define project-specific terms so future work uses the same language.
 
 ## Terms
 
-### Numbat
+### Diffrat
 
-The local CLI product defined in this repository. Named after the marsupial; no
-relation to the Numbat language unless explicitly added later.
+The local CLI product defined in this repository. Formerly named Numbat
+(rebrand D-008). PyPI name, CLI command, and import package are all `diffrat`.
 
 ### Diff scope
 
-The set of file changes Numbat analyzes — typically from `git diff` output or
+The set of file changes Diffrat analyzes — typically from `git diff` output or
 equivalent (staged, unstaged, branch vs base, commit range). Not the entire
 repository tree.
 
@@ -29,16 +29,16 @@ touched, and coarse categorization (e.g. tests vs source vs config).
 
 ### Self-review
 
-A developer running Numbat on their own changes before push or PR creation.
+A developer running Diffrat on their own changes before push or PR creation.
 
 ### Reviewer triage
 
-A reviewer running Numbat on someone else's diff to prioritize manual review.
+A reviewer running Diffrat on someone else's diff to prioritize manual review.
 
 ### Analysis backend
 
-Component that turns parsed diff + git context into report content. v1 uses
-deterministic/heuristic logic only; optional LLM backend is out of v1 (D-005).
+Component that turns parsed diff + git context into report content. Heuristic
+logic always runs; optional LLM backend when `DIFFRAT_LLM_*` is set (D-005).
 
 ### Bootstrap
 

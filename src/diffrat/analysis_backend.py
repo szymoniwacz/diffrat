@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from numbat.analysis import AnalysisResult, analyze_diff
-from numbat.config import NumbatConfig
-from numbat.diff_parser import DiffContent, DiffSummary
-from numbat.git_adapter import GitContext
-from numbat.llm_client import run_llm_analysis
-from numbat.llm_config import LlmConfig, load_llm_config
+from diffrat.analysis import AnalysisResult, analyze_diff
+from diffrat.config import DiffratConfig
+from diffrat.diff_parser import DiffContent, DiffSummary
+from diffrat.git_adapter import GitContext
+from diffrat.llm_client import run_llm_analysis
+from diffrat.llm_config import LlmConfig, load_llm_config
 
 
 def run_analysis(
@@ -18,7 +18,7 @@ def run_analysis(
     diff_content: DiffContent | None = None,
     cwd: str | None = None,
     git_context: GitContext | None = None,
-    config: NumbatConfig | None = None,
+    config: DiffratConfig | None = None,
     llm_config: LlmConfig | None = None,
 ) -> AnalysisResult:
     """Run analysis through the configured backend.

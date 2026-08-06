@@ -1,18 +1,18 @@
-"""Numbat CLI entry point."""
+"""Diffrat CLI entry point."""
 
 from __future__ import annotations
 
 import argparse
 import sys
 
-from numbat import __version__
-from numbat.diff_parser import HUNKS_FOR_MAX_LINES_PER_FILE, MAX_CHANGE_FILES, MAX_LINES_PER_FILE
-from numbat.review import run_review
+from diffrat import __version__
+from diffrat.diff_parser import HUNKS_FOR_MAX_LINES_PER_FILE, MAX_CHANGE_FILES, MAX_LINES_PER_FILE
+from diffrat.review import run_review
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="numbat",
+        prog="diffrat",
         description="Local CLI for diff and PR review assistance.",
     )
     parser.add_argument(

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from numbat.diff_parser import DiffSummary, FileChange
-from numbat.git_adapter import GitCommitInfo, GitContext
-from numbat.report import render_review_report
+from diffrat.diff_parser import DiffSummary, FileChange
+from diffrat.git_adapter import GitCommitInfo, GitContext
+from diffrat.report import render_review_report
 
 
 def test_render_review_report_includes_summary_and_files() -> None:
@@ -35,7 +35,7 @@ def test_render_review_report_includes_summary_and_files() -> None:
 
 
 def test_render_review_report_includes_changes_section() -> None:
-    from numbat.diff_parser import DiffContent, DiffHunk, FileDiffContent
+    from diffrat.diff_parser import DiffContent, DiffHunk, FileDiffContent
 
     summary = DiffSummary(
         files=(FileChange(path="README.md", additions=1, deletions=0, binary=False),)
@@ -186,7 +186,7 @@ def test_render_review_report_review_order_lists_all_when_five_or_fewer_files() 
 def test_render_review_report_includes_llm_analysis_when_present() -> None:
     from dataclasses import replace
 
-    from numbat.analysis import analyze_diff
+    from diffrat.analysis import analyze_diff
 
     summary = DiffSummary(
         files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)

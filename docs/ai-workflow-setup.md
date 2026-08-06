@@ -2,14 +2,14 @@
 
 Owner/maintainer runbook. The reusable AI workflow lives in the private
 submodule `.ai-template/` (`szymoniwacz/ai-project-template`) and is not
-shared. Product users install and run Numbat via the Setup section in
+shared. Product users install and run Diffrat via the Setup section in
 `README.md` only — they do not need this document or submodule access.
 
 ## Local setup
 
 ```bash
-git clone --recurse-submodules git@github.com:szymoniwacz/numbat.git
-cd numbat
+git clone --recurse-submodules git@github.com:szymoniwacz/diffrat.git
+cd diffrat
 ./scripts/setup-ai-workflow.sh
 ```
 
@@ -21,7 +21,7 @@ git submodule update --init --recursive .ai-template
 ```
 
 After setup, `.ai/` is a local merge of the private template plus committed
-numbat product files under `.ai/project/`, `.ai/docs/project-requirements.md`,
+diffrat product files under `.ai/project/`, `.ai/docs/project-requirements.md`,
 and related paths.
 
 ## Full workflow validation (local)
@@ -34,12 +34,12 @@ and related paths.
 
 CI reads the private submodule via deploy key secret `SUBMODULE_DEPLOY_KEY`
 (read-only key on `ai-project-template`). Repository maintainers configure this
-once in numbat Settings → Secrets and variables → Actions.
+once in diffrat Settings → Secrets and variables → Actions.
 
-## What stays public in numbat
+## What stays public in diffrat
 
-- `src/numbat/`, `tests/`, product `README.md`
-- Numbat product context: `.ai/project/`, `numbat-cli.md`, product ADR/docs
+- `src/diffrat/`, `tests/`, product `README.md`
+- Diffrat product context: `.ai/project/`, `diffrat-cli.md`, product ADR/docs
 - Thin adapters: `AGENTS.md`, `CLAUDE.md`, `.cursor/rules/`
 
 ## What is private

@@ -1,0 +1,8 @@
+# Include license in sdists; rely on setuptools package discovery under src/.
+# Do not ship private AI workflow trees or local caches.
+prune .ai
+prune .ai-template
+prune .git
+prune .venv
+prune tests
+global-exclude *.py[cod] __pycache__ .DS_Store

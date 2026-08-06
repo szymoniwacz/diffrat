@@ -5,12 +5,12 @@ from __future__ import annotations
 import sys
 from unittest.mock import MagicMock, patch
 
-from numbat.analysis import (
+from diffrat.analysis import (
     is_ci_workflow_validator_path,
     is_pyproject_path,
     is_python_source_or_test_path,
 )
-from numbat.checks import (
+from diffrat.checks import (
     CheckSpec,
     bandit_targets_for_paths,
     is_pip_audit_dependency_path,
@@ -20,8 +20,8 @@ from numbat.checks import (
     pytest_targets_for_paths,
     run_checks,
 )
-from numbat.config import NumbatConfig
-from numbat.diff_parser import DiffSummary, FileChange
+from diffrat.config import DiffratConfig
+from diffrat.diff_parser import DiffSummary, FileChange
 
 
 def test_parse_check_argv_maps_python_to_sys_executable() -> None:
@@ -49,7 +49,7 @@ def test_plan_checks_ci_validator_uses_config_override() -> None:
             ),
         )
     )
-    config = NumbatConfig(
+    config = DiffratConfig(
         checks={"ci_validator": "python ci/validate-workflow-contracts.py --mode strict"},
         content_rules=(),
     )
@@ -70,10 +70,10 @@ def test_plan_checks_ci_validator_uses_config_override() -> None:
 def test_plan_checks_ignores_non_ci_validator_config_overrides() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
         )
     )
-    config = NumbatConfig(
+    config = DiffratConfig(
         checks={"pytest": "custom-pytest"},
         content_rules=(),
     )
@@ -84,7 +84,7 @@ def test_plan_checks_ignores_non_ci_validator_config_overrides() -> None:
 
 
 def test_is_python_source_or_test_path() -> None:
-    assert is_python_source_or_test_path("src/numbat/review.py")
+    assert is_python_source_or_test_path("src/diffrat/review.py")
     assert is_python_source_or_test_path("tests/test_review.py")
     assert not is_python_source_or_test_path("README.md")
     assert not is_python_source_or_test_path("src/other/module.py")
@@ -97,7 +97,7 @@ def test_is_ci_workflow_validator_path() -> None:
 
 
 def test_pytest_targets_maps_source_to_test_module() -> None:
-    assert pytest_targets_for_paths(["src/numbat/review.py"]) == ["tests/test_review.py"]
+    assert pytest_targets_for_paths(["src/diffrat/review.py"]) == ["tests/test_review.py"]
 
 
 def test_pytest_targets_uses_test_module_directly() -> None:
@@ -105,13 +105,13 @@ def test_pytest_targets_uses_test_module_directly() -> None:
 
 
 def test_pytest_targets_deduplicates_source_and_test_paths() -> None:
-    paths = ["src/numbat/review.py", "tests/test_review.py"]
+    paths = ["src/diffrat/review.py", "tests/test_review.py"]
 
     assert pytest_targets_for_paths(paths) == ["tests/test_review.py"]
 
 
 def test_pytest_targets_supports_multiple_modules() -> None:
-    paths = ["src/numbat/review.py", "tests/test_checks.py"]
+    paths = ["src/diffrat/review.py", "tests/test_checks.py"]
 
     assert pytest_targets_for_paths(paths) == [
         "tests/test_checks.py",
@@ -124,7 +124,7 @@ def test_pytest_targets_maps_conftest_to_tests_directory() -> None:
 
 
 def test_mypy_targets_maps_source_modules() -> None:
-    assert mypy_targets_for_paths(["src/numbat/review.py"]) == ["src/numbat/review.py"]
+    assert mypy_targets_for_paths(["src/diffrat/review.py"]) == ["src/diffrat/review.py"]
 
 
 def test_mypy_targets_skips_tests_and_other_paths() -> None:
@@ -133,17 +133,17 @@ def test_mypy_targets_skips_tests_and_other_paths() -> None:
 
 
 def test_mypy_targets_deduplicates_and_sorts() -> None:
-    paths = ["src/numbat/checks.py", "src/numbat/review.py", "src/numbat/checks.py"]
+    paths = ["src/diffrat/checks.py", "src/diffrat/review.py", "src/diffrat/checks.py"]
     assert mypy_targets_for_paths(paths) == [
-        "src/numbat/checks.py",
-        "src/numbat/review.py",
+        "src/diffrat/checks.py",
+        "src/diffrat/review.py",
     ]
 
 
 def test_plan_checks_selects_mypy_for_source_paths() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
         )
     )
 
@@ -154,23 +154,23 @@ def test_plan_checks_selects_mypy_for_source_paths() -> None:
         sys.executable,
         "-m",
         "mypy",
-        "src/numbat/review.py",
+        "src/diffrat/review.py",
     )
-    assert specs[1].display_command == "mypy src/numbat/review.py"
+    assert specs[1].display_command == "mypy src/diffrat/review.py"
 
 
 def test_plan_checks_mypy_deduplicates_multiple_modules() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
-            FileChange(path="src/numbat/checks.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/checks.py", additions=1, deletions=0, binary=False),
         )
     )
 
     specs = plan_checks(summary)
 
     assert [spec.code for spec in specs] == ["pytest", "mypy", "bandit"]
-    assert specs[1].argv[-2:] == ("src/numbat/checks.py", "src/numbat/review.py")
+    assert specs[1].argv[-2:] == ("src/diffrat/checks.py", "src/diffrat/review.py")
 
 
 def test_is_pyproject_path() -> None:
@@ -203,7 +203,7 @@ def test_plan_checks_selects_ci_validator() -> None:
 def test_plan_checks_selects_pytest_for_source_paths() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
         )
     )
 
@@ -222,7 +222,7 @@ def test_plan_checks_selects_pytest_for_source_paths() -> None:
 def test_plan_checks_deduplicates_checks() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
             FileChange(path="tests/test_review.py", additions=1, deletions=0, binary=False),
         )
     )
@@ -250,7 +250,7 @@ def test_plan_checks_ci_validator_unchanged_with_python_paths() -> None:
                 deletions=0,
                 binary=False,
             ),
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
         )
     )
 
@@ -282,7 +282,7 @@ def test_plan_checks_skips_ruff_for_other_config() -> None:
         )
     )
 
-    with patch("numbat.checks.shutil.which", return_value=None):
+    with patch("diffrat.checks.shutil.which", return_value=None):
         specs = plan_checks(summary)
 
     assert [spec.code for spec in specs] == ["pip-audit"]
@@ -293,7 +293,7 @@ def test_plan_checks_pyproject_and_source() -> None:
     summary = DiffSummary(
         files=(
             FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
         )
     )
 
@@ -309,7 +309,7 @@ def test_run_checks_records_pass_and_fail() -> None:
     success = MagicMock(returncode=0, stdout="ok\n", stderr="")
     failure = MagicMock(returncode=1, stdout="", stderr="boom\n")
 
-    with patch("numbat.checks.subprocess.run", side_effect=[success, failure]) as run_mock:
+    with patch("diffrat.checks.subprocess.run", side_effect=[success, failure]) as run_mock:
         passed = run_checks(specs, cwd="/tmp/repo")
         failed = run_checks(specs, cwd="/tmp/repo")
 
@@ -321,8 +321,8 @@ def test_run_checks_records_pass_and_fail() -> None:
 
 
 def test_bandit_targets_match_mypy_targets() -> None:
-    paths = ["src/numbat/review.py", "tests/test_review.py"]
-    assert bandit_targets_for_paths(paths) == ["src/numbat/review.py"]
+    paths = ["src/diffrat/review.py", "tests/test_review.py"]
+    assert bandit_targets_for_paths(paths) == ["src/diffrat/review.py"]
 
 
 def test_is_pip_audit_dependency_path() -> None:
@@ -335,27 +335,27 @@ def test_is_pip_audit_dependency_path() -> None:
 def test_plan_checks_selects_bandit_when_on_path() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
         )
     )
 
-    with patch("numbat.checks.shutil.which", return_value="/usr/bin/bandit"):
+    with patch("diffrat.checks.shutil.which", return_value="/usr/bin/bandit"):
         specs = plan_checks(summary)
 
     assert [spec.code for spec in specs] == ["pytest", "mypy", "bandit"]
-    assert specs[2].display_command == "bandit -r src/numbat/review.py"
-    assert specs[2].argv == ("/usr/bin/bandit", "-r", "src/numbat/review.py")
+    assert specs[2].display_command == "bandit -r src/diffrat/review.py"
+    assert specs[2].argv == ("/usr/bin/bandit", "-r", "src/diffrat/review.py")
     assert specs[2].skip_reason is None
 
 
 def test_plan_checks_skips_bandit_when_missing() -> None:
     summary = DiffSummary(
         files=(
-            FileChange(path="src/numbat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
         )
     )
 
-    with patch("numbat.checks.shutil.which", return_value=None):
+    with patch("diffrat.checks.shutil.which", return_value=None):
         specs = plan_checks(summary)
 
     assert [spec.code for spec in specs] == ["pytest", "mypy", "bandit"]
@@ -369,7 +369,7 @@ def test_plan_checks_selects_pip_audit_for_pyproject() -> None:
         )
     )
 
-    with patch("numbat.checks.shutil.which", return_value="/usr/bin/pip-audit"):
+    with patch("diffrat.checks.shutil.which", return_value="/usr/bin/pip-audit"):
         specs = plan_checks(summary)
 
     assert [spec.code for spec in specs] == ["ruff", "pip-audit"]
@@ -383,7 +383,7 @@ def test_plan_checks_skips_pip_audit_when_missing() -> None:
         )
     )
 
-    with patch("numbat.checks.shutil.which", return_value=None):
+    with patch("diffrat.checks.shutil.which", return_value=None):
         specs = plan_checks(summary)
 
     assert [spec.code for spec in specs] == ["pip-audit"]
@@ -395,12 +395,12 @@ def test_run_checks_records_skipped_without_subprocess() -> None:
         CheckSpec(
             code="bandit",
             argv=(),
-            display_command="bandit -r src/numbat/review.py",
+            display_command="bandit -r src/diffrat/review.py",
             skip_reason="bandit not found on PATH",
         )
     ]
 
-    with patch("numbat.checks.subprocess.run") as run_mock:
+    with patch("diffrat.checks.subprocess.run") as run_mock:
         results = run_checks(specs, cwd="/tmp/repo")
 
     run_mock.assert_not_called()

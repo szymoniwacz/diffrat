@@ -6,14 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from numbat.config import ContentRule, NumbatConfig, load_config
+from diffrat.config import ContentRule, DiffratConfig, load_config
 
 
-def _rule_codes(config: NumbatConfig) -> set[str]:
+def _rule_codes(config: DiffratConfig) -> set[str]:
     return {rule.code for rule in config.content_rules}
 
 
-def _rule_by_code(config: NumbatConfig, code: str) -> ContentRule:
+def _rule_by_code(config: DiffratConfig, code: str) -> ContentRule:
     for rule in config.content_rules:
         if rule.code == code:
             return rule
@@ -24,24 +24,24 @@ def _write_pyproject(repo: Path, body: str) -> None:
     (repo / "pyproject.toml").write_text(body, encoding="utf-8")
 
 
-def _write_numbat_toml(repo: Path, body: str) -> None:
-    (repo / ".numbat.toml").write_text(body, encoding="utf-8")
+def _write_diffrat_toml(repo: Path, body: str) -> None:
+    (repo / ".diffrat.toml").write_text(body, encoding="utf-8")
 
 
 def test_load_config_empty_when_no_config(git_repo_clean: Path) -> None:
     config = load_config(git_repo_clean)
 
-    assert config == NumbatConfig(checks={}, content_rules=())
+    assert config == DiffratConfig(checks={}, content_rules=())
 
 
 def test_load_config_parses_pyproject_checks_and_shorthand_rules(git_repo_clean: Path) -> None:
     _write_pyproject(
         git_repo_clean,
         """\
-[tool.numbat.checks]
+[tool.diffrat.checks]
 ci_validator = "python ci/validate.py --mode project"
 
-[tool.numbat.content_rules]
+[tool.diffrat.content_rules]
 regex_typo = "continue-projec(?!t) → continue-project"
 """,
     )
@@ -60,7 +60,7 @@ def test_load_config_parses_table_form_content_rule(git_repo_clean: Path) -> Non
     _write_pyproject(
         git_repo_clean,
         """\
-[tool.numbat.content_rules.scoped_rule]
+[tool.diffrat.content_rules.scoped_rule]
 paths = ["ci/", "scripts/"]
 pattern = "execute-projec(?!t)"
 expected = "execute-project"
@@ -79,7 +79,7 @@ def test_load_config_parses_array_table_content_rule(git_repo_clean: Path) -> No
     _write_pyproject(
         git_repo_clean,
         """\
-[[tool.numbat.content_rules.array_rule]]
+[[tool.diffrat.content_rules.array_rule]]
 paths = ["docs/"]
 pattern = "foo"
 expected = "bar"
@@ -97,12 +97,12 @@ def test_load_config_parses_multiple_array_rules_with_same_code(git_repo_clean: 
     _write_pyproject(
         git_repo_clean,
         """\
-[[tool.numbat.content_rules.regex_typo]]
+[[tool.diffrat.content_rules.regex_typo]]
 paths = ["ci/"]
 pattern = "continue-projec(?!t)"
 expected = "continue-project"
 
-[[tool.numbat.content_rules.regex_typo]]
+[[tool.diffrat.content_rules.regex_typo]]
 paths = ["ci/"]
 pattern = "execute-projec(?!t)"
 expected = "execute-project"
@@ -119,27 +119,27 @@ expected = "execute-project"
     }
 
 
-def test_load_config_numbat_toml_overrides_pyproject(git_repo_clean: Path) -> None:
+def test_load_config_diffrat_toml_overrides_pyproject(git_repo_clean: Path) -> None:
     _write_pyproject(
         git_repo_clean,
         """\
-[tool.numbat.checks]
+[tool.diffrat.checks]
 ci_validator = "python old.py"
 pytest = "pytest old"
 
-[tool.numbat.content_rules]
+[tool.diffrat.content_rules]
 shared = "old → new"
 """,
     )
-    _write_numbat_toml(
+    _write_diffrat_toml(
         git_repo_clean,
         """\
-[numbat.checks]
+[diffrat.checks]
 ci_validator = "python new.py"
 
-[numbat.content_rules]
+[diffrat.content_rules]
 shared = "pat → exp"
-only_numbat = "x → y"
+only_diffrat = "x → y"
 """,
     )
 
@@ -149,9 +149,9 @@ only_numbat = "x → y"
         "ci_validator": "python new.py",
         "pytest": "pytest old",
     }
-    assert _rule_codes(config) == {"shared", "only_numbat"}
+    assert _rule_codes(config) == {"shared", "only_diffrat"}
     assert _rule_by_code(config, "shared").expected == "exp"
-    assert _rule_by_code(config, "only_numbat").expected == "y"
+    assert _rule_by_code(config, "only_diffrat").expected == "y"
 
 
 def test_load_config_skips_invalid_regex_with_warning(
@@ -161,7 +161,7 @@ def test_load_config_skips_invalid_regex_with_warning(
     _write_pyproject(
         git_repo_clean,
         """\
-[tool.numbat.content_rules]
+[tool.diffrat.content_rules]
 bad = "[unclosed → replacement"
 good = "foo → bar"
 """,
@@ -182,7 +182,7 @@ def test_load_config_skips_invalid_shorthand(
     _write_pyproject(
         git_repo_clean,
         """\
-[tool.numbat.content_rules]
+[tool.diffrat.content_rules]
 broken = "missing arrow separator"
 """,
     )
@@ -198,7 +198,7 @@ def test_load_config_uses_cwd_when_not_in_git_repo(outside_git_directory: Path) 
     _write_pyproject(
         outside_git_directory,
         """\
-[tool.numbat.checks]
+[tool.diffrat.checks]
 ci_validator = "python local.py"
 """,
     )
@@ -212,7 +212,7 @@ def test_load_config_uses_git_toplevel_not_subdirectory(git_repo_clean: Path) ->
     _write_pyproject(
         git_repo_clean,
         """\
-[tool.numbat.checks]
+[tool.diffrat.checks]
 ci_validator = "python root.py"
 """,
     )
@@ -228,7 +228,7 @@ def test_load_config_ignores_non_string_check_values(git_repo_clean: Path) -> No
     _write_pyproject(
         git_repo_clean,
         """\
-[tool.numbat.checks]
+[tool.diffrat.checks]
 valid = "pytest"
 invalid = 42
 """,

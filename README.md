@@ -1,42 +1,43 @@
-# Numbat
+# Diffrat
 
 Local CLI for developers and reviewers who want structured assistance when
 assessing pull-request diffs using git context.
 
 ## Purpose
 
-Numbat reads a bounded git diff (not the whole repository) and produces a
+Diffrat reads a bounded git diff (not the whole repository) and produces a
 review-oriented report: change summary, focus areas, and git metadata. It runs
 locally without a web UI. Terminal output is the default; use `--json` when
 scripting.
 
 ## Status
 
-**1.0.0** is the first product release on `main` — v1 review CLI core plus Phase 3
-optional LLM:
+**1.0.0** is the first product release — v1 review CLI core plus Phase 3
+optional LLM. Published on PyPI as [`diffrat`](https://pypi.org/project/diffrat/)
+(formerly developed as Numbat; see D-008):
 
-- `numbat review` with unstaged, `--staged`, `--base`, and `--range` modes; optional `--json`
+- `diffrat review` with unstaged, `--staged`, `--base`, and `--range` modes; optional `--json`
 - Bounded diff hunks, git context, file categories, deterministic Focus/Risk hints
   (including CI/workflow path hints with suggested commands, and content-based typo
   hints for known CI validator patterns)
 - Optional `--check` for path-scoped local validators and tests
-- Optional LLM-backed analysis when `NUMBAT_LLM_*` env vars are set (ADR-0001 / D-005);
+- Optional LLM-backed analysis when `DIFFRAT_LLM_*` env vars are set (ADR-0001 / D-005);
   heuristics-only report remains the default without API keys
 
 Phase 4 (integrations) is deferred. See `.ai/project/roadmap.md`.
 
 ## Current capabilities
 
-- Installable Python package with `numbat` CLI entry point
+- Installable Python package with `diffrat` CLI entry point
 - `--help` and `--version`
-- `numbat review` — analyze unstaged or staged local git diffs and print a
+- `diffrat review` — analyze unstaged or staged local git diffs and print a
   human-readable report (file list with coarse categories, per-file +/- counts,
   bounded diff hunks, summary, deterministic Focus/Risk hints)
-- `numbat review --json` — same analysis as structured JSON on stdout for scripting
-- `numbat review --check` — run applicable local validators/tests for touched paths
-- `numbat review --base <ref>` — compare the current branch to a base ref and
+- `diffrat review --json` — same analysis as structured JSON on stdout for scripting
+- `diffrat review --check` — run applicable local validators/tests for touched paths
+- `diffrat review --base <ref>` — compare the current branch to a base ref and
   include git context (branch, base, commits since base)
-- `numbat review --range <A..B>` — compare two git refs using two-dot range
+- `diffrat review --range <A..B>` — compare two git refs using two-dot range
   semantics (e.g. `main..feature`) and include range git context
 - Dev tooling: pytest, ruff, mypy
 
@@ -45,23 +46,30 @@ Phase 4 (integrations) is deferred. See `.ai/project/roadmap.md`.
 Requires Python 3.11+ and git on PATH.
 
 ```bash
-git clone https://github.com/szymoniwacz/numbat.git
-cd numbat
-pip install -e .
-numbat --version
+pip install diffrat
+diffrat --version
 ```
 
-`numbat review` needs a real diff. On a clean `main` with no local changes,
+From source (development):
+
+```bash
+git clone https://github.com/szymoniwacz/diffrat.git
+cd diffrat
+pip install -e .
+diffrat --version
+```
+
+`diffrat review` needs a real diff. On a clean `main` with no local changes,
 `--base main` exits `2` (`no changes on branch since main`) — that is expected.
 Use unstaged/staged edits or a feature branch, then:
 
 ```bash
-numbat review
-numbat review --base main
+diffrat review
+diffrat review --base main
 ```
 
 For local development (tests, lint, typecheck), and if you will use
-`numbat review --check`, install the optional extras:
+`diffrat review --check`, install the optional extras:
 
 ```bash
 pip install -e ".[dev]"
@@ -72,8 +80,8 @@ External dogfood sessions: `docs/feedback-checklist.md`.
 ## Run
 
 ```bash
-numbat --help
-python -m numbat --help
+diffrat --help
+python -m diffrat --help
 ```
 
 ### Review a local diff
@@ -82,19 +90,19 @@ Run from inside a git repository:
 
 ```bash
 # Unstaged changes (working tree vs index) — default
-numbat review
+diffrat review
 
 # Staged changes (index vs HEAD)
-numbat review --staged
+diffrat review --staged
 
 # Branch vs base (merge-base with ref through HEAD; default base is main)
-numbat review --base main
-numbat review --base
+diffrat review --base main
+diffrat review --base
 
 # Two-dot commit range (changes reachable from B not from A)
-numbat review --range main..feature
+diffrat review --range main..feature
 
-numbat review --help
+diffrat review --help
 ```
 
 ### JSON output for scripting
@@ -107,14 +115,14 @@ omitted when LLM is disabled or the request fails.
 
 ```bash
 # Unstaged diff as JSON
-numbat review --json
+diffrat review --json
 
 # Staged or branch-vs-base JSON
-numbat review --staged --json
-numbat review --base main --json
+diffrat review --staged --json
+diffrat review --base main --json
 
 # Example: file count from a branch review
-numbat review --base main --json | python -c "import sys,json; print(json.load(sys.stdin)['summary']['file_count'])"
+diffrat review --base main --json | python -c "import sys,json; print(json.load(sys.stdin)['summary']['file_count'])"
 ```
 
 Errors and empty-diff messages still go to stderr with the same exit codes as
@@ -134,7 +142,7 @@ category-composition signals (`source_without_tests`, `tests_only`,
 `ci_without_tests`), size and deletion signals
 (`large_single_file`, `deletions_heavy`), generated-artifact detection
 (`generated_file_touched`), missing mapped test files for changed
-`src/numbat` modules, lockfile/manifest consistency hints (`lockfile_without_manifest`,
+`src/diffrat` modules, lockfile/manifest consistency hints (`lockfile_without_manifest`,
 `manifest_without_lockfile`), git-context hints on branch/range reviews
 (`many_commits`, `wip_commits`) and cross-area diffs (`mixed_concerns`), and
 content-based hints from added hunk lines on
@@ -146,7 +154,7 @@ required. JSON
 output includes additive `category` fields on each file and a top-level
 `focus_risk` array while keeping `schema_version` at `"1"`. Each hint carries a
 `code`, `message`, and `severity` (`risk`, `warn`, or `info`) from the central
-registry in `src/numbat/scoring.py`; unknown codes default to `info`. Content-derived
+registry in `src/diffrat/scoring.py`; unknown codes default to `info`. Content-derived
 hints may also include optional `path` (repository-relative file path) and `line`
 (1-based line number in the new file) when the location can be resolved from the
 diff; those keys are omitted when unset. Hints are sorted by severity (risk first),
@@ -155,7 +163,7 @@ then by code, in both text and JSON reports.
 ### File risk scores and ordering
 
 Each changed file receives a deterministic non-negative integer `risk_score`
-computed in `src/numbat/scoring.py`. Files in the text **Files** list and JSON
+computed in `src/diffrat/scoring.py`. Files in the text **Files** list and JSON
 `files[]` array are sorted by descending `risk_score`; ties break by path name.
 The **Changes** section follows the same order.
 
@@ -196,7 +204,7 @@ Output is bounded to keep reports readable:
 | Max diff lines per file | 100 |
 
 When limits apply, the report notes truncation. Limits are documented in
-`numbat review --help` and echoed in JSON under `changes.limits`.
+`diffrat review --help` and echoed in JSON under `changes.limits`.
 
 ### Optional local checks (`--check`)
 
@@ -206,7 +214,7 @@ include results in the report:
 | Touched path pattern | Command run |
 |---|---|
 | `ci/`, `.github/workflows/`, or `validate-workflow-contracts.py` | `python ci/validate-workflow-contracts.py --mode project` |
-| `src/numbat/<module>.py` | `pytest tests/test_<module>.py`, `mypy src/numbat/<module>.py`, and `bandit -r src/numbat/<module>.py` when `bandit` is on PATH |
+| `src/diffrat/<module>.py` | `pytest tests/test_<module>.py`, `mypy src/diffrat/<module>.py`, and `bandit -r src/diffrat/<module>.py` when `bandit` is on PATH |
 | `tests/test_<name>.py` | `pytest tests/test_<name>.py` |
 | other `tests/` files (e.g. `conftest.py`) | `pytest tests` |
 | `pyproject.toml` | `ruff check .` and `pip-audit` when `pip-audit` is on PATH |
@@ -228,9 +236,9 @@ Failed checks are echoed to stderr with the command and output. Exit code `3`
 means at least one check failed (distinct from git errors and empty diffs).
 
 ```bash
-numbat review --check
-numbat review --staged --check
-numbat review --base main --check --json
+diffrat review --check
+diffrat review --staged --check
+diffrat review --base main --check --json
 ```
 
 ### Scriptable gate (`--fail-on`)
@@ -249,10 +257,10 @@ hint presence only — it does not run extra subprocesses beyond `--check`.
 
 ```bash
 # Fail when typo or secret hints appear (human report)
-numbat review --base main --fail-on=regex_typo,possible_secret
+diffrat review --base main --fail-on=regex_typo,possible_secret
 
 # Pre-push hook: JSON + gate
-numbat review --base main --json --fail-on=regex_typo,possible_secret
+diffrat review --base main --json --fail-on=regex_typo,possible_secret
 ```
 
 When `--json` and `--fail-on` are both used, JSON output includes a top-level
@@ -271,8 +279,8 @@ With `--json`, `changes.files` contains only the requested path and
 `changes.limits.max_lines_per_file` reflects the elevated limit (500).
 
 ```bash
-numbat review --staged --hunks-for=src/foo.py
-numbat review --base main --hunks-for=src/foo.py --json
+diffrat review --staged --hunks-for=src/foo.py
+diffrat review --base main --hunks-for=src/foo.py --json
 ```
 
 ## Tests and quality
@@ -285,18 +293,18 @@ mypy .
 
 ## Configuration
 
-Numbat is offline and deterministic by default (D-005). No API keys or LLM
+Diffrat is offline and deterministic by default (D-005). No API keys or LLM
 credentials are required for the heuristic report. Repositories without
-`[tool.numbat]` behave exactly as before — built-in check commands and content
+`[tool.diffrat]` behave exactly as before — built-in check commands and content
 heuristics apply unchanged.
 
 ### Optional LLM analysis (Phase 3)
 
-LLM calls are **opt-in only**. With no `NUMBAT_LLM_*` variables set, Numbat
+LLM calls are **opt-in only**. With no `DIFFRAT_LLM_*` variables set, Diffrat
 makes no network requests and sends no diff content to external services. The
 heuristic Focus/Risk report is unchanged.
 
-When both provider and API key are set, Numbat sends **diff-scoped** prompts
+When both provider and API key are set, Diffrat sends **diff-scoped** prompts
 (bounded hunks from the current review only — never a whole-repo scan) to an
 OpenAI-compatible chat-completions endpoint. Successful responses appear as an
 **LLM analysis** section in the text report and as additive `llm_findings` in
@@ -304,12 +312,12 @@ OpenAI-compatible chat-completions endpoint. Successful responses appear as an
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `NUMBAT_LLM_PROVIDER` | When LLM enabled | Provider id (e.g. `openai`, `ollama`) |
-| `NUMBAT_LLM_API_KEY` | When LLM enabled | API key or token for the provider |
-| `NUMBAT_LLM_BASE_URL` | Optional | Custom base URL for local runtimes or proxies |
+| `DIFFRAT_LLM_PROVIDER` | When LLM enabled | Provider id (e.g. `openai`, `ollama`) |
+| `DIFFRAT_LLM_API_KEY` | When LLM enabled | API key or token for the provider |
+| `DIFFRAT_LLM_BASE_URL` | Optional | Custom base URL for local runtimes or proxies |
 
-Cloud provider default endpoints are selected from `NUMBAT_LLM_PROVIDER`.
-`NUMBAT_LLM_BASE_URL` is for local or custom OpenAI-compatible endpoints only.
+Cloud provider default endpoints are selected from `DIFFRAT_LLM_PROVIDER`.
+`DIFFRAT_LLM_BASE_URL` is for local or custom OpenAI-compatible endpoints only.
 
 **Privacy:** diff content leaves the machine only when you explicitly set these
 variables. Store keys in your environment or secret manager — never commit them.
@@ -319,13 +327,13 @@ See ADR-0001 (`.ai/architecture/adr-0001-llm-analysis-layer.md`) and D-005 in
 Optional per-repository rules live in TOML at the git repository root (or
 `cwd` when not inside a git repo):
 
-1. `pyproject.toml` → `[tool.numbat]` (base)
-2. `.numbat.toml` at the repo root overrides duplicate keys when both exist
+1. `pyproject.toml` → `[tool.diffrat]` (base)
+2. `.diffrat.toml` at the repo root overrides duplicate keys when both exist
 
 Parsing uses stdlib `tomllib` only (Python 3.11+). Invalid regex in a content
 rule emits a stderr warning and skips that rule; review does not crash.
 
-### `[tool.numbat.checks]`
+### `[tool.diffrat.checks]`
 
 Map check code → display command string. Commands are parsed safely into argv
 (no `shell=True`). A leading `python` token maps to `sys.executable`.
@@ -334,11 +342,11 @@ In v1, only `ci_validator` may be overridden. Built-in defaults for pytest,
 ruff, mypy, bandit, and pip-audit remain when a key is omitted.
 
 ```toml
-[tool.numbat.checks]
+[tool.diffrat.checks]
 ci_validator = "python ci/validate-workflow-contracts.py --mode project"
 ```
 
-### `[tool.numbat.content_rules]`
+### `[tool.diffrat.content_rules]`
 
 Declarative regex rules scanned on **added diff-hunk lines** (before built-in
 production heuristics). The hint `code` is the TOML table key (for example
@@ -347,14 +355,14 @@ production heuristics). The hint `code` is the TOML table key (for example
 **Shorthand** — one string per rule code:
 
 ```toml
-[tool.numbat.content_rules]
+[tool.diffrat.content_rules]
 regex_typo = "continue-projec(?!t) → continue-project"
 ```
 
 **Table form** — supports path scoping and multiple entries per code:
 
 ```toml
-[[tool.numbat.content_rules.regex_typo]]
+[[tool.diffrat.content_rules.regex_typo]]
 paths = ["ci/validate-workflow-contracts.py"]
 pattern = "execute-projec(?!t)"
 expected = "execute-project"
@@ -366,16 +374,16 @@ entries match as prefix or glob-style patterns.
 
 ### Example (this repository)
 
-This repo dogfoods `[tool.numbat.content_rules]` for CI validator typo patterns
+This repo dogfoods `[tool.diffrat.content_rules]` for CI validator typo patterns
 and `PROJECT_EXECUTOR_COMMENT_FILTER` checks — see `pyproject.toml`:
 
 ```toml
-[[tool.numbat.content_rules.regex_typo]]
+[[tool.diffrat.content_rules.regex_typo]]
 paths = ["ci/validate-workflow-contracts.py"]
 pattern = "continue-projec(?!t)"
 expected = "continue-project"
 
-[[tool.numbat.content_rules.suspicious_constant_change]]
+[[tool.diffrat.content_rules.suspicious_constant_change]]
 paths = ["ci/validate-workflow-contracts.py"]
 pattern = "PROJECT_EXECUTOR_COMMENT_FILTER\\s*=(?!.*continue-project)(?!.*continue-projec)"
 expected = "continue-project"
@@ -394,13 +402,15 @@ See D-006 in `.ai/project/decisions.md` for format scope and precedence.
 This repository is developed with a documentation-first AI delivery workflow
 used to plan, review, and land changes in small steps. That system is private
 and not part of the installable CLI — you only need the Setup section above to
-run `numbat`.
+run `diffrat`.
 
 ## Limitations
 
 - No CI integration or GitHub App (Phase 4 deferred)
 - LLM analysis requires explicit env configuration; non-OpenAI-shaped APIs need
   a compatibility layer or future adapter work (ADR-0001)
+- The PyPI name `numbat` was already taken; this product uses `diffrat` for
+  package, CLI, and import (D-008)
 
 ## License
 

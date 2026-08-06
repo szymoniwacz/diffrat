@@ -1,9 +1,9 @@
-"""Repository configuration discovery and parsing for Numbat.
+"""Repository configuration discovery and parsing for Diffrat.
 
 Discovery order (from the git repository root, or ``cwd`` when not in a git repo):
 
-1. ``pyproject.toml`` → ``[tool.numbat]`` (base)
-2. ``.numbat.toml`` at the repo root overrides duplicate keys when both exist
+1. ``pyproject.toml`` → ``[tool.diffrat]`` (base)
+2. ``.diffrat.toml`` at the repo root overrides duplicate keys when both exist
 """
 
 from __future__ import annotations
@@ -29,19 +29,19 @@ class ContentRule:
 
 
 @dataclass(frozen=True)
-class NumbatConfig:
-    """Parsed per-repository Numbat configuration."""
+class DiffratConfig:
+    """Parsed per-repository Diffrat configuration."""
 
     checks: dict[str, str]
     content_rules: tuple[ContentRule, ...]
 
 
-def load_config(cwd: Path | str) -> NumbatConfig:
-    """Load Numbat config for the repository containing ``cwd``."""
+def load_config(cwd: Path | str) -> DiffratConfig:
+    """Load Diffrat config for the repository containing ``cwd``."""
     root = _resolve_config_root(Path(cwd))
-    merged = _merge_numbat_sections(
-        _read_numbat_section(root / "pyproject.toml", nested=True),
-        _read_numbat_section(root / ".numbat.toml", nested=False),
+    merged = _merge_diffrat_sections(
+        _read_diffrat_section(root / "pyproject.toml", nested=True),
+        _read_diffrat_section(root / ".diffrat.toml", nested=False),
     )
     return _build_config(merged)
 
@@ -65,30 +65,30 @@ def _resolve_config_root(cwd: Path) -> Path:
     return Path(toplevel)
 
 
-def _read_numbat_section(path: Path, *, nested: bool) -> dict[str, object]:
+def _read_diffrat_section(path: Path, *, nested: bool) -> dict[str, object]:
     if not path.is_file():
         return {}
     try:
         with path.open("rb") as handle:
             data = tomllib.load(handle)
     except tomllib.TOMLDecodeError as exc:
-        print(f"numbat config: warning: failed to parse {path}: {exc}", file=sys.stderr)
+        print(f"diffrat config: warning: failed to parse {path}: {exc}", file=sys.stderr)
         return {}
     if nested:
         tool = data.get("tool")
         if not isinstance(tool, dict):
             return {}
-        numbat = tool.get("numbat")
-        if not isinstance(numbat, dict):
+        diffrat = tool.get("diffrat")
+        if not isinstance(diffrat, dict):
             return {}
-        return numbat
-    numbat = data.get("numbat")
-    if not isinstance(numbat, dict):
+        return diffrat
+    diffrat = data.get("diffrat")
+    if not isinstance(diffrat, dict):
         return {}
-    return numbat
+    return diffrat
 
 
-def _merge_numbat_sections(
+def _merge_diffrat_sections(
     base: dict[str, object],
     override: dict[str, object],
 ) -> dict[str, object]:
@@ -102,10 +102,10 @@ def _merge_numbat_sections(
     return merged
 
 
-def _build_config(section: dict[str, object]) -> NumbatConfig:
+def _build_config(section: dict[str, object]) -> DiffratConfig:
     checks = _parse_checks(section.get("checks"))
     content_rules = _parse_content_rules(section.get("content_rules"))
-    return NumbatConfig(checks=checks, content_rules=content_rules)
+    return DiffratConfig(checks=checks, content_rules=content_rules)
 
 
 def _parse_checks(raw: object) -> dict[str, str]:
@@ -150,7 +150,7 @@ def _content_rule_from_shorthand(code: str, value: str) -> ContentRule | None:
     parts = _ARROW_SEPARATOR.split(value, maxsplit=1)
     if len(parts) != 2:
         print(
-            f"numbat config: warning: content rule {code!r} "
+            f"diffrat config: warning: content rule {code!r} "
             "shorthand must use 'pattern → expected'",
             file=sys.stderr,
         )
@@ -164,7 +164,7 @@ def _content_rule_from_mapping(code: str, value: dict[str, object]) -> ContentRu
     expected = value.get("expected")
     if not isinstance(pattern, str) or not isinstance(expected, str):
         print(
-            f"numbat config: warning: content rule {code!r} "
+            f"diffrat config: warning: content rule {code!r} "
             "table must include pattern and expected",
             file=sys.stderr,
         )
@@ -196,7 +196,7 @@ def _compile_content_rule(
         compiled = re.compile(pattern_text)
     except re.error as exc:
         print(
-            f"numbat config: warning: content rule {code!r} has invalid regex: {exc}",
+            f"diffrat config: warning: content rule {code!r} has invalid regex: {exc}",
             file=sys.stderr,
         )
         return None

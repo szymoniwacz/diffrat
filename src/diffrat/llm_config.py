@@ -6,9 +6,9 @@ import os
 import sys
 from dataclasses import dataclass
 
-_ENV_PROVIDER = "NUMBAT_LLM_PROVIDER"
-_ENV_API_KEY = "NUMBAT_LLM_API_KEY"
-_ENV_BASE_URL = "NUMBAT_LLM_BASE_URL"
+_ENV_PROVIDER = "DIFFRAT_LLM_PROVIDER"
+_ENV_API_KEY = "DIFFRAT_LLM_API_KEY"
+_ENV_BASE_URL = "DIFFRAT_LLM_BASE_URL"
 
 
 @dataclass(frozen=True)
@@ -41,7 +41,7 @@ def load_llm_config() -> LlmConfig:
 
     if provider or api_key or base_url:
         print(
-            "numbat: warning: incomplete LLM configuration — "
+            "diffrat: warning: incomplete LLM configuration — "
             f"set both {_ENV_PROVIDER} and {_ENV_API_KEY} to enable LLM analysis",
             file=sys.stderr,
         )

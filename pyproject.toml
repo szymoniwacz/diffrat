@@ -3,19 +3,39 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "numbat"
+name = "diffrat"
 version = "1.0.0"
 description = "Local CLI for diff and PR review assistance"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Szymon Iwacz" }]
+keywords = ["git", "diff", "review", "cli", "pull-request"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Version Control :: Git",
+]
+
+[project.urls]
+Homepage = "https://github.com/szymoniwacz/diffrat"
+Repository = "https://github.com/szymoniwacz/diffrat"
+Issues = "https://github.com/szymoniwacz/diffrat/issues"
+Changelog = "https://github.com/szymoniwacz/diffrat/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "mypy>=1.8", "ruff>=0.4"]
 
 [project.scripts]
-numbat = "numbat.__main__:main"
+diffrat = "diffrat.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -34,25 +54,25 @@ select = ["E", "F", "I", "UP"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
-packages = ["numbat"]
+packages = ["diffrat"]
 exclude = ["ci/"]
 
-[[tool.numbat.content_rules.regex_typo]]
+[[tool.diffrat.content_rules.regex_typo]]
 paths = ["ci/validate-workflow-contracts.py"]
 pattern = "continue-projec(?!t)"
 expected = "continue-project"
 
-[[tool.numbat.content_rules.regex_typo]]
+[[tool.diffrat.content_rules.regex_typo]]
 paths = ["ci/validate-workflow-contracts.py"]
 pattern = "execute-projec(?!t)"
 expected = "execute-project"
 
-[[tool.numbat.content_rules.suspicious_constant_change]]
+[[tool.diffrat.content_rules.suspicious_constant_change]]
 paths = ["ci/validate-workflow-contracts.py"]
 pattern = "PROJECT_EXECUTOR_COMMENT_FILTER\\s*=(?!.*continue-project)(?!.*continue-projec)"
 expected = "continue-project"
 
-[[tool.numbat.content_rules.suspicious_constant_change]]
+[[tool.diffrat.content_rules.suspicious_constant_change]]
 paths = ["ci/validate-workflow-contracts.py"]
 pattern = "PROJECT_EXECUTOR_COMMENT_FILTER\\s*=(?!.*execute-project)(?!.*execute-projec)"
 expected = "execute-project"

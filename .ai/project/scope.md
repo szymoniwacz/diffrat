@@ -9,11 +9,11 @@ This file protects the project from uncontrolled expansion.
 ## In scope now
 
 - Bootstrap and project definition (vision, requirements, readiness)
-- Python CLI packaging scaffold (`pyproject.toml`, `src/numbat/`, dev tooling)
+- Python CLI packaging scaffold (`pyproject.toml`, `src/diffrat/`, dev tooling)
 - Local git diff ingestion (working tree, staged, branch vs base, commit range)
 - Structured review report: change summary, risk/focus hints, git metadata context
 - Human-readable terminal output with optional `--json` flag
-- Optional LLM analysis when `NUMBAT_LLM_*` is configured (D-005 / ADR-0001);
+- Optional LLM analysis when `DIFFRAT_LLM_*` is configured (D-005 / ADR-0001);
   heuristics-only remains the default without API keys
 - Unit and CLI tests for new commands and flags
 - Documentation updates alongside behavior changes

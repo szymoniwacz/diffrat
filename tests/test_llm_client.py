@@ -8,14 +8,14 @@ from typing import Any
 
 import pytest
 
-from numbat.diff_parser import DiffContent, DiffHunk, FileDiffContent
-from numbat.llm_client import (
+from diffrat.diff_parser import DiffContent, DiffHunk, FileDiffContent
+from diffrat.llm_client import (
     format_diff_for_prompt,
     request_chat_completion,
     resolve_chat_completions_url,
     run_llm_analysis,
 )
-from numbat.llm_config import LlmConfig
+from diffrat.llm_config import LlmConfig
 
 
 def _success_response(content: str = "review notes") -> io.BytesIO:

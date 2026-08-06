@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from numbat.git_adapter import GitError, ensure_git_repository, get_diff_numstat
+from diffrat.git_adapter import GitError, ensure_git_repository, get_diff_numstat
 
 
 def test_ensure_git_repository_rejects_non_repo(outside_git_directory: Path) -> None:
@@ -31,7 +31,7 @@ def test_get_diff_numstat_staged(git_repo_with_staged_change: Path) -> None:
 
 
 def test_get_diff_numstat_git_failure(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    import numbat.git_adapter as git_adapter
+    import diffrat.git_adapter as git_adapter
 
     def fake_run_git(args: list[str], *, cwd: str | None = None) -> object:
         class Result:
@@ -53,14 +53,14 @@ def test_get_diff_numstat_git_failure(monkeypatch: pytest.MonkeyPatch, tmp_path:
 
 
 def test_verify_ref_rejects_invalid(git_repo_clean: Path) -> None:
-    from numbat.git_adapter import verify_ref
+    from diffrat.git_adapter import verify_ref
 
     with pytest.raises(GitError, match="Needed a single revision"):
         verify_ref("invalid-ref", cwd=str(git_repo_clean))
 
 
 def test_get_diff_numstat_vs_base(git_repo_with_feature_branch: Path) -> None:
-    from numbat.git_adapter import get_diff_numstat_vs_base, get_git_context
+    from diffrat.git_adapter import get_diff_numstat_vs_base, get_git_context
 
     result = get_diff_numstat_vs_base("main", cwd=str(git_repo_with_feature_branch))
     assert "feature.txt" in result.numstat
@@ -73,14 +73,14 @@ def test_get_diff_numstat_vs_base(git_repo_with_feature_branch: Path) -> None:
 
 
 def test_parse_range_spec_valid() -> None:
-    from numbat.git_adapter import parse_range_spec
+    from diffrat.git_adapter import parse_range_spec
 
     assert parse_range_spec("main..feature") == ("main", "feature")
     assert parse_range_spec("abc123..def456") == ("abc123", "def456")
 
 
 def test_parse_range_spec_rejects_invalid() -> None:
-    from numbat.git_adapter import GitError, parse_range_spec
+    from diffrat.git_adapter import GitError, parse_range_spec
 
     with pytest.raises(GitError, match="expected REV format A..B"):
         parse_range_spec("main-feature")
@@ -91,7 +91,7 @@ def test_parse_range_spec_rejects_invalid() -> None:
 
 
 def test_get_diff_numstat_for_range(git_repo_with_feature_branch: Path) -> None:
-    from numbat.git_adapter import get_diff_numstat_for_range, get_git_context_for_range
+    from diffrat.git_adapter import get_diff_numstat_for_range, get_git_context_for_range
 
     result = get_diff_numstat_for_range("main", "feature", cwd=str(git_repo_with_feature_branch))
     assert "feature.txt" in result.numstat

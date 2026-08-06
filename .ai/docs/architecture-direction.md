@@ -9,14 +9,14 @@ It should describe direction, constraints, and boundaries.
 
 ## System shape
 
-Local **Python CLI** (`numbat`) invoked from a git repository working copy.
+Local **Python CLI** (`diffrat`) invoked from a git repository working copy.
 No long-running server in v1. No web UI.
 
 ```txt
 Developer/Reviewer
        │
        ▼
-  numbat CLI (argparse/click TBD at scaffold)
+  diffrat CLI (argparse/click TBD at scaffold)
        │
        ├── Git adapter ──► local git (diff, log, branch metadata)
        │
@@ -48,7 +48,7 @@ Developer/Reviewer
 
 ## Data flow (v1)
 
-1. User runs `numbat review` (exact subcommand name TBD at scaffold) with diff target flags
+1. User runs `diffrat review` (exact subcommand name TBD at scaffold) with diff target flags
 2. Git adapter resolves refs and captures diff + metadata
 3. Diff parser builds internal change model
 4. Analysis backend adds summary, file groupings, heuristic risk/focus hints
@@ -59,8 +59,8 @@ Developer/Reviewer
 | Mechanism | Purpose |
 |---|---|
 | CLI flags | Diff target, output format, checks, fail-on |
-| Env vars | `NUMBAT_LLM_PROVIDER`, `NUMBAT_LLM_API_KEY`, optional `NUMBAT_LLM_BASE_URL` when LLM enabled (ADR-0001) |
-| Config file | Optional repo-local `[tool.numbat]` in `pyproject.toml` / `.numbat.toml` (D-006) |
+| Env vars | `DIFFRAT_LLM_PROVIDER`, `DIFFRAT_LLM_API_KEY`, optional `DIFFRAT_LLM_BASE_URL` when LLM enabled (ADR-0001) |
+| Config file | Optional repo-local `[tool.diffrat]` in `pyproject.toml` / `.diffrat.toml` (D-006) |
 
 ## Open questions
 

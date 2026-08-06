@@ -5,10 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from numbat.config import NumbatConfig
-from numbat.diff_parser import DiffContent, DiffSummary, FileChange
-from numbat.git_adapter import GitContext
-from numbat.scoring import HintSeverity, risk_score_for_file, severity_for_code
+from diffrat.config import DiffratConfig
+from diffrat.diff_parser import DiffContent, DiffSummary, FileChange
+from diffrat.git_adapter import GitContext
+from diffrat.scoring import HintSeverity, risk_score_for_file, severity_for_code
 
 _SEVERITY_ORDER: dict[HintSeverity, int] = {"risk": 0, "warn": 1, "info": 2}
 
@@ -251,14 +251,14 @@ def analyze_diff(
     diff_content: DiffContent | None = None,
     cwd: str | None = None,
     git_context: GitContext | None = None,
-    config: NumbatConfig | None = None,
+    config: DiffratConfig | None = None,
 ) -> AnalysisResult:
     """Compute per-file categories and focus/risk hints for a diff."""
     categories = tuple(categorize_path(file_change.path) for file_change in summary.files)
     hints = _build_hints(summary, categories, cwd=cwd)
     hints.extend(_git_context_hints(summary, categories, git_context=git_context))
     if diff_content is not None:
-        from numbat.content_hints import content_focus_risk_hints
+        from diffrat.content_hints import content_focus_risk_hints
 
         hints.extend(content_focus_risk_hints(diff_content, config=config))
 
@@ -678,7 +678,7 @@ def _missing_test_file_hints(
     *,
     cwd: str | None,
 ) -> list[FocusRiskHint]:
-    """Emit hints when a changed src/numbat module lacks a mapped test file."""
+    """Emit hints when a changed src/diffrat module lacks a mapped test file."""
     if cwd is None:
         return []
 
@@ -691,7 +691,7 @@ def _missing_test_file_hints(
         if (
             len(parts) >= 2
             and parts[0] == "src"
-            and parts[1] == "numbat"
+            and parts[1] == "diffrat"
             and posix.suffix == ".py"
         ):
             test_rel = f"tests/test_{posix.stem}.py"
@@ -873,7 +873,7 @@ def is_python_source_or_test_path(path: str) -> bool:
     """Return True when a changed path should trigger pytest checks."""
     posix = PurePosixPath(path.replace("\\", "/"))
     parts = posix.parts
-    if len(parts) >= 2 and parts[0] == "src" and parts[1] == "numbat":
+    if len(parts) >= 2 and parts[0] == "src" and parts[1] == "diffrat":
         return True
     return bool(parts and parts[0] == "tests")
 

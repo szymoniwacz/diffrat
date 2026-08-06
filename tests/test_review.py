@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from numbat.json_renderer import JSON_SCHEMA_VERSION
-from numbat.review import (
+from diffrat.json_renderer import JSON_SCHEMA_VERSION
+from diffrat.review import (
     EXIT_CHECK_FAILED,
     EXIT_EMPTY_DIFF,
     EXIT_ERROR,
@@ -309,10 +309,10 @@ def test_run_review_check_reports_failure(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from numbat.checks import CheckResult, CheckSpec
+    from diffrat.checks import CheckResult, CheckSpec
 
     monkeypatch.setattr(
-        "numbat.review.plan_checks",
+        "diffrat.review.plan_checks",
         lambda summary, *, config=None: [
             CheckSpec(
                 code="ci_validator",
@@ -324,7 +324,7 @@ def test_run_review_check_reports_failure(
         ],
     )
     monkeypatch.setattr(
-        "numbat.review.run_checks",
+        "diffrat.review.run_checks",
         lambda specs, *, cwd=None: [
             CheckResult(
                 code="ci_validator",
@@ -349,10 +349,10 @@ def test_run_review_check_json_includes_checks(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from numbat.checks import CheckResult
+    from diffrat.checks import CheckResult
 
     monkeypatch.setattr(
-        "numbat.review.run_checks",
+        "diffrat.review.run_checks",
         lambda specs, *, cwd=None: [
             CheckResult(code="pytest", command="pytest", passed=True, output="")
         ],
@@ -493,10 +493,10 @@ def test_run_review_fail_on_check_failure_precedence(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from numbat.checks import CheckResult, CheckSpec
+    from diffrat.checks import CheckResult, CheckSpec
 
     monkeypatch.setattr(
-        "numbat.review.plan_checks",
+        "diffrat.review.plan_checks",
         lambda summary, *, config=None: [
             CheckSpec(
                 code="ci_validator",
@@ -508,7 +508,7 @@ def test_run_review_fail_on_check_failure_precedence(
         ],
     )
     monkeypatch.setattr(
-        "numbat.review.run_checks",
+        "diffrat.review.run_checks",
         lambda specs, *, cwd=None: [
             CheckResult(
                 code="ci_validator",
