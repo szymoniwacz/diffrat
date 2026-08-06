@@ -78,7 +78,7 @@ Outputs:
 
 ## Rebrand and PyPI publication
 
-**Status:** in progress (D-008)
+**Status:** complete (D-008)
 
 Goal:
 Ship under the Diffrat name with matching PyPI / CLI / import (`diffrat`), and
@@ -87,8 +87,9 @@ publish the real `1.0.0` wheel (after `0.0.1` name-reservation stub).
 Outputs:
 
 - Full rebrand (code, config, env, docs)
-- Trusted Publishing + tag-driven release workflow
-- `pip install diffrat` installs the product CLI
+- Tag-driven publish workflow (Trusted Publisher to be attached on PyPI for
+  future automated releases)
+- `pip install diffrat` installs the product CLI (`1.0.0` on PyPI)
 
 ## Phase 4 — Integrations (deferred)
 

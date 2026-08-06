@@ -9,14 +9,26 @@ Maintainer runbook for releases after the Diffrat rebrand (D-008).
 - Follow SemVer. Breaking CLI/JSON/`schema_version` changes bump major.
 - PyPI already has `0.0.1` (name-reservation stub) and product `1.0.0`.
 
+## Trusted Publisher setup (required once for CI publishes)
+
+After the GitHub repo is `szymoniwacz/diffrat`:
+
+1. Open https://pypi.org/manage/project/diffrat/settings/publishing/
+2. Add a Trusted Publisher:
+   - Owner: `szymoniwacz`
+   - Repository: `diffrat`
+   - Workflow: `publish.yml`
+   - Environment: `pypi`
+3. In GitHub → Settings → Environments, create environment `pypi`
+   (optional protection: required reviewers).
+
+Until this is configured, use the manual upload fallback below.
+
 ## Preconditions
 
 1. `pytest`, `ruff check .`, and `mypy .` pass on the release commit.
 2. `CHANGELOG.md` describes the release.
-3. GitHub repository is named `diffrat` (Trusted Publisher is bound to
-   owner/repo).
-4. PyPI project `diffrat` has a Trusted Publisher for this repo’s
-   `.github/workflows/publish.yml` and environment `pypi`.
+3. Trusted Publisher (above) is configured for automated tag publishes.
 
 ## Release steps
 

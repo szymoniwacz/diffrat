@@ -14,8 +14,8 @@ Before planning or changing anything, an AI assistant should read this file.
   someone else's diff
 - **Core problem:** Diff review is slow, inconsistent, and context-poor without
   structured assistance grounded in git changes
-- **Current phase:** Phase 3 complete — **1.0.0** product release; PyPI publish
-  in progress (D-008)
+- **Current phase:** Phase 3 complete — **1.0.0** on PyPI as `diffrat` (D-008);
+  Phase 4 integrations deferred
 - **Important constraints:** Local-first; diff-scoped analysis only; no web UI in v1;
   optional LLM when `DIFFRAT_LLM_*` env vars are set (diff-scoped prompts only);
   humans merge; agents never merge
@@ -23,14 +23,14 @@ Before planning or changing anything, an AI assistant should read this file.
 ## Current phase
 
 Phase 3 complete (optional LLM layer per D-005 / ADR-0001). Rebrand to Diffrat
-and PyPI publication underway (D-008). Phase 4 integrations (CI bots, GitHub App)
-remain deferred.
+and first product PyPI publish complete (D-008). Phase 4 integrations (CI bots,
+GitHub App) remain deferred.
 
 ## What exists today
 
 - AI workflow working system (`.ai/`) from `ai-project-template`
 - Project definition and requirements documentation
-- Installable `diffrat` CLI (`pip install -e ".[dev]"` or `pip install diffrat`)
+- Installable `diffrat` CLI via `pip install diffrat` or `pip install -e ".[dev]"`
   at version **1.0.0**
 - `diffrat review` — unstaged, `--staged`, `--base` (merge-base), `--range` (two-ref), `--json`
 - Human-readable report with file categories and deterministic Focus/Risk hints
@@ -40,7 +40,7 @@ remain deferred.
   report remains the default without API keys
 - `CHANGELOG.md` for the 1.0.0 release
 - pytest / ruff / mypy green on main
-- PyPI name `diffrat` reserved (`0.0.1` stub); product wheel publish follows rebrand
+- PyPI project [`diffrat`](https://pypi.org/project/diffrat/) (`0.0.1` stub + `1.0.0` product)
 
 ## What does not exist yet
 
