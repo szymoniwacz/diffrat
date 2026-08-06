@@ -36,12 +36,14 @@ cp "${OVERLAY}/architecture-direction.md" "${AI}/docs/"
 cp "${OVERLAY}/project-requirements.md" "${AI}/docs/"
 
 # Materialize template-owned paths expected by validators and numbat --check.
-rm -rf "${ROOT}/ci" "${ROOT}/examples" "${ROOT}/.github/PULL_REQUEST_TEMPLATE"
+rm -rf "${ROOT}/ci" "${ROOT}/examples" \
+  "${ROOT}/.github/PULL_REQUEST_TEMPLATE" "${ROOT}/.github/ISSUE_TEMPLATE"
 ln -sfn .ai-template/ci "${ROOT}/ci"
 ln -sfn .ai-template/examples "${ROOT}/examples"
 ln -sfn .ai-template/.cursorrules "${ROOT}/.cursorrules"
 ln -sfn ../.ai-template/.github/copilot-instructions.md "${ROOT}/.github/copilot-instructions.md"
 ln -sfn ../.ai-template/.github/pull_request_template.md "${ROOT}/.github/pull_request_template.md"
 ln -sfn ../.ai-template/.github/PULL_REQUEST_TEMPLATE "${ROOT}/.github/PULL_REQUEST_TEMPLATE"
+ln -sfn ../.ai-template/.github/ISSUE_TEMPLATE "${ROOT}/.github/ISSUE_TEMPLATE"
 
 echo "AI workflow ready under .ai/ (template + numbat overlay)"

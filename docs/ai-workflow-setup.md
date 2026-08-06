@@ -45,5 +45,6 @@ once in numbat Settings → Secrets and variables → Actions.
 ## What is private
 
 Everything else under `.ai/` and template-owned paths (`ci/`, `examples/`,
-selected `.github/` adapters) are symlinked from `.ai-template/` by the setup
-script and are not committed to the public repository.
+selected `.github/` adapters including issue/PR templates) are symlinked from
+`.ai-template/` by the setup script and are not committed to the public
+repository.
