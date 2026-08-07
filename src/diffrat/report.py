@@ -21,6 +21,7 @@ def render_review_report(
     analysis: AnalysisResult | None = None,
     diff_content: DiffContent | None = None,
     check_results: list[CheckResult] | None = None,
+    brief: bool = False,
 ) -> str:
     """Render a review-oriented text report for stdout."""
     result = (
@@ -84,9 +85,10 @@ def render_review_report(
                     f"(+{file_change.additions} -{file_change.deletions} lines)"
                 )
 
-    lines.extend(["", "Changes", "-------"])
-    sorted_paths = [entry[0].path for entry in sorted_entries]
-    lines.extend(_render_changes(diff_content, sort_paths=sorted_paths))
+    if not brief:
+        lines.extend(["", "Changes", "-------"])
+        sorted_paths = [entry[0].path for entry in sorted_entries]
+        lines.extend(_render_changes(diff_content, sort_paths=sorted_paths))
 
     lines.extend(["", "Focus / Risk", "------------"])
     sorted_hints = sort_hints(list(result.hints))
