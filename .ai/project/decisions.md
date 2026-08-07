@@ -138,6 +138,33 @@ name, CLI entry point, and Python import package are all `diffrat`
 **Context:** Name `diffrat` reserved on PyPI as stub `0.0.1` before the rebrand
 landed; first real product upload is `1.0.0`.
 
+---
+
+### D-009 — Diffrat Cursor automation loader gate (2026-08-07)
+
+**Decision:** Do **not** commit full `.ai/automation/goal-executor.md` (or
+`project-executor.md`) on the public default branch. Cursor Automations for
+Diffrat load public entrypoints from `docs/ai-workflow/*-live-loader.md` on
+`main`, then resolve the full runtime from:
+
+1. materialized `.ai/automation/*.md` (after `./scripts/setup-ai-workflow.sh`), or
+2. `.ai-template/.ai/automation/*.md` (initialized private submodule;
+   `SUBMODULE_DEPLOY_KEY` in CI / equivalent agent access).
+
+Fail closed if neither full runtime is readable. Live Cursor Automation prompts
+must use the Diffrat blocks in `docs/ai-workflow-setup.md`, not the template
+default-branch-only loader that reads `.ai/automation/*.md` from `main`.
+
+**Reason:** Template Goal Executor assumes automation docs are on the default
+branch. Diffrat keeps the reusable workflow private; requiring
+`origin/main:.ai/automation/goal-executor.md` makes every `/execute-goal` run
+fail closed by design.
+
+**Status:** confirmed
+
+**Context:** Unblocks Goal Executor against public Diffrat without publishing
+`ai-project-template` automation payloads.
+
 > Reusable workflow rules (for example, documentation before implementation)
 > live in the canonical workflow documents under `.ai/`, not in this product
 > decision log.
