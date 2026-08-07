@@ -57,6 +57,9 @@ strict = true
 packages = ["diffrat"]
 exclude = ["ci/"]
 
+[tool.diffrat.checks]
+ci_validator = "python ci/validate-workflow-contracts.py --mode project"
+
 [[tool.diffrat.content_rules.regex_typo]]
 paths = ["ci/validate-workflow-contracts.py"]
 pattern = "continue-projec(?!t)"

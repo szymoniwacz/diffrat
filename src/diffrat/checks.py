@@ -19,11 +19,9 @@ from diffrat.analysis import (
 from diffrat.config import DiffratConfig
 from diffrat.diff_parser import DiffSummary
 
-# v1: only ci_validator may be overridden via [tool.diffrat.checks].
+# v1: only ci_validator may be configured via [tool.diffrat.checks].
+# There is no hardcoded default command; without config, the check is omitted.
 
-_CI_VALIDATOR_COMMAND = (
-    "python ci/validate-workflow-contracts.py --mode project"
-)
 _PYTEST_COMMAND = "pytest"
 _MYPY_COMMAND = "mypy"
 _RUFF_COMMAND = "ruff check ."
@@ -131,20 +129,13 @@ def parse_check_argv(display_command: str) -> tuple[str, ...]:
     return tuple(tokens)
 
 
-def _ci_validator_spec(config: DiffratConfig | None) -> CheckSpec:
-    display_command = _CI_VALIDATOR_COMMAND
-    argv: tuple[str, ...] = (
-        sys.executable,
-        "ci/validate-workflow-contracts.py",
-        "--mode",
-        "project",
-    )
-    if config is not None and "ci_validator" in config.checks:
-        display_command = config.checks["ci_validator"]
-        argv = parse_check_argv(display_command)
+def _ci_validator_spec(config: DiffratConfig | None) -> CheckSpec | None:
+    if config is None or "ci_validator" not in config.checks:
+        return None
+    display_command = config.checks["ci_validator"]
     return CheckSpec(
         code="ci_validator",
-        argv=argv,
+        argv=parse_check_argv(display_command),
         display_command=display_command,
     )
 
@@ -160,9 +151,10 @@ def plan_checks(
     seen: set[str] = set()
 
     if any(is_ci_workflow_validator_path(path) for path in paths):
-        if "ci_validator" not in seen:
+        ci_spec = _ci_validator_spec(config)
+        if ci_spec is not None and "ci_validator" not in seen:
             seen.add("ci_validator")
-            specs.append(_ci_validator_spec(config))
+            specs.append(ci_spec)
 
     pytest_targets = pytest_targets_for_paths(paths)
     if pytest_targets:
