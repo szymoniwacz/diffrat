@@ -180,7 +180,7 @@ def test_is_pyproject_path() -> None:
     assert not is_pyproject_path("README.md")
 
 
-def test_plan_checks_selects_ci_validator() -> None:
+def test_plan_checks_omits_ci_validator_without_config() -> None:
     summary = DiffSummary(
         files=(
             FileChange(
@@ -192,7 +192,26 @@ def test_plan_checks_selects_ci_validator() -> None:
         )
     )
 
-    specs = plan_checks(summary)
+    assert plan_checks(summary) == []
+
+
+def test_plan_checks_selects_ci_validator_when_configured() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="ci/validate-workflow-contracts.py",
+                additions=1,
+                deletions=0,
+                binary=False,
+            ),
+        )
+    )
+    config = DiffratConfig(
+        checks={"ci_validator": "python ci/validate-workflow-contracts.py --mode project"},
+        content_rules=(),
+    )
+
+    specs = plan_checks(summary, config=config)
 
     assert [spec.code for spec in specs] == ["ci_validator"]
     assert specs[0].display_command == (
@@ -241,7 +260,7 @@ def test_plan_checks_returns_empty_for_unrelated_paths() -> None:
     assert plan_checks(summary) == []
 
 
-def test_plan_checks_ci_validator_unchanged_with_python_paths() -> None:
+def test_plan_checks_ci_validator_with_python_paths_when_configured() -> None:
     summary = DiffSummary(
         files=(
             FileChange(
@@ -253,8 +272,12 @@ def test_plan_checks_ci_validator_unchanged_with_python_paths() -> None:
             FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
         )
     )
+    config = DiffratConfig(
+        checks={"ci_validator": "python ci/validate-workflow-contracts.py --mode project"},
+        content_rules=(),
+    )
 
-    specs = plan_checks(summary)
+    specs = plan_checks(summary, config=config)
 
     assert [spec.code for spec in specs] == ["ci_validator", "pytest", "mypy", "bandit"]
     assert specs[0].display_command == (

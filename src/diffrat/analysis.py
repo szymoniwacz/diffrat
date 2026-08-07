@@ -120,9 +120,6 @@ _SOURCE_EXTENSIONS = frozenset(
     }
 )
 
-_CI_WORKFLOW_VALIDATOR_COMMAND = (
-    "python ci/validate-workflow-contracts.py --mode project"
-)
 _PYPROJECT_DEV_INSTALL_COMMAND = 'pip install -e ".[dev]"'
 _RUFF_CHECK_COMMAND = "ruff check ."
 
@@ -255,7 +252,7 @@ def analyze_diff(
 ) -> AnalysisResult:
     """Compute per-file categories and focus/risk hints for a diff."""
     categories = tuple(categorize_path(file_change.path) for file_change in summary.files)
-    hints = _build_hints(summary, categories, cwd=cwd)
+    hints = _build_hints(summary, categories, cwd=cwd, config=config)
     hints.extend(_git_context_hints(summary, categories, git_context=git_context))
     if diff_content is not None:
         from diffrat.content_hints import content_focus_risk_hints
@@ -290,6 +287,7 @@ def _build_hints(
     categories: tuple[FileCategory, ...],
     *,
     cwd: str | None = None,
+    config: DiffratConfig | None = None,
 ) -> list[FocusRiskHint]:
     hints: list[FocusRiskHint] = []
 
@@ -425,15 +423,19 @@ def _build_hints(
         )
         if has_ci_validator_in_diff:
             message = (
-                f"CI/workflow paths changed ({preview}) — run: "
-                f"{_CI_WORKFLOW_VALIDATOR_COMMAND}"
+                f"CI/workflow paths changed ({preview}) — "
+                "review CI/workflow changes carefully"
             )
         else:
             message = (
                 f"CI/workflow paths changed ({preview}) — "
-                "confirm workflow contracts are validated; run: "
-                f"{_CI_WORKFLOW_VALIDATOR_COMMAND}"
+                "confirm workflow contracts are validated"
             )
+        configured_command = None
+        if config is not None:
+            configured_command = config.checks.get("ci_validator")
+        if configured_command:
+            message = f"{message}; run: {configured_command}"
         hints.append(
             focus_risk_hint(
                 code="ci_workflow_paths",

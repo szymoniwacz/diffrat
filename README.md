@@ -232,7 +232,7 @@ diffrat review --base main --hunks-for=src/foo.py --json
 
 | Touched path pattern | Command run |
 |---|---|
-| `ci/`, `.github/workflows/`, or `validate-workflow-contracts.py` | `python ci/validate-workflow-contracts.py --mode project` |
+| `ci/`, `.github/workflows/`, or `validate-workflow-contracts.py` | `ci_validator` from `[tool.diffrat.checks]` when configured (no default command) |
 | `src/diffrat/<module>.py` | `pytest tests/test_<module>.py`, `mypy src/diffrat/<module>.py`, and `bandit -r …` when `bandit` is on PATH |
 | `tests/test_<name>.py` | `pytest tests/test_<name>.py` |
 | other `tests/` files | `pytest tests` |
@@ -292,7 +292,8 @@ Invalid content-rule regex → stderr warning and skip; review continues.
 ### `[tool.diffrat.checks]`
 
 Map check code → command string (no `shell=True`). In v1, only `ci_validator`
-may be overridden.
+may be configured. Without this entry, CI/workflow path changes still produce a
+Focus/Risk warning, but `--check` does not run a project-specific validator.
 
 ```toml
 [tool.diffrat.checks]

@@ -105,6 +105,32 @@ def test_analyze_diff_ci_workflow_paths_hint() -> None:
     ci_hints = [hint for hint in result.hints if hint.code == "ci_workflow_paths"]
     assert len(ci_hints) == 1
     assert "ci/validate-workflow-contracts.py" in ci_hints[0].message
+    assert "review CI/workflow changes carefully" in ci_hints[0].message
+    assert "validate-workflow-contracts.py --mode project" not in ci_hints[0].message
+
+
+def test_analyze_diff_ci_workflow_paths_hint_includes_configured_command() -> None:
+    from diffrat.config import DiffratConfig
+
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="ci/validate-workflow-contracts.py",
+                additions=2,
+                deletions=1,
+                binary=False,
+            ),
+        )
+    )
+    config = DiffratConfig(
+        checks={"ci_validator": "python ci/validate-workflow-contracts.py --mode project"},
+        content_rules=(),
+    )
+
+    result = analyze_diff(summary, config=config)
+
+    ci_hints = [hint for hint in result.hints if hint.code == "ci_workflow_paths"]
+    assert len(ci_hints) == 1
     assert (
         "python ci/validate-workflow-contracts.py --mode project"
         in ci_hints[0].message
@@ -289,6 +315,7 @@ def test_analyze_diff_workflow_without_ci_validator_hint() -> None:
     assert len(ci_hints) == 1
     assert ".github/workflows/validate-workflow-contracts.yml" in ci_hints[0].message
     assert "confirm workflow contracts are validated" in ci_hints[0].message
+    assert "validate-workflow-contracts.py --mode project" not in ci_hints[0].message
 
 
 def test_analyze_diff_no_workflow_without_ci_validator_when_ci_changed() -> None:
