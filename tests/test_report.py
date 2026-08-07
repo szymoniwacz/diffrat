@@ -213,3 +213,44 @@ def test_render_review_report_omits_llm_analysis_when_absent() -> None:
     report = render_review_report(summary)
 
     assert "LLM analysis" not in report
+
+
+def test_render_review_report_brief_omits_changes_section() -> None:
+    from diffrat.diff_parser import DiffContent, DiffHunk, FileDiffContent
+
+    summary = DiffSummary(
+        files=(FileChange(path="README.md", additions=1, deletions=0, binary=False),)
+    )
+    diff_content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="README.md",
+                hunks=(DiffHunk(header="@@ -1 +1 @@", lines=("+extra line",)),),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+    git_context = GitContext(
+        branch="feature",
+        base_ref="main",
+        commit_count=1,
+        commits=(GitCommitInfo(short_hash="abc1234", subject="add brief"),),
+    )
+
+    report = render_review_report(
+        summary,
+        git_context=git_context,
+        diff_content=diff_content,
+        brief=True,
+    )
+
+    assert "Git context" in report
+    assert "Summary" in report
+    assert "Files" in report
+    assert "Review order" in report
+    assert "Focus / Risk" in report
+    assert "Changes" not in report
+    assert "+extra line" not in report
+    assert report.index("Review order") < report.index("Focus / Risk")

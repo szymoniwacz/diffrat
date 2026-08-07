@@ -67,6 +67,41 @@ def test_render_review_json_includes_changes() -> None:
     assert payload["changes"]["files"][0]["hunks"][0]["lines"] == ["+extra line"]
 
 
+def test_render_review_json_brief_empties_changes_files() -> None:
+    from diffrat.diff_parser import DiffContent, DiffHunk, FileDiffContent
+
+    summary = DiffSummary(
+        files=(FileChange(path="README.md", additions=1, deletions=0, binary=False),)
+    )
+    diff_content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="README.md",
+                hunks=(DiffHunk(header="@@ -1 +1 @@", lines=("+extra line",)),),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+    payload = json.loads(
+        render_review_json(
+            summary,
+            mode="unstaged",
+            diff_content=diff_content,
+            brief=True,
+        )
+    )
+
+    assert payload["summary"]["file_count"] == 1
+    assert payload["review_order"] == ["README.md"]
+    assert payload["focus_risk"]
+    assert payload["changes"]["limits"] == {"max_files": 20, "max_lines_per_file": 100}
+    assert payload["changes"]["truncated_files"] is False
+    assert payload["changes"]["files"] == []
+
+
 def test_render_review_json_includes_categories_and_focus_risk() -> None:
     summary = DiffSummary(
         files=(
