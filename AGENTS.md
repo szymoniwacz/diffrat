@@ -12,6 +12,11 @@ submodule `.ai-template/` (`ai-project-template`). Run
 `./scripts/setup-ai-workflow.sh` after clone to materialize `.ai/`.
 See `docs/ai-workflow-setup.md`.
 
+Cursor Goal/Project Executor automations must **not** expect
+`.ai/automation/*.md` on `origin/main`. Use the Diffrat public loaders under
+`docs/ai-workflow/` and resolve the full runtime from materialized `.ai/` or
+`.ai-template/` (D-009).
+
 **1.0.0** on `main` is the first product release: `diffrat review` (modes, JSON,
 hunks, Focus/Risk hints, optional `--check`, optional Phase 3 LLM via
 `DIFFRAT_LLM_*` per D-005 / ADR-0001). Phase 4 integrations (CI bots, GitHub App)
