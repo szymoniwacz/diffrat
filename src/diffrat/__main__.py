@@ -67,6 +67,16 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     review_parser.add_argument(
+        "--brief",
+        action="store_true",
+        help=(
+            "Triage-first report: include Git context (when applicable), Summary, "
+            "Files, Review order, and Focus/Risk, but omit the Changes (hunks) "
+            "section. With --json, changes.files is empty (limits retained). "
+            "Mutually exclusive with --hunks-for."
+        ),
+    )
+    review_parser.add_argument(
         "--json",
         action="store_true",
         help=(
@@ -118,6 +128,7 @@ def main(argv: list[str] | None = None) -> int:
             staged=args.staged,
             base=args.base,
             range_spec=args.range_spec,
+            brief=args.brief,
             json_output=args.json,
             run_checks_flag=args.check,
             fail_on=args.fail_on,

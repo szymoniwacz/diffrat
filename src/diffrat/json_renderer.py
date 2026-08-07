@@ -47,6 +47,7 @@ def render_review_json(
     check_results: list[CheckResult] | None = None,
     fail_on_requested: list[str] | None = None,
     fail_on_matched: list[str] | None = None,
+    brief: bool = False,
 ) -> str:
     """Render a review report as a JSON document for stdout."""
     result = (
@@ -60,6 +61,26 @@ def render_review_json(
     )
     sorted_paths = [entry[0].path for entry in sorted_entries]
     review_order = [entry[0].path for entry in review_order_entries(sorted_entries)]
+
+    if brief:
+        changes_payload: dict[str, object] = {
+            "limits": {
+                "max_files": MAX_CHANGE_FILES,
+                "max_lines_per_file": (
+                    changes_limits_max_lines_per_file
+                    if changes_limits_max_lines_per_file is not None
+                    else MAX_LINES_PER_FILE
+                ),
+            },
+            "truncated_files": False,
+            "files": [],
+        }
+    else:
+        changes_payload = _serialize_changes(
+            diff_content,
+            sort_paths=sorted_paths,
+            max_lines_per_file_limit=changes_limits_max_lines_per_file,
+        )
 
     payload: dict[str, object] = {
         "schema_version": JSON_SCHEMA_VERSION,
@@ -85,11 +106,7 @@ def render_review_json(
             _serialize_focus_risk_hint(hint)
             for hint in sort_hints(list(result.hints))
         ],
-        "changes": _serialize_changes(
-            diff_content,
-            sort_paths=sorted_paths,
-            max_lines_per_file_limit=changes_limits_max_lines_per_file,
-        ),
+        "changes": changes_payload,
     }
 
     if check_results is not None:

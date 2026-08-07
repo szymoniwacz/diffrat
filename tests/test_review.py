@@ -595,3 +595,88 @@ def test_run_review_default_unchanged_without_hunks_for(
     assert "Review order" in default_output
     assert "Changes" in default_output
     assert "+extra line" in default_output
+
+
+def test_run_review_brief_omits_changes_keeps_triage_sections(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(staged=False, brief=True, cwd=str(git_repo_with_changes))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+    assert "Summary" in captured.out
+    assert "Files" in captured.out
+    assert "Review order" in captured.out
+    assert "Focus / Risk" in captured.out
+    assert "Changes" not in captured.out
+    assert "+extra line" not in captured.out
+
+
+def test_run_review_brief_json_empties_changes_files(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        brief=True,
+        json_output=True,
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+    payload = json.loads(captured.out)
+    assert payload["schema_version"] == JSON_SCHEMA_VERSION
+    assert payload["summary"]["file_count"] == 1
+    assert payload["review_order"]
+    assert payload["focus_risk"]
+    assert payload["changes"]["files"] == []
+    assert payload["changes"]["limits"]["max_files"] == 20
+
+
+def test_run_review_brief_with_base(
+    git_repo_with_feature_branch: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        base="main",
+        brief=True,
+        cwd=str(git_repo_with_feature_branch),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+    assert "Git context" in captured.out
+    assert "Review order" in captured.out
+    assert "Focus / Risk" in captured.out
+    assert "Changes" not in captured.out
+
+
+def test_run_review_brief_with_hunks_for_errors(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(
+        staged=False,
+        brief=True,
+        hunks_for="README.md",
+        cwd=str(git_repo_with_changes),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_ERROR
+    assert captured.out == ""
+    assert "cannot use --brief with --hunks-for" in captured.err
+
+
+def test_run_review_default_still_includes_changes_without_brief(
+    git_repo_with_changes: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = run_review(staged=False, brief=False, cwd=str(git_repo_with_changes))
+
+    captured = capsys.readouterr()
+    assert exit_code == EXIT_SUCCESS
+    assert "Changes" in captured.out
+    assert "+extra line" in captured.out

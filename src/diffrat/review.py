@@ -64,6 +64,7 @@ def run_review(
     staged: bool = False,
     base: str | None = None,
     range_spec: str | None = None,
+    brief: bool = False,
     json_output: bool = False,
     run_checks_flag: bool = False,
     fail_on: str | None = None,
@@ -79,6 +80,9 @@ def run_review(
         return EXIT_ERROR
     if base is not None and range_spec is not None:
         print("cannot use --base with --range", file=sys.stderr)
+        return EXIT_ERROR
+    if brief and hunks_for is not None:
+        print("cannot use --brief with --hunks-for", file=sys.stderr)
         return EXIT_ERROR
 
     fail_on_codes: list[str] | None = None
@@ -162,13 +166,14 @@ def run_review(
             mode=mode,
             git_context=git_context,
             analysis=analysis,
-            diff_content=changes_diff_content,
+            diff_content=None if brief else changes_diff_content,
             changes_limits_max_lines_per_file=(
                 HUNKS_FOR_MAX_LINES_PER_FILE if hunks_for is not None else None
             ),
             check_results=check_results,
             fail_on_requested=fail_on_codes,
             fail_on_matched=matched_codes,
+            brief=brief,
         )
     else:
         output = render_review_report(
@@ -177,6 +182,7 @@ def run_review(
             analysis=analysis,
             diff_content=changes_diff_content,
             check_results=check_results,
+            brief=brief,
         )
 
     sys.stdout.write(output)

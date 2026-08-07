@@ -45,6 +45,8 @@ def test_review_help_documents_empty_diff_exit(
     assert "--base" in captured.out
     assert "--range" in captured.out
     assert "--json" in captured.out
+    assert "--brief" in captured.out
+    assert "Triage-first report" in captured.out
     assert "--check" in captured.out
     assert "--fail-on" in captured.out
     assert "--hunks-for" in captured.out

@@ -134,6 +134,10 @@ diffrat review --range main..feature
 # Structured JSON for scripting
 diffrat review --base main --json
 
+# Triage-first report (omit Changes / hunk payloads)
+diffrat review --base main --brief
+diffrat review --base main --brief --json
+
 # Path-scoped local validators/tests for touched files
 diffrat review --base main --check
 
@@ -146,6 +150,11 @@ format). When LLM analysis is enabled and succeeds, JSON includes additive
 Errors and empty-diff messages go to stderr with the same exit codes as the
 text report.
 
+`--brief` keeps Git context (when applicable), Summary, Files, Review order, and
+Focus/Risk, but omits the text **Changes** section. With `--json`, `changes.files`
+is empty while `changes.limits` remains. `--brief` works with `--staged`,
+`--base`, and `--range`. It is mutually exclusive with `--hunks-for`.
+
 ## Status
 
 **1.0.0** is the first product release on PyPI as
@@ -153,7 +162,7 @@ text report.
 see D-008):
 
 - `diffrat review` with unstaged, `--staged`, `--base`, and `--range`; optional
-  `--json`
+  `--json` and `--brief` (triage without hunks)
 - Bounded hunks, git context, file categories, deterministic Focus/Risk hints
 - Optional `--check` for path-scoped local validators and tests
 - Optional LLM analysis when `DIFFRAT_LLM_*` is set (ADR-0001 / D-005);
@@ -197,8 +206,9 @@ as `possible_secret`, `debug_leftover`, `dangerous_call`, `broad_exception`,
 
 ## Changes section (diff hunks)
 
-Text reports include a **Changes** section with unified-diff hunks. JSON has a
-top-level `changes` object. Output is bounded:
+Text reports include a **Changes** section with unified-diff hunks unless
+`--brief` is set. JSON has a top-level `changes` object (`changes.files` is empty
+under `--brief`). Output is bounded:
 
 | Limit | Value |
 |---|---|
@@ -211,7 +221,7 @@ Limits appear in `diffrat review --help` and JSON `changes.limits`.
 
 `--hunks-for=<path>` shows **Changes** for one repository-relative path only
 (500-line budget). **Files**, **Review order**, and **Focus / Risk** still
-cover the full diff. Missing path → exit `1`.
+cover the full diff. Missing path → exit `1`. Cannot combine with `--brief`.
 
 ```bash
 diffrat review --staged --hunks-for=src/foo.py
