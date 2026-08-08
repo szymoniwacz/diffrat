@@ -22,7 +22,9 @@ This file protects the project from uncontrolled expansion.
 
 - Web UI, GitHub App, or hosted review service
 - CI/CD integration and PR comment bots (deferred to Phase 4)
-- Full-repository or cross-repo analysis
+- Full-repository or cross-repo analysis (architecture map and module-boundary
+  review captured as a deferred idea in
+  `.ai/ideas/active/001-architecture-map-and-review.md`)
 - Automatic merge, approval, or policy enforcement
 - Shared or remote rule packs beyond repo-local TOML (D-006 partial)
 - Large rewrites without explicit approval

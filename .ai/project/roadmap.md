@@ -109,3 +109,6 @@ Outputs:
 - Custom rule packs for domain-specific review focus — **partially delivered**
   (v1 `content_rules` declarative regex on added hunk lines; shared/remote
   packs still deferred)
+- Architecture map and review — **deferred** (pre-map repo structure for
+  faster architectural diff review; on-the-fly mapping fallback; see
+  `.ai/ideas/active/001-architecture-map-and-review.md`)
