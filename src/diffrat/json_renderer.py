@@ -128,7 +128,11 @@ def render_review_json(
         }
 
     if result.llm_findings is not None:
+        payload["llm_status"] = "ok"
         payload["llm_findings"] = result.llm_findings
+    elif result.llm_error is not None:
+        payload["llm_status"] = "failed"
+        payload["llm_error"] = result.llm_error
 
     if git_context is not None:
         if git_context.range_spec is not None:

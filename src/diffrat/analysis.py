@@ -220,6 +220,7 @@ class AnalysisResult:
     hints: tuple[FocusRiskHint, ...]
     risk_scores: tuple[int, ...]
     llm_findings: str | None = None
+    llm_error: str | None = None
 
 
 def categorize_path(path: str) -> FileCategory:
