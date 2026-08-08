@@ -35,8 +35,10 @@ def run_analysis(
         config=config,
     )
     if resolved_llm.enabled:
-        llm_content = run_llm_analysis(resolved_llm, diff_content=diff_content)
-        if llm_content is not None:
-            result = replace(result, llm_findings=llm_content)
+        llm_result = run_llm_analysis(resolved_llm, diff_content=diff_content)
+        if llm_result.findings is not None:
+            result = replace(result, llm_findings=llm_result.findings)
+        elif llm_result.error is not None:
+            result = replace(result, llm_error=llm_result.error)
     return result
 

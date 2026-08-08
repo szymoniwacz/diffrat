@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `docs/llm.md` — copy-paste OpenAI and Ollama setup, env table, troubleshooting,
+  and JSON LLM field shapes
+- Additive JSON `llm_status` / `llm_findings` on LLM success and
+  `llm_status` / `llm_error` on LLM failure (`schema_version` unchanged)
+- Actionable stderr for common LLM misconfiguration (missing base URL for
+  Ollama, invalid API key, bad base URL, connection refused)
+
+### Changed
+
+- README optional LLM section shortened with link to `docs/llm.md`
+- `diffrat review --help` epilog references `docs/llm.md`
+
 ## [1.0.0] - 2026-07-31
 
 First product release: v1 review CLI core plus optional Phase 3 LLM analysis.

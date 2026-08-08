@@ -53,3 +53,4 @@ def test_review_help_documents_empty_diff_exit(
     assert "schema_version" in captured.out
     assert "20 files" in captured.out
     assert "100 diff lines" in captured.out
+    assert "docs/llm.md" in captured.out

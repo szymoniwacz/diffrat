@@ -270,6 +270,29 @@ def test_render_review_json_includes_llm_findings_when_present() -> None:
     )
 
     assert payload["llm_findings"] == "LLM narrative."
+    assert payload["llm_status"] == "ok"
+
+
+def test_render_review_json_includes_llm_error_when_present() -> None:
+    from dataclasses import replace
+
+    from diffrat.analysis import analyze_diff
+
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=1, deletions=0, binary=False),)
+    )
+    analysis = replace(
+        analyze_diff(summary),
+        llm_error="LLM authentication failed (HTTP 401)",
+    )
+
+    payload = json.loads(
+        render_review_json(summary, mode="unstaged", analysis=analysis)
+    )
+
+    assert payload["llm_status"] == "failed"
+    assert payload["llm_error"] == "LLM authentication failed (HTTP 401)"
+    assert "llm_findings" not in payload
 
 
 def test_render_review_json_omits_llm_findings_when_absent() -> None:
@@ -280,3 +303,5 @@ def test_render_review_json_omits_llm_findings_when_absent() -> None:
     payload = json.loads(render_review_json(summary, mode="unstaged"))
 
     assert "llm_findings" not in payload
+    assert "llm_status" not in payload
+    assert "llm_error" not in payload
