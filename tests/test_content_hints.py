@@ -221,6 +221,39 @@ def test_content_hints_debug_leftover_negative() -> None:
     assert content_focus_risk_hints(content) == []
 
 
+def test_content_hints_debug_leftover_ruby_binding_pry() -> None:
+    content = _single_file_content("app/models/user.rb", "binding.pry")
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "debug_leftover"
+    assert hints[0].path == "app/models/user.rb"
+    assert hints[0].line == 1
+
+
+def test_content_hints_debug_leftover_ruby_byebug() -> None:
+    content = _single_file_content("lib/worker.rb", "byebug")
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "debug_leftover"
+    assert hints[0].path == "lib/worker.rb"
+
+
+def test_content_hints_debug_leftover_ruby_puts_call_like() -> None:
+    content = _single_file_content("app/services/report.rb", 'puts("debug")')
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "debug_leftover"
+
+
+def test_content_hints_debug_leftover_ruby_puts_not_substring() -> None:
+    content = _single_file_content("app/services/report.rb", "outputs = compute()")
+
+    assert content_focus_risk_hints(content) == []
+
+
 def test_content_hints_dangerous_call_positive() -> None:
     content = _single_file_content("src/diffrat/shell.py", "subprocess.run(cmd, shell=True)")
 
