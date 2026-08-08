@@ -20,6 +20,10 @@ OVERLAY="$(mktemp -d)"
 trap 'rm -rf "${OVERLAY}"' EXIT
 
 cp -a "${AI}/project" "${OVERLAY}/"
+if git -C "${ROOT}" ls-files -- .ai/ideas/ 2>/dev/null | grep -q .; then
+  mkdir -p "${OVERLAY}"
+  (cd "${ROOT}" && git archive HEAD .ai/ideas) | tar -x -C "${OVERLAY}"
+fi
 cp "${AI}/stack-profiles/diffrat-cli.md" "${OVERLAY}/"
 cp "${AI}/architecture/adr-0001-llm-analysis-layer.md" "${OVERLAY}/"
 cp "${AI}/docs/architecture-direction.md" "${OVERLAY}/"
@@ -29,6 +33,10 @@ mkdir -p "${AI}"
 rsync -a --delete "${TEMPLATE}/.ai/" "${AI}/"
 
 cp -a "${OVERLAY}/project" "${AI}/"
+if [[ -d "${OVERLAY}/.ai/ideas" ]]; then
+  mkdir -p "${AI}/ideas"
+  cp -a "${OVERLAY}/.ai/ideas/." "${AI}/ideas/"
+fi
 mkdir -p "${AI}/stack-profiles" "${AI}/architecture" "${AI}/docs"
 cp "${OVERLAY}/diffrat-cli.md" "${AI}/stack-profiles/"
 cp "${OVERLAY}/adr-0001-llm-analysis-layer.md" "${AI}/architecture/"

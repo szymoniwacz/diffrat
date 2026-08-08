@@ -46,6 +46,8 @@ GitHub App) remain deferred.
 
 - CI bots, GitHub App (Phase 4)
 - Shared/remote rule packs beyond repo-local TOML
+- Architecture map and review (pre-map or on-the-fly; see
+  `.ai/ideas/active/001-architecture-map-and-review.md`)
 
 ## Core workflows (intended)
 
