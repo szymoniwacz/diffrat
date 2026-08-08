@@ -12,7 +12,7 @@ The GitHub About section uses the same pitch: local git diff review triage CLI.
 ## Sample report
 
 Example of `diffrat review --base main` on a small feature branch (sections and
-formatting match shipped 1.0.0 text output):
+formatting match current text output):
 
 ```text
 Review Report
@@ -34,11 +34,17 @@ Lines added: 83
 Lines deleted: 15
 Total lines changed: 98
 
+Review quality
+--------------
+- Understand in seconds: ok
+- One thing well: ok
+- Safe to change in six months: warn (tests_touched)
+
 Files
 -----
 source
   src/diffrat/scoring.py  [source]  risk=17  +28 -6
-  src/diffrat/cli.py  [source]  risk=7  +12 -3
+  src/diffrat/review.py  [source]  risk=7  +12 -3
 tests
   tests/test_scoring.py  [tests]  risk=19  +35 -4
 docs
@@ -48,7 +54,7 @@ Review order
 ------------
 1. tests/test_scoring.py  [tests]  (+35 -4 lines)
 2. src/diffrat/scoring.py  [source]  (+28 -6 lines)
-3. src/diffrat/cli.py  [source]  (+12 -3 lines)
+3. src/diffrat/review.py  [source]  (+12 -3 lines)
 4. README.md  [docs]  (+8 -2 lines)
 
 Changes
@@ -65,7 +71,7 @@ src/diffrat/scoring.py
 +def _config_boost(path: str) -> int:
 +    return RISK_WEIGHT_CONFIG_CATEGORY if path.endswith('.toml') else 0
 
-src/diffrat/cli.py
+src/diffrat/review.py
 @@ -88,6 +88,9 @@
      parser.add_argument("--json", action="store_true")
 +    parser.add_argument(
@@ -166,9 +172,9 @@ is empty while `changes.limits` remains. `--brief` works with `--staged`,
 
 ## Status
 
-**1.0.0** is the first product release on PyPI as
+**1.1.0** is the current release on PyPI as
 [`diffrat`](https://pypi.org/project/diffrat/) (formerly developed as Numbat;
-see D-008):
+see D-008). **1.0.0** was the first product release:
 
 - `diffrat review` with unstaged, `--staged`, `--base`, and `--range`; optional
   `--json` and `--brief` (triage without hunks)
@@ -252,7 +258,7 @@ diffrat review --base main --hunks-for=src/foo.py --json
 
 | Touched path pattern | Command run |
 |---|---|
-| `ci/`, `.github/workflows/`, or `validate-workflow-contracts.py` | `ci_validator` from `[tool.diffrat.checks]` when configured (no default command) |
+| `ci/` or `.github/workflows/` | `ci_validator` from `[tool.diffrat.checks]` when configured (no default command) |
 | `src/<package>/<module>.py` | `pytest tests/test_<module>.py`, `mypy src/<package>/<module>.py`, and `bandit -r …` when `bandit` is on PATH |
 | `tests/test_<name>.py` | `pytest tests/test_<name>.py` |
 | other `tests/` files | `pytest tests` |

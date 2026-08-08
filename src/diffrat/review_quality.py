@@ -76,7 +76,6 @@ CODE_TO_PILLAR: dict[str, PillarId] = {
     "source_without_tests": "maintainable",
     "source_heavy_without_tests": "maintainable",
     "ci_without_tests": "maintainable",
-    "workflow_without_ci_validator": "maintainable",
     "missing_test_file": "maintainable",
     "lockfile_without_manifest": "maintainable",
     "manifest_without_lockfile": "maintainable",

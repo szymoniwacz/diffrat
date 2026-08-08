@@ -39,7 +39,6 @@ HINT_SEVERITY_REGISTRY: dict[str, HintSeverity] = {
     "source_without_tests": "warn",
     "tests_only": "warn",
     "ci_without_tests": "warn",
-    "workflow_without_ci_validator": "warn",
     "generated_file_touched": "warn",
     "many_commits": "warn",
     "wip_commits": "warn",

@@ -113,7 +113,6 @@ Unknown codes fall back to **Safe to change in six months**.
 | `source_without_tests` | warn | Source changed without tests in diff |
 | `source_heavy_without_tests` | warn | ≥ 40 source additions, ≥ 75% of total, no tests |
 | `ci_without_tests` | warn | CI changed without tests in diff |
-| `workflow_without_ci_validator` | warn | Workflow changed without configured validator |
 | `missing_test_file` | warn | Expected test file missing |
 | `lockfile_without_manifest` | warn | Lockfile without manifest |
 | `manifest_without_lockfile` | warn | Manifest without lockfile |

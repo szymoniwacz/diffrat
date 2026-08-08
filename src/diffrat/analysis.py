@@ -421,7 +421,6 @@ def _build_hints(
             preview = f"{preview}, +{len(ci_workflow_paths) - 3} more"
         has_ci_validator_in_diff = any(
             _is_ci_directory_path(file_change.path)
-            or file_change.path.endswith("validate-workflow-contracts.py")
             for file_change in summary.files
         )
         if has_ci_validator_in_diff:
@@ -910,7 +909,6 @@ def is_python_source_or_test_path(path: str) -> bool:
 def _is_ci_workflow_validator_path(path: str) -> bool:
     posix = PurePosixPath(path.replace("\\", "/"))
     parts_lower = tuple(part.lower() for part in posix.parts)
-    name_lower = posix.name.lower()
 
     if parts_lower and parts_lower[0] == "ci":
         return True
@@ -919,8 +917,6 @@ def _is_ci_workflow_validator_path(path: str) -> bool:
         and parts_lower[0] == ".github"
         and parts_lower[1] == "workflows"
     ):
-        return True
-    if name_lower == "validate-workflow-contracts.py":
         return True
     return False
 

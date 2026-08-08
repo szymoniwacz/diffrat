@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-08
+
 ### Added
 
+- `diffrat review --brief` — triage-first text report (omits Changes hunks);
+  JSON empties `changes.files` under `--brief`
+- **Review quality** section in text reports and additive `review_quality` in
+  `--json` — three pillars rolled up from Focus/Risk hints
+  (`docs/review-quality.md`)
+- Ruby debug leftover hints: `binding.pry`, `byebug`, call-like `puts(` in
+  `.rb` files (`debug_leftover`)
+- `docs/demo/` — sample brief report and 5-minute presenter runbook
 - `docs/llm.md` — copy-paste OpenAI and Ollama setup, env table, troubleshooting,
   and JSON LLM field shapes
 - Additive JSON `llm_status` / `llm_findings` on LLM success and
@@ -18,8 +28,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- README repositioned as local **review triage** CLI with sample report
 - README optional LLM section shortened with link to `docs/llm.md`
 - `diffrat review --help` epilog references `docs/llm.md`
+- Default CI/workflow Focus/Risk hints no longer embed dogfood validator commands;
+  `ci_validator` runs only when configured in `[tool.diffrat.checks]`
+- `--check` path mapping generalized for any `src/<package>/` layout (not
+  hardcoded to this repository)
+- PyPI classifier: Development Status Beta (was Production/Stable)
+
+### Fixed
+
+- Removed product-code hardcoding of `validate-workflow-contracts.py` filename;
+  CI hints rely on `ci/` and `.github/workflows/` path patterns plus repo config
 
 ## [1.0.0] - 2026-07-31
 
@@ -70,5 +91,6 @@ project name, CLI command, and import package match (`diffrat`). PyPI held a
   `.diffrat.toml`, and `DIFFRAT_LLM_*` (old `NUMBAT_*` / `[tool.numbat]` no
   longer read)
 
-[Unreleased]: https://github.com/szymoniwacz/diffrat/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/szymoniwacz/diffrat/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/szymoniwacz/diffrat/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/szymoniwacz/diffrat/releases/tag/v1.0.0
