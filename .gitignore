@@ -25,6 +25,8 @@ venv/
 .ai/*
 !.ai/project/
 !.ai/project/**
+!.ai/ideas/
+!.ai/ideas/**
 !.ai/stack-profiles/
 .ai/stack-profiles/*
 !.ai/stack-profiles/diffrat-cli.md
