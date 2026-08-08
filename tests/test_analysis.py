@@ -542,6 +542,31 @@ def test_analyze_diff_missing_test_file_hint_when_test_absent(tmp_path: Path) ->
     assert "tests/test_foo.py" in hint.message
 
 
+def test_analyze_diff_missing_test_file_for_non_diffrat_src_package(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "src" / "otherpkg").mkdir(parents=True)
+    (tmp_path / "src" / "otherpkg" / "widget.py").write_text("x = 1\n")
+
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="src/otherpkg/widget.py",
+                additions=1,
+                deletions=0,
+                binary=False,
+            ),
+        )
+    )
+
+    result = analyze_diff(summary, cwd=str(tmp_path))
+
+    assert any(hint.code == "missing_test_file" for hint in result.hints)
+    hint = next(hint for hint in result.hints if hint.code == "missing_test_file")
+    assert "tests/test_widget.py" in hint.message
+    assert hint.path == "src/otherpkg/widget.py"
+
+
 def test_analyze_diff_no_missing_test_file_when_test_exists(tmp_path: Path) -> None:
     (tmp_path / "src" / "diffrat").mkdir(parents=True)
     (tmp_path / "tests").mkdir()
