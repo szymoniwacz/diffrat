@@ -214,6 +214,16 @@ call-like `puts(`), `dangerous_call`, `broad_exception`,
 `hardcoded_url_or_ip`, plus validator typo patterns (e.g.
 `PROJECT_EXECUTOR_COMMENT_FILTER`). Full code list: `src/diffrat/scoring.py`.
 
+## Review quality
+
+After **Summary**, text reports include a **Review quality** section that rolls
+Focus/Risk hints into three pillars (understand in seconds, one thing well,
+safe to change in six months). JSON adds `review_quality.pillars[]` with per-pillar
+`status` (`ok` / `warn` / `risk`) and matched codes.
+
+Pillar definitions, status rules, and the full code→pillar table:
+[`docs/review-quality.md`](docs/review-quality.md).
+
 ## Changes section (diff hunks)
 
 Text reports include a **Changes** section with unified-diff hunks unless
