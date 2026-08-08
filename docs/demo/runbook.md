@@ -66,7 +66,8 @@ Optional JSON for tooling demos:
 diffrat review --base main --brief --json
 ```
 
-Point at **Review order**, then **Focus / Risk**. Call out product value with
+Point at **Review quality** (three pillars: understand, focus, maintainability),
+then **Review order**, then **Focus / Risk**. Call out product value with
 hints such as `possible_secret`, `dangerous_call`, `wip_commits`, and
 `mixed_concerns`. If the live branch is quiet, open
 [`sample-brief-report.txt`](sample-brief-report.txt) and walk the same
@@ -84,7 +85,8 @@ signal for humans or CI — not an approval.
 ## Minute 4–5: What to say aloud
 
 1. **Problem:** Reviewers drown in unordered diffs; risky lines hide in noise.
-2. **Move:** `diffrat review --base main --brief` → Review order + Focus/Risk.
+2. **Move:** `diffrat review --base main --brief` → Review quality + Review order
+   + Focus/Risk.
 3. **Gate:** `--fail-on=…` fails the command when those codes appear.
 4. **Boundary:** Diffrat helps you decide where to look. A human still owns
    approve/merge. Do not pitch auto-approve.
@@ -97,7 +99,7 @@ for maintainers, not the opening demo path.
 - [ ] Installed / version shown
 - [ ] Non-empty diff or sample report ready
 - [ ] Ran `--brief` (or walked the sample)
-- [ ] Named Review order + at least one Focus/Risk finding
+- [ ] Named Review quality + Review order + at least one Focus/Risk finding
 - [ ] Showed or described `--fail-on`
 - [ ] Closed on triage, not auto-approve
 - [ ] Did **not** open with `--check` or AI-workflow setup

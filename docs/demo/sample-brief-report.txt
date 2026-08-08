@@ -22,6 +22,12 @@ Lines added: 74
 Lines deleted: 11
 Total lines changed: 85
 
+Review quality
+--------------
+- Understand in seconds: ok
+- One thing well: warn (mixed_concerns, wip_commits)
+- Safe to change in six months: risk (dangerous_call, possible_secret, tests_touched)
+
 Files
 -----
 source
