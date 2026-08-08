@@ -242,7 +242,7 @@ diffrat review --base main --hunks-for=src/foo.py --json
 | Touched path pattern | Command run |
 |---|---|
 | `ci/`, `.github/workflows/`, or `validate-workflow-contracts.py` | `ci_validator` from `[tool.diffrat.checks]` when configured (no default command) |
-| `src/diffrat/<module>.py` | `pytest tests/test_<module>.py`, `mypy src/diffrat/<module>.py`, and `bandit -r …` when `bandit` is on PATH |
+| `src/<package>/<module>.py` | `pytest tests/test_<module>.py`, `mypy src/<package>/<module>.py`, and `bandit -r …` when `bandit` is on PATH |
 | `tests/test_<name>.py` | `pytest tests/test_<name>.py` |
 | other `tests/` files | `pytest tests` |
 | `pyproject.toml` | `ruff check .` and `pip-audit` when available |

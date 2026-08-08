@@ -680,7 +680,7 @@ def _missing_test_file_hints(
     *,
     cwd: str | None,
 ) -> list[FocusRiskHint]:
-    """Emit hints when a changed src/diffrat module lacks a mapped test file."""
+    """Emit hints when a changed src/<package> module lacks a mapped test file."""
     if cwd is None:
         return []
 
@@ -689,13 +689,7 @@ def _missing_test_file_hints(
 
     for file_change in summary.files:
         posix = PurePosixPath(file_change.path.replace("\\", "/"))
-        parts = posix.parts
-        if (
-            len(parts) >= 2
-            and parts[0] == "src"
-            and parts[1] == "diffrat"
-            and posix.suffix == ".py"
-        ):
+        if is_src_package_path(file_change.path) and posix.suffix == ".py":
             test_rel = f"tests/test_{posix.stem}.py"
             if not (root / test_rel).exists():
                 hints.append(
@@ -871,11 +865,18 @@ def is_ci_workflow_validator_path(path: str) -> bool:
     return _is_ci_workflow_validator_path(path)
 
 
+def is_src_package_path(path: str) -> bool:
+    """Return True for paths under a src/<package>/ layout tree."""
+    posix = PurePosixPath(path.replace("\\", "/"))
+    parts = posix.parts
+    return len(parts) >= 3 and parts[0] == "src" and bool(parts[1])
+
+
 def is_python_source_or_test_path(path: str) -> bool:
     """Return True when a changed path should trigger pytest checks."""
     posix = PurePosixPath(path.replace("\\", "/"))
     parts = posix.parts
-    if len(parts) >= 2 and parts[0] == "src" and parts[1] == "diffrat":
+    if is_src_package_path(path):
         return True
     return bool(parts and parts[0] == "tests")
 
