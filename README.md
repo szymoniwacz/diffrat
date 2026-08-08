@@ -7,6 +7,8 @@ layer only when you configure it.
 Use it before opening a PR, or when reviewing a branch, to get a ranked file
 list, Focus/Risk hints, and bounded hunks without leaving the terminal.
 
+The GitHub About section uses the same pitch: local git diff review triage CLI.
+
 ## Sample report
 
 Example of `diffrat review --base main` on a small feature branch (sections and
