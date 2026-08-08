@@ -30,6 +30,10 @@ _DEBUG_LEFTOVER_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\bbreakpoint\s*\(\s*\)"),
     re.compile(r"\bdebugger\b", re.IGNORECASE),
     re.compile(r"\bconsole\.log\s*\("),
+    re.compile(r"\bbinding\.pry\b"),
+    re.compile(r"\bbyebug\b"),
+    # Call-like `puts(...)` only; bare `puts x` is too noisy in Ruby prose.
+    re.compile(r"\bputs\s*\("),
     re.compile(r"TODO:\s*remove", re.IGNORECASE),
 )
 

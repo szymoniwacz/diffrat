@@ -200,7 +200,8 @@ files use fixed score `5`).
 Common hint themes include large diffs, tests/config/CI touched, security-sensitive
 paths, rename/copy, category composition, generated artifacts, lockfile/manifest
 consistency, git-context signals on branch/range reviews, and content codes such
-as `possible_secret`, `debug_leftover`, `dangerous_call`, `broad_exception`,
+as `possible_secret`, `debug_leftover` (including Ruby `binding.pry` / `byebug` /
+call-like `puts(`), `dangerous_call`, `broad_exception`,
 `hardcoded_url_or_ip`, plus validator typo patterns (e.g.
 `PROJECT_EXECUTOR_COMMENT_FILTER`). Full code list: `src/diffrat/scoring.py`.
 
