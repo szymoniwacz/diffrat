@@ -153,8 +153,9 @@ diffrat review --help
 ```
 
 `--json` writes a structured document to stdout (`schema_version` identifies the
-format). When LLM analysis is enabled and succeeds, JSON includes additive
-`llm_findings`; the key is omitted when LLM is disabled or the request fails.
+format). When LLM is enabled and succeeds, JSON includes `llm_status: "ok"` and
+`llm_findings`; on LLM failure, `llm_status: "failed"` and `llm_error` (see
+[`docs/llm.md`](docs/llm.md)). When LLM is disabled, no `llm_*` keys are present.
 Errors and empty-diff messages go to stderr with the same exit codes as the
 text report.
 
@@ -275,21 +276,17 @@ With `--json`, output includes top-level `fail_on.requested` / `fail_on.matched`
 Offline and deterministic by default (D-005). No API keys required for the
 heuristic report.
 
-### Optional LLM analysis (Phase 3)
+### Optional LLM analysis
 
-Opt-in only. With no `DIFFRAT_LLM_*` variables, Diffrat makes no network
-requests. When provider and API key are set, it sends **diff-scoped** prompts
-to an OpenAI-compatible endpoint. Success adds an **LLM analysis** section /
-`llm_findings` in JSON.
+Opt-in only — no `DIFFRAT_LLM_*` variables means no network calls. When
+configured, Diffrat sends **diff-scoped** prompts to an OpenAI-compatible API
+and adds an **LLM analysis** section / JSON `llm_findings` on success.
 
-| Variable | Required | Purpose |
-|---|---|---|
-| `DIFFRAT_LLM_PROVIDER` | When LLM enabled | Provider id (e.g. `openai`, `ollama`) |
-| `DIFFRAT_LLM_API_KEY` | When LLM enabled | API key or token |
-| `DIFFRAT_LLM_BASE_URL` | Optional | Custom / local OpenAI-compatible base URL |
+Setup (OpenAI, Ollama), env table, JSON failure fields, and troubleshooting:
+[`docs/llm.md`](docs/llm.md).
 
 **Privacy:** diff content leaves the machine only when you set these variables.
-Never commit keys. See ADR-0001 and D-005 in `.ai/project/decisions.md`.
+Never commit keys.
 
 Optional per-repo TOML at the git root (or `cwd`):
 

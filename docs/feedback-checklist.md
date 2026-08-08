@@ -57,7 +57,8 @@ diffrat review --base main --hunks-for=<path-in-diff>
 diffrat review --base main --check
 ```
 
-Optional LLM (only if you choose to send diff-scoped prompts off-machine):
+Optional LLM (only if you choose to send diff-scoped prompts off-machine).
+Copy-paste setup and troubleshooting: [`docs/llm.md`](llm.md).
 
 ```bash
 export DIFFRAT_LLM_PROVIDER=...

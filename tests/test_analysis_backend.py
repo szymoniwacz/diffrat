@@ -9,6 +9,7 @@ import pytest
 from diffrat.analysis import analyze_diff
 from diffrat.analysis_backend import run_analysis
 from diffrat.diff_parser import DiffContent, DiffHunk, DiffSummary, FileChange, FileDiffContent
+from diffrat.llm_client import LlmRunResult
 from diffrat.llm_config import LlmConfig
 
 
@@ -32,7 +33,7 @@ def test_run_analysis_matches_analyze_diff_when_llm_enabled(
 ) -> None:
     monkeypatch.setattr(
         "diffrat.analysis_backend.run_llm_analysis",
-        lambda config, *, diff_content=None: None,
+        lambda config, *, diff_content=None: LlmRunResult(),
     )
 
     summary = DiffSummary(
@@ -63,9 +64,9 @@ def test_run_analysis_invokes_llm_client_when_enabled(
         config: LlmConfig,
         *,
         diff_content: DiffContent | None = None,
-    ) -> str | None:
+    ) -> LlmRunResult:
         calls.append((config, diff_content))
-        return "llm-output"
+        return LlmRunResult(findings="llm-output")
 
     monkeypatch.setattr("diffrat.analysis_backend.run_llm_analysis", fake_run_llm)
 
@@ -89,11 +90,35 @@ def test_run_analysis_invokes_llm_client_when_enabled(
 
     result = run_analysis(summary, diff_content=diff_content, llm_config=llm_config)
 
-    assert analyze_diff(summary) == replace(result, llm_findings=None)
+    assert analyze_diff(summary) == replace(result, llm_findings=None, llm_error=None)
     assert result.llm_findings == "llm-output"
     assert len(calls) == 1
     assert calls[0][0] == llm_config
     assert calls[0][1] == diff_content
+
+
+def test_run_analysis_propagates_llm_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "diffrat.analysis_backend.run_llm_analysis",
+        lambda config, *, diff_content=None: LlmRunResult(
+            error="provider 'ollama' requires DIFFRAT_LLM_BASE_URL"
+        ),
+    )
+
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
+        )
+    )
+    llm_config = LlmConfig(enabled=True, provider="ollama", api_key="local")
+
+    result = run_analysis(summary, llm_config=llm_config)
+
+    assert result.llm_findings is None
+    assert result.llm_error is not None
+    assert "DIFFRAT_LLM_BASE_URL" in result.llm_error
 
 
 def test_run_analysis_loads_llm_config_from_env_by_default(

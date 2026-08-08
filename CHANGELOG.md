@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `docs/llm.md` — copy-paste OpenAI/Ollama setup, troubleshooting, JSON LLM fields
+- Additive JSON `llm_status` / `llm_error` when LLM is enabled and the request fails
+
+### Changed
+
+- Actionable stderr messages for common LLM misconfiguration and HTTP errors
+- README optional LLM section shortened with link to `docs/llm.md`
+
 ## [1.0.0] - 2026-07-31
 
 First product release: v1 review CLI core plus optional Phase 3 LLM analysis.

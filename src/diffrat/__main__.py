@@ -37,7 +37,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Exit codes: 0 success, 1 git/usage error, 2 empty diff, "
             "3 check failure, 4 --fail-on match.\n"
             f"Changes sections show up to {MAX_CHANGE_FILES} files and "
-            f"{MAX_LINES_PER_FILE} diff lines per file."
+            f"{MAX_LINES_PER_FILE} diff lines per file.\n"
+            "Optional LLM via DIFFRAT_LLM_* (see docs/llm.md)."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
