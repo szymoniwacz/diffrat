@@ -56,6 +56,10 @@ _STRING_LITERAL_PATTERN = re.compile(r"""['"]([^'"]+)['"]""")
 
 _HUNK_HEADER_PATTERN = re.compile(r"@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 
+LONG_ADDED_HUNK_THRESHOLD = 40
+
+_ADD_ARGUMENT_PATTERN = re.compile(r"\.add_argument\s*\(")
+
 
 @dataclass(frozen=True)
 class _AddedLine:
@@ -80,6 +84,8 @@ def content_focus_risk_hints(
             continue
         for added in _iter_added_lines(file_diff):
             hints.extend(_hints_for_added_line(added, config=config))
+        hints.extend(_long_added_hunk_hints(file_diff))
+        hints.extend(_cli_flag_without_help_hints(file_diff))
     return hints
 
 
@@ -274,3 +280,84 @@ def _matches_hardcoded_url_or_ip(line: str) -> bool:
         _HARDCODED_URL_PATTERN.search(line) is not None
         or _IPV4_PATTERN.search(line) is not None
     )
+
+
+def _long_added_hunk_hints(file_diff: FileDiffContent) -> list[FocusRiskHint]:
+    hints: list[FocusRiskHint] = []
+    for hunk in file_diff.hunks:
+        added_count = sum(1 for line in hunk.lines if line.startswith("+"))
+        if added_count < LONG_ADDED_HUNK_THRESHOLD:
+            continue
+        start_line = _new_file_start_line(hunk.header)
+        hints.append(
+            focus_risk_hint(
+                code="long_added_hunk",
+                message=(
+                    f"Long added hunk in {file_diff.path}: {added_count} added lines "
+                    f"(threshold >= {LONG_ADDED_HUNK_THRESHOLD}) — consider splitting"
+                ),
+                path=file_diff.path,
+                line=start_line,
+            )
+        )
+    return hints
+
+
+def _is_cli_entry_path(path: str) -> bool:
+    normalized = path.replace("\\", "/")
+    name = normalized.rsplit("/", 1)[-1]
+    if name == "__main__.py":
+        return True
+    if name.endswith("_cli.py"):
+        return True
+    return "/cli/" in normalized
+
+
+def _cli_flag_without_help_hints(file_diff: FileDiffContent) -> list[FocusRiskHint]:
+    if not _is_cli_entry_path(file_diff.path):
+        return []
+
+    hints: list[FocusRiskHint] = []
+    for hunk in file_diff.hunks:
+        added_lines: list[tuple[str, int | None]] = []
+        new_line = _new_file_start_line(hunk.header)
+        for line in hunk.lines:
+            if line.startswith("+"):
+                added_lines.append((line[1:], new_line))
+                if new_line is not None:
+                    new_line += 1
+            elif line.startswith(" "):
+                if new_line is not None:
+                    new_line += 1
+
+        index = 0
+        while index < len(added_lines):
+            text, line_no = added_lines[index]
+            if _ADD_ARGUMENT_PATTERN.search(text) is None:
+                index += 1
+                continue
+
+            call_parts = [text]
+            paren_depth = text.count("(") - text.count(")")
+            next_index = index + 1
+            while paren_depth > 0 and next_index < len(added_lines):
+                continuation, _ = added_lines[next_index]
+                call_parts.append(continuation)
+                paren_depth += continuation.count("(") - continuation.count(")")
+                next_index += 1
+
+            call_text = " ".join(call_parts)
+            if "help=" not in call_text and 'action="version"' not in call_text:
+                hints.append(
+                    focus_risk_hint(
+                        code="cli_flag_without_help",
+                        message=(
+                            f"CLI flag added without help text in {file_diff.path}: "
+                            f"{text.strip()}"
+                        ),
+                        path=file_diff.path,
+                        line=line_no,
+                    )
+                )
+            index = next_index if next_index > index else index + 1
+    return hints

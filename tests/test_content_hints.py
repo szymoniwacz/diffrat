@@ -7,7 +7,7 @@ from pathlib import Path
 
 from diffrat.analysis import analyze_diff
 from diffrat.config import ContentRule, DiffratConfig, load_config
-from diffrat.content_hints import content_focus_risk_hints
+from diffrat.content_hints import LONG_ADDED_HUNK_THRESHOLD, content_focus_risk_hints
 from diffrat.diff_parser import (
     DiffContent,
     DiffHunk,
@@ -429,3 +429,129 @@ def test_content_hints_dogfood_rules_match_repo_pyproject() -> None:
     assert len(config.content_rules) == 2
     hints = content_focus_risk_hints(_validator_typo_content(), config=_DOGFOOD_CONFIG)
     assert any(hint.code == "regex_typo" for hint in hints)
+
+
+def test_content_hints_long_added_hunk() -> None:
+    lines = tuple(f"+added line {index}" for index in range(LONG_ADDED_HUNK_THRESHOLD))
+    content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="src/diffrat/review.py",
+                hunks=(
+                    DiffHunk(
+                        header="@@ -1 +1,40 @@",
+                        lines=lines,
+                    ),
+                ),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "long_added_hunk"
+    assert hints[0].path == "src/diffrat/review.py"
+    assert hints[0].line == 1
+
+
+def test_content_hints_no_long_added_hunk_below_threshold() -> None:
+    lines = tuple(f"+line {index}" for index in range(LONG_ADDED_HUNK_THRESHOLD - 1))
+    content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="src/diffrat/review.py",
+                hunks=(
+                    DiffHunk(
+                        header="@@ -1 +1,39 @@",
+                        lines=lines,
+                    ),
+                ),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+    assert content_focus_risk_hints(content) == []
+
+
+def test_content_hints_cli_flag_without_help() -> None:
+    content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="src/diffrat/__main__.py",
+                hunks=(
+                    DiffHunk(
+                        header="@@ -10 +10,2 @@",
+                        lines=(
+                            '+    review_parser.add_argument("--verbose", action="store_true")',
+                        ),
+                    ),
+                ),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "cli_flag_without_help"
+    assert hints[0].path == "src/diffrat/__main__.py"
+    assert hints[0].line == 10
+
+
+def test_content_hints_cli_flag_with_help_not_flagged() -> None:
+    content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="src/diffrat/__main__.py",
+                hunks=(
+                    DiffHunk(
+                        header="@@ -10 +10,2 @@",
+                        lines=(
+                            '+    review_parser.add_argument("--verbose", help="Verbose output")',
+                        ),
+                    ),
+                ),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+    assert content_focus_risk_hints(content) == []
+
+
+def test_content_hints_cli_flag_multiline_without_help() -> None:
+    content = DiffContent(
+        files=(
+            FileDiffContent(
+                path="src/diffrat/__main__.py",
+                hunks=(
+                    DiffHunk(
+                        header="@@ -10 +10,3 @@",
+                        lines=(
+                            '+    review_parser.add_argument(',
+                            '+        "--verbose",',
+                            '+        action="store_true",',
+                            '+    )',
+                        ),
+                    ),
+                ),
+                binary=False,
+                truncated=False,
+            ),
+        ),
+        truncated_files=False,
+    )
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "cli_flag_without_help"

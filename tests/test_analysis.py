@@ -11,6 +11,8 @@ from diffrat.analysis import (
     LARGE_SINGLE_FILE_MIN_FILE_LINES,
     MANY_COMMITS_THRESHOLD,
     MIXED_CONCERNS_MIN_SEGMENTS,
+    SOURCE_HEAVY_MIN_ADDITIONS,
+    SOURCE_HEAVY_PERCENT_THRESHOLD,
     analyze_diff,
     categorize_path,
 )
@@ -839,3 +841,52 @@ def test_analyze_diff_mixed_concerns_ignores_docs_only_paths() -> None:
     result = analyze_diff(summary)
 
     assert not any(hint.code == "mixed_concerns" for hint in result.hints)
+
+
+def test_analyze_diff_source_heavy_without_tests_hint() -> None:
+    source_additions = SOURCE_HEAVY_MIN_ADDITIONS
+    config_additions = max(
+        1,
+        (source_additions * (100 - SOURCE_HEAVY_PERCENT_THRESHOLD))
+        // SOURCE_HEAVY_PERCENT_THRESHOLD,
+    )
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="src/diffrat/review.py",
+                additions=source_additions,
+                deletions=0,
+                binary=False,
+            ),
+            FileChange(
+                path="pyproject.toml",
+                additions=config_additions,
+                deletions=0,
+                binary=False,
+            ),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    hints = [hint for hint in result.hints if hint.code == "source_heavy_without_tests"]
+    assert len(hints) == 1
+    assert "source-heavy" in hints[0].message.lower()
+
+
+def test_analyze_diff_no_source_heavy_without_tests_when_tests_present() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(
+                path="src/diffrat/review.py",
+                additions=SOURCE_HEAVY_MIN_ADDITIONS,
+                deletions=0,
+                binary=False,
+            ),
+            FileChange(path="tests/test_review.py", additions=5, deletions=0, binary=False),
+        )
+    )
+
+    result = analyze_diff(summary)
+
+    assert not any(hint.code == "source_heavy_without_tests" for hint in result.hints)
