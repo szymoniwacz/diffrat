@@ -1,0 +1,52 @@
+SAMPLE — static captured output for demos. Not produced live from this repository.
+Command illustrated: diffrat review --base main --brief
+Scenario: messy feature branch mixing auth, scripts, and docs with a WIP commit.
+
+Review Report
+=============
+
+Git context
+-----------
+Branch: feature/auth-timeout-hotfix
+Base: main
+Commits since base: 3
+Recent commits:
+  c0ffee1 WIP tighten session timeout
+  bada55d Add helper script for local smoke
+  deadbee Document operator notes
+
+Summary
+-------
+Files changed: 5
+Lines added: 74
+Lines deleted: 11
+Total lines changed: 85
+
+Files
+-----
+source
+  src/app/auth/session.py  [source]  risk=62  +22 -4
+  scripts/smoke_local.py  [source]  risk=41  +18 -0
+tests
+  tests/test_session.py  [tests]  risk=28  +20 -3
+docs
+  docs/ops-notes.md  [docs]  risk=8  +10 -2
+config
+  config/settings.toml  [config]  risk=18  +4 -2
+
+Review order
+------------
+1. src/app/auth/session.py  [source]  (+22 -4 lines)
+2. scripts/smoke_local.py  [source]  (+18 -0 lines)
+3. tests/test_session.py  [tests]  (+20 -3 lines)
+4. config/settings.toml  [config]  (+4 -2 lines)
+5. docs/ops-notes.md  [docs]  (+10 -2 lines)
+
+Focus / Risk
+------------
+- [risk] [possible_secret] Possible secret in src/app/auth/session.py: api_key = 'sk-demo-not-a-real-key-0123456789'
+- [risk] [dangerous_call] Dangerous call in scripts/smoke_local.py: subprocess.run(..., shell=True)
+- [warn] [wip_commits] WIP/fixup/squash commit subjects detected: WIP tighten session timeout — clean up before merge
+- [warn] [mixed_concerns] Changes span multiple top-level areas (config, docs, scripts, src, tests) — confirm unrelated work is not bundled
+- [warn] [tests_touched] Tests touched — confirm coverage matches behavior changes
+- [info] [config_or_deps] Config or dependency files changed — verify intended environment impact
