@@ -114,6 +114,12 @@ pip install -e ".[dev]"
 
 External dogfood sessions: [`docs/feedback-checklist.md`](docs/feedback-checklist.md).
 
+## Demo
+
+Five-minute presenter runbook (install → real diff → `--brief` → `--fail-on`,
+triage not auto-approve): [`docs/demo/runbook.md`](docs/demo/runbook.md).
+Includes a labeled sample brief report under `docs/demo/`.
+
 ## Common commands
 
 Run from inside a git repository:
