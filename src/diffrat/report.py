@@ -7,6 +7,7 @@ from diffrat.analysis_backend import run_analysis
 from diffrat.checks import CheckResult
 from diffrat.diff_parser import DiffContent, DiffSummary, FileChange
 from diffrat.git_adapter import GitContext
+from diffrat.review_quality import ReviewQualityPillarResult, rollup_pillars
 from diffrat.scoring import (
     group_entries_by_category,
     review_order_entries,
@@ -48,6 +49,14 @@ def render_review_report(
             f"Lines added: {summary.total_additions}",
             f"Lines deleted: {summary.total_deletions}",
             f"Total lines changed: {summary.total_lines_changed}",
+            "",
+            "Review quality",
+            "--------------",
+        ]
+    )
+    lines.extend(_render_review_quality(rollup_pillars(result.hints)))
+    lines.extend(
+        [
             "",
             "Files",
             "-----",
@@ -122,6 +131,19 @@ def render_review_report(
                         lines.append(f"  {output_line}")
 
     return "\n".join(lines) + "\n"
+
+
+def _render_review_quality(
+    pillars: tuple[ReviewQualityPillarResult, ...],
+) -> list[str]:
+    lines: list[str] = []
+    for pillar in pillars:
+        if pillar.status == "ok":
+            lines.append(f"- {pillar.label}: ok")
+        else:
+            code_list = ", ".join(pillar.codes)
+            lines.append(f"- {pillar.label}: {pillar.status} ({code_list})")
+    return lines
 
 
 def _format_file_line(

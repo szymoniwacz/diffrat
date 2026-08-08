@@ -126,6 +126,48 @@ def test_render_review_json_includes_categories_and_focus_risk() -> None:
     for item in payload["focus_risk"]:
         assert "path" not in item
         assert "line" not in item
+    review_quality = payload["review_quality"]
+    assert [p["id"] for p in review_quality["pillars"]] == [
+        "understand",
+        "focused",
+        "maintainable",
+    ]
+    maintainable = next(p for p in review_quality["pillars"] if p["id"] == "maintainable")
+    assert maintainable["status"] == "risk"
+    assert "security_sensitive_paths" in maintainable["codes"]
+    assert payload["schema_version"] == JSON_SCHEMA_VERSION
+
+
+def test_render_review_json_review_quality_shape() -> None:
+    from diffrat.analysis import AnalysisResult, focus_risk_hint
+
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=4, deletions=1, binary=False),)
+    )
+    analysis = AnalysisResult(
+        categories=("source",),
+        risk_scores=(10,),
+        hints=(
+            focus_risk_hint("large_diff", "Large diff", severity="warn"),
+            focus_risk_hint("docs_touched", "Docs", severity="info"),
+        ),
+        llm_findings=None,
+        llm_error=None,
+    )
+    payload = json.loads(
+        render_review_json(summary, mode="unstaged", analysis=analysis)
+    )
+    pillars = payload["review_quality"]["pillars"]
+    understand = next(p for p in pillars if p["id"] == "understand")
+    assert understand == {
+        "id": "understand",
+        "label": "Understand in seconds",
+        "status": "warn",
+        "codes": ["large_diff"],
+    }
+    focused = next(p for p in pillars if p["id"] == "focused")
+    assert focused["status"] == "ok"
+    assert focused["codes"] == []
 
 
 def test_render_review_json_focus_risk_includes_path_and_line_when_set() -> None:

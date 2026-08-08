@@ -32,6 +32,35 @@ def test_render_review_report_includes_summary_and_files() -> None:
     assert "[tests_touched]" in report
     assert "[warn] [tests_touched]" in report
     assert "Changes" in report
+    assert "Review quality" in report
+    assert report.index("Review quality") < report.index("Files\n-----")
+
+
+def test_render_review_report_review_quality_after_summary_lists_pillar_status() -> None:
+    from diffrat.analysis import AnalysisResult, focus_risk_hint
+
+    summary = DiffSummary(
+        files=(FileChange(path="src/a.py", additions=4, deletions=1, binary=False),)
+    )
+    analysis = AnalysisResult(
+        categories=("source",),
+        risk_scores=(10,),
+        hints=(
+            focus_risk_hint("large_diff", "Large diff", severity="warn"),
+            focus_risk_hint("possible_secret", "Secret", severity="risk"),
+        ),
+        llm_findings=None,
+        llm_error=None,
+    )
+    report = render_review_report(summary, analysis=analysis)
+
+    summary_pos = report.index("Summary")
+    review_quality_pos = report.index("Review quality")
+    files_pos = report.index("Files\n-----")
+    assert summary_pos < review_quality_pos < files_pos
+    assert "- Understand in seconds: warn (large_diff)" in report
+    assert "- Safe to change in six months: risk (possible_secret)" in report
+    assert "- One thing well: ok" in report
 
 
 def test_render_review_report_includes_changes_section() -> None:
@@ -134,6 +163,7 @@ def test_render_review_report_groups_files_by_category() -> None:
 
     report = render_review_report(summary)
     files_section = report.split("Review order", maxsplit=1)[0]
+    files_section = files_section.split("Files\n-----", maxsplit=1)[1]
 
     assert files_section.index("source") < files_section.index("tests")
     assert files_section.index("tests") < files_section.index("ci")

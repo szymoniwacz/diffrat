@@ -14,6 +14,7 @@ from diffrat.diff_parser import (
     DiffSummary,
 )
 from diffrat.git_adapter import GitContext
+from diffrat.review_quality import rollup_pillars
 from diffrat.scoring import (
     files_by_category_mapping,
     review_order_entries,
@@ -106,6 +107,17 @@ def render_review_json(
             _serialize_focus_risk_hint(hint)
             for hint in sort_hints(list(result.hints))
         ],
+        "review_quality": {
+            "pillars": [
+                {
+                    "id": pillar.id,
+                    "label": pillar.label,
+                    "status": pillar.status,
+                    "codes": list(pillar.codes),
+                }
+                for pillar in rollup_pillars(result.hints)
+            ],
+        },
         "changes": changes_payload,
     }
 
