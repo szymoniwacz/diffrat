@@ -58,6 +58,8 @@ CODE_TO_PILLAR: dict[str, PillarId] = {
     "generated_file_touched": "understand",
     "regex_typo": "understand",
     "docs_touched": "understand",
+    "long_added_hunk": "understand",
+    "cli_flag_without_help": "understand",
     # focused — scope and change hygiene
     "tests_only": "focused",
     "many_commits": "focused",
@@ -72,6 +74,7 @@ CODE_TO_PILLAR: dict[str, PillarId] = {
     "suspicious_constant_change": "maintainable",
     "tests_touched": "maintainable",
     "source_without_tests": "maintainable",
+    "source_heavy_without_tests": "maintainable",
     "ci_without_tests": "maintainable",
     "workflow_without_ci_validator": "maintainable",
     "missing_test_file": "maintainable",

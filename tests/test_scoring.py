@@ -35,7 +35,7 @@ def test_severity_for_unknown_code_defaults_to_info() -> None:
 def test_registry_covers_all_documented_builtin_codes() -> None:
     assert "security_sensitive_paths" in HINT_SEVERITY_REGISTRY
     assert "docs_touched" in HINT_SEVERITY_REGISTRY
-    assert len(HINT_SEVERITY_REGISTRY) >= 25
+    assert len(HINT_SEVERITY_REGISTRY) >= 28
 
 
 def test_focus_risk_hint_resolves_severity_from_registry() -> None:
