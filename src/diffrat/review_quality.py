@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Literal
 
+from diffrat.analysis import FocusRiskHint
 from diffrat.scoring import HINT_SEVERITY_REGISTRY
 
 PillarId = Literal["understand", "focused", "maintainable"]
+PillarStatus = Literal["ok", "warn", "risk"]
 
 _DEFAULT_PILLAR: PillarId = "maintainable"
 
@@ -18,6 +21,16 @@ class ReviewQualityPillar:
 
     id: PillarId
     label: str
+
+
+@dataclass(frozen=True, slots=True)
+class ReviewQualityPillarResult:
+    """Rollup status for one pillar after mapping Focus/Risk hints."""
+
+    id: PillarId
+    label: str
+    status: PillarStatus
+    codes: tuple[str, ...]
 
 
 REVIEW_QUALITY_PILLARS: tuple[ReviewQualityPillar, ...] = (
@@ -91,3 +104,33 @@ def assert_registry_pillar_coverage() -> None:
             "HINT_SEVERITY_REGISTRY codes missing from CODE_TO_PILLAR: "
             + ", ".join(missing)
         )
+
+
+def rollup_pillars(hints: Iterable[FocusRiskHint]) -> tuple[ReviewQualityPillarResult, ...]:
+    """Roll Focus/Risk hints into per-pillar ok/warn/risk status and matched codes."""
+    codes_by_pillar: dict[PillarId, set[str]] = {
+        pillar.id: set() for pillar in REVIEW_QUALITY_PILLARS
+    }
+    status_by_pillar: dict[PillarId, PillarStatus] = {
+        pillar.id: "ok" for pillar in REVIEW_QUALITY_PILLARS
+    }
+
+    for hint in hints:
+        if hint.severity == "info":
+            continue
+        pillar_id = pillar_for_code(hint.code)
+        codes_by_pillar[pillar_id].add(hint.code)
+        if hint.severity == "risk":
+            status_by_pillar[pillar_id] = "risk"
+        elif hint.severity == "warn" and status_by_pillar[pillar_id] != "risk":
+            status_by_pillar[pillar_id] = "warn"
+
+    return tuple(
+        ReviewQualityPillarResult(
+            id=pillar.id,
+            label=pillar.label,
+            status=status_by_pillar[pillar.id],
+            codes=tuple(sorted(codes_by_pillar[pillar.id])),
+        )
+        for pillar in REVIEW_QUALITY_PILLARS
+    )
