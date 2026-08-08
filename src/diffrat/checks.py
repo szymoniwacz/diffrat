@@ -15,6 +15,7 @@ from diffrat.analysis import (
     is_lockfile_path,
     is_pyproject_path,
     is_python_source_or_test_path,
+    is_src_package_path,
 )
 from diffrat.config import DiffratConfig
 from diffrat.diff_parser import DiffSummary
@@ -67,7 +68,7 @@ def pytest_targets_for_paths(paths: list[str]) -> list[str]:
 
 
 def bandit_targets_for_paths(paths: list[str]) -> list[str]:
-    """Map changed source paths to bandit targets under src/diffrat/."""
+    """Map changed source paths to bandit targets under src/<package>/."""
     return mypy_targets_for_paths(paths)
 
 
@@ -81,20 +82,14 @@ def is_pip_audit_dependency_path(path: str) -> bool:
 
 
 def mypy_targets_for_paths(paths: list[str]) -> list[str]:
-    """Map changed source paths to mypy target modules under src/diffrat/."""
+    """Map changed source paths to mypy target modules under src/<package>/."""
     targets: list[str] = []
     seen: set[str] = set()
 
     for path in paths:
         posix = PurePosixPath(path.replace("\\", "/"))
-        parts = posix.parts
-        if (
-            len(parts) >= 2
-            and parts[0] == "src"
-            and parts[1] == "diffrat"
-            and posix.suffix == ".py"
-        ):
-            target = "/".join(parts)
+        if is_src_package_path(path) and posix.suffix == ".py":
+            target = "/".join(posix.parts)
             if target not in seen:
                 seen.add(target)
                 targets.append(target)
@@ -106,7 +101,7 @@ def _map_path_to_pytest_target(path: str) -> str | None:
     posix = PurePosixPath(path.replace("\\", "/"))
     parts = posix.parts
 
-    if len(parts) >= 2 and parts[0] == "src" and parts[1] == "diffrat":
+    if is_src_package_path(path):
         if posix.suffix == ".py":
             return f"tests/test_{posix.stem}.py"
         return "tests"

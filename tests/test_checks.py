@@ -85,9 +85,11 @@ def test_plan_checks_ignores_non_ci_validator_config_overrides() -> None:
 
 def test_is_python_source_or_test_path() -> None:
     assert is_python_source_or_test_path("src/diffrat/review.py")
+    assert is_python_source_or_test_path("src/otherpkg/module.py")
     assert is_python_source_or_test_path("tests/test_review.py")
     assert not is_python_source_or_test_path("README.md")
-    assert not is_python_source_or_test_path("src/other/module.py")
+    assert not is_python_source_or_test_path("src/module.py")
+    assert not is_python_source_or_test_path("lib/other/module.py")
 
 
 def test_is_ci_workflow_validator_path() -> None:
@@ -98,6 +100,12 @@ def test_is_ci_workflow_validator_path() -> None:
 
 def test_pytest_targets_maps_source_to_test_module() -> None:
     assert pytest_targets_for_paths(["src/diffrat/review.py"]) == ["tests/test_review.py"]
+
+
+def test_pytest_targets_maps_non_diffrat_src_package() -> None:
+    assert pytest_targets_for_paths(["src/otherpkg/widget.py"]) == [
+        "tests/test_widget.py"
+    ]
 
 
 def test_pytest_targets_uses_test_module_directly() -> None:
@@ -127,8 +135,14 @@ def test_mypy_targets_maps_source_modules() -> None:
     assert mypy_targets_for_paths(["src/diffrat/review.py"]) == ["src/diffrat/review.py"]
 
 
+def test_mypy_targets_maps_non_diffrat_src_package() -> None:
+    assert mypy_targets_for_paths(["src/otherpkg/widget.py"]) == [
+        "src/otherpkg/widget.py"
+    ]
+
+
 def test_mypy_targets_skips_tests_and_other_paths() -> None:
-    paths = ["tests/test_review.py", "README.md", "src/other/module.py"]
+    paths = ["tests/test_review.py", "README.md", "src/module.py", "lib/other/module.py"]
     assert mypy_targets_for_paths(paths) == []
 
 
