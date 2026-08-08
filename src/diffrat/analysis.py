@@ -27,6 +27,8 @@ DELETIONS_HEAVY_MIN_DELETIONS = 20
 MANY_COMMITS_THRESHOLD = 10
 MIXED_CONCERNS_MIN_SEGMENTS = 3
 MIXED_CONCERNS_MIN_SOURCE_CI_SEGMENTS = 2
+SOURCE_HEAVY_MIN_ADDITIONS = 40
+SOURCE_HEAVY_PERCENT_THRESHOLD = 75
 
 _GENERATED_LOCKFILE_BASENAMES = frozenset(
     {
@@ -477,6 +479,29 @@ def _build_hints(
                 message=(
                     f"Source changed without tests in diff ({preview}) — "
                     "confirm test coverage"
+                ),
+            )
+        )
+
+    source_additions = sum(
+        file_change.additions
+        for file_change, category in zip(summary.files, categories, strict=True)
+        if category == "source" and not file_change.binary
+    )
+    if (
+        not has_tests_in_diff
+        and source_additions >= SOURCE_HEAVY_MIN_ADDITIONS
+        and summary.total_additions > 0
+        and source_additions * 100
+        >= SOURCE_HEAVY_PERCENT_THRESHOLD * summary.total_additions
+    ):
+        hints.append(
+            focus_risk_hint(
+                code="source_heavy_without_tests",
+                message=(
+                    f"Source-heavy diff without tests: {source_additions} source "
+                    f"additions ({source_additions * 100 // summary.total_additions}% "
+                    "of additions) — confirm test coverage"
                 ),
             )
         )

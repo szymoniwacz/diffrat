@@ -50,6 +50,9 @@ HINT_SEVERITY_REGISTRY: dict[str, HintSeverity] = {
     "debug_leftover": "warn",
     "broad_exception": "warn",
     "hardcoded_url_or_ip": "warn",
+    "long_added_hunk": "warn",
+    "source_heavy_without_tests": "warn",
+    "cli_flag_without_help": "warn",
     # info
     "docs_touched": "info",
 }
