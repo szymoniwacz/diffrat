@@ -102,6 +102,8 @@ def _map_path_to_pytest_target(path: str) -> str | None:
     parts = posix.parts
 
     if is_src_package_path(path):
+        if posix.name == "__init__.py":
+            return None
         if posix.suffix == ".py":
             return f"tests/test_{posix.stem}.py"
         return "tests"
@@ -281,12 +283,8 @@ def _format_subprocess_output(stdout: str, stderr: str) -> str:
 
 
 def _bandit_display_command(targets: list[str]) -> str:
-    flags = " ".join(f"-r {target}" for target in targets)
-    return f"{_BANDIT_COMMAND} {flags}"
+    return f"{_BANDIT_COMMAND} -r {' '.join(targets)}"
 
 
 def _bandit_argv(executable: str, targets: list[str]) -> tuple[str, ...]:
-    argv: list[str] = [executable]
-    for target in targets:
-        argv.extend(["-r", target])
-    return tuple(argv)
+    return (executable, "-r", *targets)
