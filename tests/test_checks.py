@@ -12,6 +12,8 @@ from diffrat.analysis import (
 )
 from diffrat.checks import (
     CheckSpec,
+    _bandit_argv,
+    _bandit_display_command,
     bandit_targets_for_paths,
     is_pip_audit_dependency_path,
     mypy_targets_for_paths,
@@ -129,6 +131,15 @@ def test_pytest_targets_supports_multiple_modules() -> None:
 
 def test_pytest_targets_maps_conftest_to_tests_directory() -> None:
     assert pytest_targets_for_paths(["tests/conftest.py"]) == ["tests"]
+
+
+def test_pytest_targets_skips_package_init() -> None:
+    assert pytest_targets_for_paths(["src/diffrat/__init__.py"]) == []
+
+
+def test_pytest_targets_skips_init_among_other_modules() -> None:
+    paths = ["src/diffrat/__init__.py", "src/diffrat/review.py"]
+    assert pytest_targets_for_paths(paths) == ["tests/test_review.py"]
 
 
 def test_mypy_targets_maps_source_modules() -> None:
@@ -383,6 +394,43 @@ def test_plan_checks_selects_bandit_when_on_path() -> None:
     assert specs[2].display_command == "bandit -r src/diffrat/review.py"
     assert specs[2].argv == ("/usr/bin/bandit", "-r", "src/diffrat/review.py")
     assert specs[2].skip_reason is None
+
+
+def test_bandit_command_uses_single_r_flag_for_multiple_targets() -> None:
+    targets = ["src/diffrat/__init__.py", "src/diffrat/analysis.py", "src/diffrat/scoring.py"]
+    assert _bandit_display_command(targets) == (
+        "bandit -r src/diffrat/__init__.py src/diffrat/analysis.py src/diffrat/scoring.py"
+    )
+    assert _bandit_argv("/usr/bin/bandit", targets) == (
+        "/usr/bin/bandit",
+        "-r",
+        "src/diffrat/__init__.py",
+        "src/diffrat/analysis.py",
+        "src/diffrat/scoring.py",
+    )
+
+
+def test_plan_checks_bandit_multi_file_single_r_flag() -> None:
+    summary = DiffSummary(
+        files=(
+            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
+            FileChange(path="src/diffrat/scoring.py", additions=1, deletions=0, binary=False),
+        )
+    )
+
+    with patch("diffrat.checks.shutil.which", return_value="/usr/bin/bandit"):
+        specs = plan_checks(summary)
+
+    bandit_spec = next(spec for spec in specs if spec.code == "bandit")
+    assert bandit_spec.display_command == (
+        "bandit -r src/diffrat/review.py src/diffrat/scoring.py"
+    )
+    assert bandit_spec.argv == (
+        "/usr/bin/bandit",
+        "-r",
+        "src/diffrat/review.py",
+        "src/diffrat/scoring.py",
+    )
 
 
 def test_plan_checks_skips_bandit_when_missing() -> None:

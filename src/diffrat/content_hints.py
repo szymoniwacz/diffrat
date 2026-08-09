@@ -258,6 +258,9 @@ def _is_high_entropy_literal(value: str) -> bool:
         return False
     if "://" in value or "|" in value or value.startswith("^") or value.endswith("$"):
         return False
+    # Reject code/prose fragments (f-strings, expressions), keep token-like secrets.
+    if re.search(r"[\s{}()*/\\]", value):
+        return False
     if not re.search(r"[A-Za-z]", value) or not re.search(r"\d", value):
         return False
     counts = Counter(value)
