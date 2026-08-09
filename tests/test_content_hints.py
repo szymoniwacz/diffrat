@@ -200,6 +200,24 @@ def test_content_hints_possible_secret_negative() -> None:
     assert content_focus_risk_hints(content) == []
 
 
+def test_content_hints_possible_secret_rejects_fstring_code_fragment() -> None:
+    content = _single_file_content(
+        "src/diffrat/analysis.py",
+        'f"additions ({source_additions * 100 // summary.total_additions}% "',
+    )
+
+    assert content_focus_risk_hints(content) == []
+
+
+def test_content_hints_possible_secret_high_entropy_token() -> None:
+    token = "a7Kx9Qm2Vp4Ln8Rw0Yz3Bc6Hd1Jf5Tg"
+    content = _single_file_content("src/diffrat/auth.py", f'token_blob = "{token}"')
+
+    hints = content_focus_risk_hints(content)
+    assert len(hints) == 1
+    assert hints[0].code == "possible_secret"
+
+
 def test_content_hints_debug_leftover_positive() -> None:
     content = _single_file_content("src/diffrat/review.py", "print(result)")
 
