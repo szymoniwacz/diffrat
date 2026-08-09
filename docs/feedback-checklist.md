@@ -1,4 +1,4 @@
-# Feedback checklist (1.0.0)
+# Feedback checklist (1.1.1)
 
 Short session for external testers and dogfood. Goal: feedback on the **CLI
 product**, not on private AI workflow tooling.
@@ -13,6 +13,8 @@ Preferred (PyPI):
 pip install diffrat
 diffrat --version
 ```
+
+Expect `diffrat 1.1.1` (or newer).
 
 From source:
 
@@ -46,8 +48,12 @@ diffrat review --staged
 # Branch vs base
 diffrat review --base main
 
+# Triage-first (omit Changes hunks); note Review quality pillars after Summary
+diffrat review --base main --brief
+
 # JSON for scripting
 diffrat review --base main --json
+diffrat review --base main --brief --json
 
 # Optional gates / deep view
 diffrat review --base main --fail-on=possible_secret,docs_touched
@@ -72,8 +78,9 @@ diffrat review --base main
 1. What was confusing or unexpected in Setup or the first successful report?
 2. Which Focus/Risk hints felt useful? Which felt like false positives or noise?
 3. Was Review order / risk scoring helpful for deciding what to look at first?
-4. Did `--json` fit how you would script or gate a review?
-5. What is the one thing you most wanted that is missing?
+4. Did the Review quality pillars (understand / one thing well / maintainable) help?
+5. Did `--json` fit how you would script or gate a review?
+6. What is the one thing you most wanted that is missing?
 
 ## What not to evaluate
 

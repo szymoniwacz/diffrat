@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-08-09
+
+### Fixed
+
+- `--check` bandit invocation uses a single `-r` with multiple paths (repeated
+  `-r` flags broke bandit CLI)
+- `--check` no longer maps package `__init__.py` to a non-existent
+  `tests/test___init__.py`
+- `possible_secret` high-entropy detection ignores code/prose string fragments
+  (e.g. f-string message pieces with braces and operators)
+
+### Changed
+
+- `docs/feedback-checklist.md` updated for 1.1.1 (`--brief`, Review quality)
+
 ## [1.1.0] - 2026-08-08
 
 ### Added
@@ -91,6 +106,7 @@ project name, CLI command, and import package match (`diffrat`). PyPI held a
   `.diffrat.toml`, and `DIFFRAT_LLM_*` (old `NUMBAT_*` / `[tool.numbat]` no
   longer read)
 
-[Unreleased]: https://github.com/szymoniwacz/diffrat/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/szymoniwacz/diffrat/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/szymoniwacz/diffrat/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/szymoniwacz/diffrat/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/szymoniwacz/diffrat/releases/tag/v1.0.0

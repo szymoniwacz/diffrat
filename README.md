@@ -172,7 +172,7 @@ is empty while `changes.limits` remains. `--brief` works with `--staged`,
 
 ## Status
 
-**1.1.0** is the current release on PyPI as
+**1.1.1** is the current release on PyPI as
 [`diffrat`](https://pypi.org/project/diffrat/) (formerly developed as Numbat;
 see D-008). **1.0.0** was the first product release:
 
