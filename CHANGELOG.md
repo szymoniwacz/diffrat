@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `mypy` excludes `build/` (avoids duplicate-module errors after `python -m build`)
-- Maintainer setup notes CI Python 3.11 and that workflow validate needs
+- Maintainer setup notes that workflow validate needs
   `./scripts/setup-ai-workflow.sh` first
+- CI product quality gates run on Python 3.11, 3.12, and 3.13 (matrix)
 - CI runs `ruff format --check src tests`, `ruff check .`, and `mypy .` in
   addition to pytest (matches README / stack-profile quality gates)
 - CI / `[dev]` include `bandit` on `--check` dogfood modules (`checks.py`,

@@ -7,8 +7,13 @@ on:
       - main
 
 jobs:
-  validate:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    name: validate (Python ${{ matrix.python-version }})
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -26,7 +31,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
 
       - name: Materialize private AI workflow
         run: ./scripts/setup-ai-workflow.sh
@@ -55,3 +60,13 @@ jobs:
 
       - name: Pytest
         run: pytest tests/ -q
+
+  # Branch protection requires a check named exactly "validate". Matrix jobs
+  # report as "validate (Python X.Y)", so this aggregator satisfies the gate.
+  validate:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require matrix success
+        run: test "${{ needs.test.result }}" = "success"
