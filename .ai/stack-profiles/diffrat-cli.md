@@ -19,6 +19,7 @@ pytest
 ruff format --check src tests
 ruff check .
 mypy .
+bandit -r src/diffrat/checks.py src/diffrat/review_quality.py src/diffrat/scoring.py
 python -m diffrat --help
 diffrat --help
 ```

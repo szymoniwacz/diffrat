@@ -32,7 +32,7 @@ Issues = "https://github.com/szymoniwacz/diffrat/issues"
 Changelog = "https://github.com/szymoniwacz/diffrat/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "mypy>=1.8", "ruff>=0.4"]
+dev = ["pytest>=8.0", "mypy>=1.8", "ruff>=0.4", "bandit>=1.7"]
 
 [project.scripts]
 diffrat = "diffrat.__main__:main"

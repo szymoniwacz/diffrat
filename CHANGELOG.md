@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `--check` bandit false positives on Diffrat itself (`subprocess` import/run in
+  `checks.py`; pillar id `"maintainable"` in `review_quality.py`)
 - Track `.ai/ideas/implemented/` docs referenced by `decisions.md`
 
 ### Changed
@@ -18,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `./scripts/setup-ai-workflow.sh` first
 - CI runs `ruff format --check src tests`, `ruff check .`, and `mypy .` in
   addition to pytest (matches README / stack-profile quality gates)
+- CI / `[dev]` include `bandit` on `--check` dogfood modules (`checks.py`,
+  `review_quality.py`, `scoring.py`)
 - One-shot `ruff format` on `src/` and `tests/`
 
 ## [1.1.1] - 2026-08-09
