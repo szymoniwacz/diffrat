@@ -332,8 +332,11 @@ Regex rules on **added** hunk lines. Shorthand or table form with optional
 
 ## Tests and quality
 
+Local (same gates as CI on pull requests and `main`):
+
 ```bash
 pytest
+ruff format --check src tests
 ruff check .
 mypy .
 ```

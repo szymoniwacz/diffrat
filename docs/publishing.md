@@ -31,7 +31,8 @@ version succeeds as a no-op.
 
 ## Preconditions
 
-1. `pytest`, `ruff check .`, and `mypy .` pass on the release commit.
+1. `pytest`, `ruff format --check src tests`, `ruff check .`, and `mypy .`
+   pass on the release commit (same gates as CI).
 2. `CHANGELOG.md` describes the release.
 3. Trusted Publisher (above) is configured for automated tag publishes.
 
