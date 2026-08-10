@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-08-10
+
 ### Fixed
 
 - `--check` bandit false positives on Diffrat itself (`subprocess` import/run in
@@ -124,7 +126,8 @@ project name, CLI command, and import package match (`diffrat`). PyPI held a
   `.diffrat.toml`, and `DIFFRAT_LLM_*` (old `NUMBAT_*` / `[tool.numbat]` no
   longer read)
 
-[Unreleased]: https://github.com/szymoniwacz/diffrat/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/szymoniwacz/diffrat/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/szymoniwacz/diffrat/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/szymoniwacz/diffrat/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/szymoniwacz/diffrat/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/szymoniwacz/diffrat/releases/tag/v1.0.0
