@@ -55,7 +55,7 @@ select = ["E", "F", "I", "UP"]
 python_version = "3.11"
 strict = true
 packages = ["diffrat"]
-exclude = ["ci/"]
+exclude = ["ci/", "build/"]
 
 [tool.diffrat.checks]
 ci_validator = "python ci/validate-workflow-contracts.py --mode project"
