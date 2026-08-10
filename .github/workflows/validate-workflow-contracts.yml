@@ -46,5 +46,12 @@ jobs:
       - name: Mypy
         run: mypy .
 
+      - name: Bandit
+        run: >
+          bandit -r
+          src/diffrat/checks.py
+          src/diffrat/review_quality.py
+          src/diffrat/scoring.py
+
       - name: Pytest
         run: pytest tests/ -q

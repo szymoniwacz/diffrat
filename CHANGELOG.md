@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `./scripts/setup-ai-workflow.sh` first
 - CI runs `ruff format --check src tests`, `ruff check .`, and `mypy .` in
   addition to pytest (matches README / stack-profile quality gates)
+- CI / `[dev]` include `bandit` on `--check` dogfood modules (`checks.py`,
+  `review_quality.py`, `scoring.py`)
 - One-shot `ruff format` on `src/` and `tests/`
 
 ## [1.1.1] - 2026-08-09
