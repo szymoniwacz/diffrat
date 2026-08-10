@@ -25,9 +25,9 @@ diffrat product files under `.ai/project/`, `.ai/docs/project-requirements.md`,
 and related paths. Tracked `.ai/ideas/` overlays product entries; template
 `implemented/` wins on rematerialize.
 
-CI runs on **Python 3.11**. Local development needs **Python ≥ 3.11** (3.12+ is
-fine). Before `./scripts/validate-ai-workflow.sh` or
-`python ci/validate-workflow-contracts.py --mode project`, run
+CI runs the product quality gates on **Python 3.11, 3.12, and 3.13**. Local
+development needs **Python ≥ 3.11**. Before `./scripts/validate-ai-workflow.sh`
+or `python ci/validate-workflow-contracts.py --mode project`, run
 `./scripts/setup-ai-workflow.sh` so materialized `.ai/` path references resolve.
 
 ## Full workflow validation (local)

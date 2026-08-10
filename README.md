@@ -332,7 +332,8 @@ Regex rules on **added** hunk lines. Shorthand or table form with optional
 
 ## Tests and quality
 
-Local (same gates as CI on pull requests and `main`):
+Local (same gates as CI on pull requests and `main`). CI runs that set on
+**Python 3.11, 3.12, and 3.13**:
 
 ```bash
 pytest
