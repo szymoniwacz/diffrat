@@ -22,7 +22,8 @@ git submodule update --init --recursive .ai-template
 
 After setup, `.ai/` is a local merge of the private template plus committed
 diffrat product files under `.ai/project/`, `.ai/docs/project-requirements.md`,
-and related paths.
+and related paths. Tracked `.ai/ideas/` overlays product entries; template
+`implemented/` wins on rematerialize.
 
 ## Full workflow validation (local)
 
