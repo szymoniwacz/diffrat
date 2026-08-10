@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Track `.ai/ideas/implemented/` docs referenced by `decisions.md`
+
+### Changed
+
+- `mypy` excludes `build/` (avoids duplicate-module errors after `python -m build`)
+- Maintainer setup notes CI Python 3.11 and that workflow validate needs
+  `./scripts/setup-ai-workflow.sh` first
+
 ## [1.1.1] - 2026-08-09
 
 ### Fixed
