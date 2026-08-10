@@ -51,15 +51,9 @@ def render_review_json(
     brief: bool = False,
 ) -> str:
     """Render a review report as a JSON document for stdout."""
-    result = (
-        analysis
-        if analysis is not None
-        else run_analysis(summary, diff_content=diff_content)
-    )
+    result = analysis if analysis is not None else run_analysis(summary, diff_content=diff_content)
 
-    sorted_entries = sort_file_entries(
-        summary.files, result.categories, result.risk_scores
-    )
+    sorted_entries = sort_file_entries(summary.files, result.categories, result.risk_scores)
     sorted_paths = [entry[0].path for entry in sorted_entries]
     review_order = [entry[0].path for entry in review_order_entries(sorted_entries)]
 
@@ -103,10 +97,7 @@ def render_review_json(
         ],
         "review_order": review_order,
         "files_by_category": files_by_category_mapping(sorted_entries),
-        "focus_risk": [
-            _serialize_focus_risk_hint(hint)
-            for hint in sort_hints(list(result.hints))
-        ],
+        "focus_risk": [_serialize_focus_risk_hint(hint) for hint in sort_hints(list(result.hints))],
         "review_quality": {
             "pillars": [
                 {
@@ -181,9 +172,7 @@ def _serialize_changes(
     limits = {
         "max_files": MAX_CHANGE_FILES,
         "max_lines_per_file": (
-            max_lines_per_file_limit
-            if max_lines_per_file_limit is not None
-            else MAX_LINES_PER_FILE
+            max_lines_per_file_limit if max_lines_per_file_limit is not None else MAX_LINES_PER_FILE
         ),
     }
     if diff_content is None:

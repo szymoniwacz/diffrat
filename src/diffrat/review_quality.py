@@ -103,8 +103,7 @@ def assert_registry_pillar_coverage() -> None:
     missing = sorted(set(HINT_SEVERITY_REGISTRY) - set(CODE_TO_PILLAR))
     if missing:
         raise ValueError(
-            "HINT_SEVERITY_REGISTRY codes missing from CODE_TO_PILLAR: "
-            + ", ".join(missing)
+            "HINT_SEVERITY_REGISTRY codes missing from CODE_TO_PILLAR: " + ", ".join(missing)
         )
 
 

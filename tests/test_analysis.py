@@ -133,17 +133,12 @@ def test_analyze_diff_ci_workflow_paths_hint_includes_configured_command() -> No
 
     ci_hints = [hint for hint in result.hints if hint.code == "ci_workflow_paths"]
     assert len(ci_hints) == 1
-    assert (
-        "python ci/validate-workflow-contracts.py --mode project"
-        in ci_hints[0].message
-    )
+    assert "python ci/validate-workflow-contracts.py --mode project" in ci_hints[0].message
 
 
 def test_analyze_diff_no_ci_workflow_hint_for_source_only() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/review.py", additions=5, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/review.py", additions=5, deletions=0, binary=False),)
     )
 
     result = analyze_diff(summary)
@@ -180,9 +175,7 @@ def test_analyze_diff_rename_or_move_hint() -> None:
 
 def test_analyze_diff_no_rename_or_move_hint_for_modify_only() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/foo.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/foo.py", additions=1, deletions=0, binary=False),)
     )
 
     result = analyze_diff(summary)
@@ -310,9 +303,7 @@ def test_analyze_diff_workflow_without_ci_validator_hint() -> None:
 
     result = analyze_diff(summary)
 
-    assert not any(
-        hint.code == "workflow_without_ci_validator" for hint in result.hints
-    )
+    assert not any(hint.code == "workflow_without_ci_validator" for hint in result.hints)
     ci_hints = [hint for hint in result.hints if hint.code == "ci_workflow_paths"]
     assert len(ci_hints) == 1
     assert ".github/workflows/validate-workflow-contracts.yml" in ci_hints[0].message
@@ -340,9 +331,7 @@ def test_analyze_diff_no_workflow_without_ci_validator_when_ci_changed() -> None
 
     result = analyze_diff(summary)
 
-    assert not any(
-        hint.code == "workflow_without_ci_validator" for hint in result.hints
-    )
+    assert not any(hint.code == "workflow_without_ci_validator" for hint in result.hints)
     assert any(hint.code == "ci_workflow_paths" for hint in result.hints)
 
 
@@ -363,9 +352,7 @@ def test_analyze_diff_workflow_only_single_ci_hint() -> None:
     ci_hints = [hint for hint in result.hints if hint.code == "ci_workflow_paths"]
     assert len(ci_hints) == 1
     assert not any(hint.code == "config_or_deps" for hint in result.hints)
-    assert not any(
-        hint.code == "workflow_without_ci_validator" for hint in result.hints
-    )
+    assert not any(hint.code == "workflow_without_ci_validator" for hint in result.hints)
 
 
 def test_analyze_diff_large_single_file_hint() -> None:
@@ -439,9 +426,7 @@ def test_analyze_diff_no_deletions_heavy_when_additions_exceed_deletions() -> No
 
 def test_analyze_diff_generated_file_touched_hint() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="api_pb2.py", additions=10, deletions=2, binary=False),
-        )
+        files=(FileChange(path="api_pb2.py", additions=10, deletions=2, binary=False),)
     )
 
     result = analyze_diff(summary)
@@ -466,19 +451,13 @@ def test_analyze_diff_no_generated_file_touched_when_source_in_diff() -> None:
 
 def test_analyze_diff_generated_file_touched_for_lockfile_without_manifest() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="yarn.lock", additions=50, deletions=10, binary=False),
-        )
+        files=(FileChange(path="yarn.lock", additions=50, deletions=10, binary=False),)
     )
 
     result = analyze_diff(summary)
 
-    generated_hints = [
-        hint for hint in result.hints if hint.code == "generated_file_touched"
-    ]
-    lockfile_hints = [
-        hint for hint in result.hints if hint.code == "lockfile_without_manifest"
-    ]
+    generated_hints = [hint for hint in result.hints if hint.code == "generated_file_touched"]
+    lockfile_hints = [hint for hint in result.hints if hint.code == "lockfile_without_manifest"]
     assert len(generated_hints) == 1
     assert "yarn.lock" in generated_hints[0].message
     assert len(lockfile_hints) == 1
@@ -532,9 +511,7 @@ def test_analyze_diff_missing_test_file_hint_when_test_absent(tmp_path: Path) ->
     (tmp_path / "src" / "diffrat" / "foo.py").write_text("x = 1\n")
 
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/foo.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/foo.py", additions=1, deletions=0, binary=False),)
     )
 
     result = analyze_diff(summary, cwd=str(tmp_path))
@@ -576,9 +553,7 @@ def test_analyze_diff_no_missing_test_file_when_test_exists(tmp_path: Path) -> N
     (tmp_path / "tests" / "test_foo.py").write_text("def test_foo() -> None: pass\n")
 
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/foo.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/foo.py", additions=1, deletions=0, binary=False),)
     )
 
     result = analyze_diff(summary, cwd=str(tmp_path))
@@ -588,9 +563,7 @@ def test_analyze_diff_no_missing_test_file_when_test_exists(tmp_path: Path) -> N
 
 def test_analyze_diff_no_missing_test_file_without_cwd() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/foo.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/foo.py", additions=1, deletions=0, binary=False),)
     )
 
     result = analyze_diff(summary)
@@ -603,9 +576,7 @@ def test_analyze_diff_no_missing_test_file_for_test_only_change(tmp_path: Path) 
     (tmp_path / "tests" / "test_foo.py").write_text("def test_foo() -> None: pass\n")
 
     summary = DiffSummary(
-        files=(
-            FileChange(path="tests/test_foo.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="tests/test_foo.py", additions=1, deletions=0, binary=False),)
     )
 
     result = analyze_diff(summary, cwd=str(tmp_path))
@@ -615,9 +586,7 @@ def test_analyze_diff_no_missing_test_file_for_test_only_change(tmp_path: Path) 
 
 def test_analyze_diff_lockfile_without_manifest_hint() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="poetry.lock", additions=10, deletions=5, binary=False),
-        )
+        files=(FileChange(path="poetry.lock", additions=10, deletions=5, binary=False),)
     )
 
     result = analyze_diff(summary)
@@ -646,9 +615,7 @@ def test_analyze_diff_manifest_without_lockfile_when_lockfile_on_disk(
     (tmp_path / "poetry.lock").write_text("lock\n")
 
     summary = DiffSummary(
-        files=(
-            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),)
     )
 
     result = analyze_diff(summary, cwd=str(tmp_path))
@@ -665,9 +632,7 @@ def test_analyze_diff_no_manifest_without_lockfile_when_no_lockfile_on_disk(
     (tmp_path / "pyproject.toml").write_text("[project]\n")
 
     summary = DiffSummary(
-        files=(
-            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),)
     )
 
     result = analyze_diff(summary, cwd=str(tmp_path))
@@ -695,9 +660,7 @@ def test_analyze_diff_no_manifest_without_lockfile_when_lockfile_changed(
 
 def test_analyze_diff_no_manifest_without_lockfile_without_cwd() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),)
     )
 
     result = analyze_diff(summary)

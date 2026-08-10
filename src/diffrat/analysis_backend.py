@@ -41,4 +41,3 @@ def run_analysis(
         elif llm_result.error is not None:
             result = replace(result, llm_error=llm_result.error)
     return result
-

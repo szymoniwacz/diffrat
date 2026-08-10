@@ -380,8 +380,7 @@ def _build_hints(
                 focus_risk_hint(
                     code="config_or_deps",
                     message=(
-                        "Config or dependency files changed — "
-                        "review install and runtime impact"
+                        "Config or dependency files changed — review install and runtime impact"
                     ),
                 )
             )
@@ -395,9 +394,7 @@ def _build_hints(
         )
 
     security_paths = [
-        file_change.path
-        for file_change in summary.files
-        if _is_security_sensitive(file_change)
+        file_change.path for file_change in summary.files if _is_security_sensitive(file_change)
     ]
     if security_paths:
         preview = ", ".join(security_paths[:3])
@@ -420,18 +417,15 @@ def _build_hints(
         if len(ci_workflow_paths) > 3:
             preview = f"{preview}, +{len(ci_workflow_paths) - 3} more"
         has_ci_validator_in_diff = any(
-            _is_ci_directory_path(file_change.path)
-            for file_change in summary.files
+            _is_ci_directory_path(file_change.path) for file_change in summary.files
         )
         if has_ci_validator_in_diff:
             message = (
-                f"CI/workflow paths changed ({preview}) — "
-                "review CI/workflow changes carefully"
+                f"CI/workflow paths changed ({preview}) — review CI/workflow changes carefully"
             )
         else:
             message = (
-                f"CI/workflow paths changed ({preview}) — "
-                "confirm workflow contracts are validated"
+                f"CI/workflow paths changed ({preview}) — confirm workflow contracts are validated"
             )
         configured_command = None
         if config is not None:
@@ -446,9 +440,7 @@ def _build_hints(
         )
 
     rename_paths = [
-        file_change.path
-        for file_change in summary.files
-        if file_change.change_type in {"R", "C"}
+        file_change.path for file_change in summary.files if file_change.change_type in {"R", "C"}
     ]
     if rename_paths:
         preview = ", ".join(rename_paths[:3])
@@ -476,8 +468,7 @@ def _build_hints(
             focus_risk_hint(
                 code="source_without_tests",
                 message=(
-                    f"Source changed without tests in diff ({preview}) — "
-                    "confirm test coverage"
+                    f"Source changed without tests in diff ({preview}) — confirm test coverage"
                 ),
             )
         )
@@ -491,8 +482,7 @@ def _build_hints(
         not has_tests_in_diff
         and source_additions >= SOURCE_HEAVY_MIN_ADDITIONS
         and summary.total_additions > 0
-        and source_additions * 100
-        >= SOURCE_HEAVY_PERCENT_THRESHOLD * summary.total_additions
+        and source_additions * 100 >= SOURCE_HEAVY_PERCENT_THRESHOLD * summary.total_additions
     ):
         hints.append(
             focus_risk_hint(
@@ -505,9 +495,7 @@ def _build_hints(
             )
         )
 
-    non_binary_files = [
-        file_change for file_change in summary.files if not file_change.binary
-    ]
+    non_binary_files = [file_change for file_change in summary.files if not file_change.binary]
     if non_binary_files and all(
         categorize_path(file_change.path) == "tests" for file_change in non_binary_files
     ):
@@ -637,9 +625,7 @@ def _mixed_concerns_hint(
         return None
 
     source_ci_segments = sorted(
-        segment
-        for segment, cats in segment_categories.items()
-        if "source" in cats or "ci" in cats
+        segment for segment, cats in segment_categories.items() if "source" in cats or "ci" in cats
     )
     if len(source_ci_segments) < MIXED_CONCERNS_MIN_SOURCE_CI_SEGMENTS:
         return None
@@ -720,9 +706,7 @@ def _missing_test_file_hints(
                 hints.append(
                     focus_risk_hint(
                         code="missing_test_file",
-                        message=(
-                            f"Changed {file_change.path} has no {test_rel} on disk"
-                        ),
+                        message=(f"Changed {file_change.path} has no {test_rel} on disk"),
                         path=file_change.path,
                     )
                 )
@@ -737,9 +721,7 @@ def _lockfile_consistency_hints(
 ) -> list[FocusRiskHint]:
     """Emit hints when lockfile and manifest changes are inconsistent."""
     changed_lockfiles = [
-        file_change.path
-        for file_change in summary.files
-        if is_lockfile_path(file_change.path)
+        file_change.path for file_change in summary.files if is_lockfile_path(file_change.path)
     ]
     changed_manifests = [
         file_change.path
@@ -765,18 +747,14 @@ def _lockfile_consistency_hints(
 
     if changed_manifests and not changed_lockfiles and cwd is not None:
         root = Path(cwd)
-        lockfiles_on_disk = [
-            name for name in sorted(_LOCKFILE_BASENAMES) if (root / name).exists()
-        ]
+        lockfiles_on_disk = [name for name in sorted(_LOCKFILE_BASENAMES) if (root / name).exists()]
         if lockfiles_on_disk:
             preview = ", ".join(changed_manifests[:3])
             if len(changed_manifests) > 3:
                 preview = f"{preview}, +{len(changed_manifests) - 3} more"
             lockfile_preview = ", ".join(lockfiles_on_disk[:3])
             if len(lockfiles_on_disk) > 3:
-                lockfile_preview = (
-                    f"{lockfile_preview}, +{len(lockfiles_on_disk) - 3} more"
-                )
+                lockfile_preview = f"{lockfile_preview}, +{len(lockfiles_on_disk) - 3} more"
             hints.append(
                 focus_risk_hint(
                     code="manifest_without_lockfile",
@@ -825,11 +803,7 @@ def _is_config_path(
 def _is_ci_path(parts_lower: tuple[str, ...]) -> bool:
     if parts_lower and parts_lower[0] == "ci":
         return True
-    return (
-        len(parts_lower) >= 2
-        and parts_lower[0] == ".github"
-        and parts_lower[1] == "workflows"
-    )
+    return len(parts_lower) >= 2 and parts_lower[0] == ".github" and parts_lower[1] == "workflows"
 
 
 def _is_ci_directory_path(path: str) -> bool:
@@ -841,11 +815,7 @@ def _is_ci_directory_path(path: str) -> bool:
 def _is_github_workflow_path(path: str) -> bool:
     posix = PurePosixPath(path.replace("\\", "/"))
     parts_lower = tuple(part.lower() for part in posix.parts)
-    return (
-        len(parts_lower) >= 2
-        and parts_lower[0] == ".github"
-        and parts_lower[1] == "workflows"
-    )
+    return len(parts_lower) >= 2 and parts_lower[0] == ".github" and parts_lower[1] == "workflows"
 
 
 def _is_docs_path(
@@ -912,11 +882,7 @@ def _is_ci_workflow_validator_path(path: str) -> bool:
 
     if parts_lower and parts_lower[0] == "ci":
         return True
-    if (
-        len(parts_lower) >= 2
-        and parts_lower[0] == ".github"
-        and parts_lower[1] == "workflows"
-    ):
+    if len(parts_lower) >= 2 and parts_lower[0] == ".github" and parts_lower[1] == "workflows":
         return True
     return False
 

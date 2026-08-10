@@ -161,9 +161,7 @@ def parse_unified_diff(
     file_blocks = _split_patch_into_file_blocks(patch)
     if only_paths is not None:
         filtered_blocks = [
-            block
-            for block in file_blocks
-            if _extract_path_from_block(block) in only_paths
+            block for block in file_blocks if _extract_path_from_block(block) in only_paths
         ]
         filtered_files = [
             _parse_file_block(

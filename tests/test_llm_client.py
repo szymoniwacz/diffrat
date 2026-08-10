@@ -38,10 +38,7 @@ def test_resolve_chat_completions_url_custom_base() -> None:
         api_key="local",
         base_url="http://localhost:11434/v1",
     )
-    assert (
-        resolve_chat_completions_url(config)
-        == "http://localhost:11434/v1/chat/completions"
-    )
+    assert resolve_chat_completions_url(config) == "http://localhost:11434/v1/chat/completions"
 
 
 def test_resolve_chat_completions_url_rejects_full_chat_completions_path() -> None:
@@ -261,9 +258,7 @@ def test_run_llm_analysis_builds_prompt_from_diff_content() -> None:
     captured: dict[str, str] = {}
 
     def fake_urlopen(request: Any, timeout: float = 0) -> io.BytesIO:
-        captured["prompt"] = json.loads(request.data.decode("utf-8"))["messages"][-1][
-            "content"
-        ]
+        captured["prompt"] = json.loads(request.data.decode("utf-8"))["messages"][-1]["content"]
         response = _success_response("ok")
         response.status = 200  # type: ignore[attr-defined]
         return response

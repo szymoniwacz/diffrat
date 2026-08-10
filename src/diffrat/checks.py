@@ -74,11 +74,7 @@ def bandit_targets_for_paths(paths: list[str]) -> list[str]:
 
 def is_pip_audit_dependency_path(path: str) -> bool:
     """Return True when a changed path should trigger pip-audit."""
-    return (
-        is_pyproject_path(path)
-        or is_lockfile_path(path)
-        or is_dependency_manifest_path(path)
-    )
+    return is_pyproject_path(path) or is_lockfile_path(path) or is_dependency_manifest_path(path)
 
 
 def mypy_targets_for_paths(paths: list[str]) -> list[str]:

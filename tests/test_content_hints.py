@@ -16,22 +16,14 @@ from diffrat.diff_parser import (
     FileDiffContent,
 )
 
-_FILTER_GOOD = (
-    'PROJECT_EXECUTOR_COMMENT_FILTER = "^/(execute-project|continue-project)$"'
-)
-_FILTER_TYPO = (
-    'PROJECT_EXECUTOR_COMMENT_FILTER = "^/(execute-project|continue-projec)$"'
-)
+_FILTER_GOOD = 'PROJECT_EXECUTOR_COMMENT_FILTER = "^/(execute-project|continue-project)$"'
+_FILTER_TYPO = 'PROJECT_EXECUTOR_COMMENT_FILTER = "^/(execute-project|continue-projec)$"'
 
 _DOGFOOD_CONFIG = load_config(Path(__file__).resolve().parents[1])
 
 
 def _dogfood_regex_typo_config() -> DiffratConfig:
-    rules = tuple(
-        rule
-        for rule in _DOGFOOD_CONFIG.content_rules
-        if rule.code == "regex_typo"
-    )
+    rules = tuple(rule for rule in _DOGFOOD_CONFIG.content_rules if rule.code == "regex_typo")
     return DiffratConfig(checks={}, content_rules=rules)
 
 
@@ -556,10 +548,10 @@ def test_content_hints_cli_flag_multiline_without_help() -> None:
                     DiffHunk(
                         header="@@ -10 +10,3 @@",
                         lines=(
-                            '+    review_parser.add_argument(',
+                            "+    review_parser.add_argument(",
                             '+        "--verbose",',
                             '+        action="store_true",',
-                            '+    )',
+                            "+    )",
                         ),
                     ),
                 ),

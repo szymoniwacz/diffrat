@@ -189,9 +189,7 @@ def test_render_review_report_review_order_before_changes_and_caps_at_five() -> 
 
     review_section = report.split("Review order", maxsplit=1)[1].split("Changes", maxsplit=1)[0]
     ranked_lines = [
-        line
-        for line in review_section.splitlines()
-        if line.strip().startswith(tuple("12345."))
+        line for line in review_section.splitlines() if line.strip().startswith(tuple("12345."))
     ]
     assert len(ranked_lines) == 5
     assert "6." not in review_section

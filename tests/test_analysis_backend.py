@@ -82,9 +82,7 @@ def test_run_analysis_invokes_llm_client_when_enabled(
         truncated_files=False,
     )
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),)
     )
     llm_config = LlmConfig(enabled=True, provider="openai", api_key="sk-test")
 
@@ -108,9 +106,7 @@ def test_run_analysis_propagates_llm_error(
     )
 
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),)
     )
     llm_config = LlmConfig(enabled=True, provider="openai", api_key="sk-test")
 
@@ -128,9 +124,7 @@ def test_run_analysis_loads_llm_config_from_env_by_default(
     monkeypatch.delenv("DIFFRAT_LLM_BASE_URL", raising=False)
 
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),)
     )
 
     expected = analyze_diff(summary)
