@@ -35,7 +35,13 @@ rsync -a --delete "${TEMPLATE}/.ai/" "${AI}/"
 cp -a "${OVERLAY}/project" "${AI}/"
 if [[ -d "${OVERLAY}/.ai/ideas" ]]; then
   mkdir -p "${AI}/ideas"
-  cp -a "${OVERLAY}/.ai/ideas/." "${AI}/ideas/"
+  # Product ideas overlay; template keeps implemented/* (--ignore-existing fills gaps).
+  rsync -a --exclude 'implemented/' "${OVERLAY}/.ai/ideas/" "${AI}/ideas/"
+  if [[ -d "${OVERLAY}/.ai/ideas/implemented" ]]; then
+    mkdir -p "${AI}/ideas/implemented"
+    rsync -a --ignore-existing \
+      "${OVERLAY}/.ai/ideas/implemented/" "${AI}/ideas/implemented/"
+  fi
 fi
 mkdir -p "${AI}/stack-profiles" "${AI}/architecture" "${AI}/docs"
 cp "${OVERLAY}/diffrat-cli.md" "${AI}/stack-profiles/"

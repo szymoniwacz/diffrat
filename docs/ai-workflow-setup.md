@@ -22,7 +22,13 @@ git submodule update --init --recursive .ai-template
 
 After setup, `.ai/` is a local merge of the private template plus committed
 diffrat product files under `.ai/project/`, `.ai/docs/project-requirements.md`,
-and related paths.
+and related paths. Tracked `.ai/ideas/` overlays product entries; template
+`implemented/` wins on rematerialize.
+
+CI runs on **Python 3.11**. Local development needs **Python ≥ 3.11** (3.12+ is
+fine). Before `./scripts/validate-ai-workflow.sh` or
+`python ci/validate-workflow-contracts.py --mode project`, run
+`./scripts/setup-ai-workflow.sh` so materialized `.ai/` path references resolve.
 
 ## Full workflow validation (local)
 
