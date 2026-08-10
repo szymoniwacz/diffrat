@@ -100,7 +100,7 @@ def test_risk_score_line_share() -> None:
         has_tests_in_diff=True,
         security_sensitive=False,
     )
-  # 10 lines = 100% share -> 50 points, source with tests -> no extra
+    # 10 lines = 100% share -> 50 points, source with tests -> no extra
     assert score == 50
 
 

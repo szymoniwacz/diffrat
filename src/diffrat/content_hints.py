@@ -20,9 +20,7 @@ _POSSIBLE_SECRET_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY", re.IGNORECASE),
     re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
     re.compile(r"\bsk-[a-zA-Z0-9]{20,}\b"),
-    re.compile(
-        r"""(?i)(?:api[_-]?key|secret|password|token|auth)\s*=\s*['"][^'"]{8,}['"]"""
-    ),
+    re.compile(r"""(?i)(?:api[_-]?key|secret|password|token|auth)\s*=\s*['"][^'"]{8,}['"]"""),
 )
 
 _DEBUG_LEFTOVER_PATTERNS: tuple[re.Pattern[str], ...] = (
@@ -265,9 +263,7 @@ def _is_high_entropy_literal(value: str) -> bool:
         return False
     counts = Counter(value)
     length = len(value)
-    entropy = -sum(
-        (count / length) * math.log2(count / length) for count in counts.values()
-    )
+    entropy = -sum((count / length) * math.log2(count / length) for count in counts.values())
     return entropy >= _ENTROPY_THRESHOLD_BITS
 
 
@@ -279,10 +275,7 @@ def _matches_broad_exception(line: str) -> bool:
 
 
 def _matches_hardcoded_url_or_ip(line: str) -> bool:
-    return (
-        _HARDCODED_URL_PATTERN.search(line) is not None
-        or _IPV4_PATTERN.search(line) is not None
-    )
+    return _HARDCODED_URL_PATTERN.search(line) is not None or _IPV4_PATTERN.search(line) is not None
 
 
 def _long_added_hunk_hints(file_diff: FileDiffContent) -> list[FocusRiskHint]:
@@ -355,8 +348,7 @@ def _cli_flag_without_help_hints(file_diff: FileDiffContent) -> list[FocusRiskHi
                     focus_risk_hint(
                         code="cli_flag_without_help",
                         message=(
-                            f"CLI flag added without help text in {file_diff.path}: "
-                            f"{text.strip()}"
+                            f"CLI flag added without help text in {file_diff.path}: {text.strip()}"
                         ),
                         path=file_diff.path,
                         line=line_no,

@@ -59,9 +59,7 @@ def test_render_review_json_includes_changes() -> None:
         truncated_files=False,
     )
 
-    payload = json.loads(
-        render_review_json(summary, mode="unstaged", diff_content=diff_content)
-    )
+    payload = json.loads(render_review_json(summary, mode="unstaged", diff_content=diff_content))
 
     assert payload["changes"]["files"][0]["path"] == "README.md"
     assert payload["changes"]["files"][0]["hunks"][0]["lines"] == ["+extra line"]
@@ -154,9 +152,7 @@ def test_render_review_json_review_quality_shape() -> None:
         llm_findings=None,
         llm_error=None,
     )
-    payload = json.loads(
-        render_review_json(summary, mode="unstaged", analysis=analysis)
-    )
+    payload = json.loads(render_review_json(summary, mode="unstaged", analysis=analysis))
     pillars = payload["review_quality"]["pillars"]
     understand = next(p for p in pillars if p["id"] == "understand")
     assert understand == {
@@ -190,19 +186,13 @@ def test_render_review_json_focus_risk_includes_path_and_line_when_set() -> None
         risk_scores=(10,),
     )
 
-    payload = json.loads(
-        render_review_json(summary, mode="unstaged", analysis=analysis)
-    )
+    payload = json.loads(render_review_json(summary, mode="unstaged", analysis=analysis))
 
-    secret_hint = next(
-        item for item in payload["focus_risk"] if item["code"] == "possible_secret"
-    )
+    secret_hint = next(item for item in payload["focus_risk"] if item["code"] == "possible_secret")
     assert secret_hint["path"] == "src/a.py"
     assert secret_hint["line"] == 10
 
-    docs_hint = next(
-        item for item in payload["focus_risk"] if item["code"] == "docs_touched"
-    )
+    docs_hint = next(item for item in payload["focus_risk"] if item["code"] == "docs_touched")
     assert "path" not in docs_hint
     assert "line" not in docs_hint
 
@@ -307,9 +297,7 @@ def test_render_review_json_includes_llm_findings_when_present() -> None:
     )
     analysis = replace(analyze_diff(summary), llm_findings="LLM narrative.")
 
-    payload = json.loads(
-        render_review_json(summary, mode="unstaged", analysis=analysis)
-    )
+    payload = json.loads(render_review_json(summary, mode="unstaged", analysis=analysis))
 
     assert payload["llm_findings"] == "LLM narrative."
     assert payload["llm_status"] == "ok"
@@ -328,9 +316,7 @@ def test_render_review_json_includes_llm_error_when_present() -> None:
         llm_error="LLM authentication failed (HTTP 401)",
     )
 
-    payload = json.loads(
-        render_review_json(summary, mode="unstaged", analysis=analysis)
-    )
+    payload = json.loads(render_review_json(summary, mode="unstaged", analysis=analysis))
 
     assert payload["llm_status"] == "failed"
     assert payload["llm_error"] == "LLM authentication failed (HTTP 401)"

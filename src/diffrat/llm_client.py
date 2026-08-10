@@ -204,10 +204,7 @@ def _http_error_message(exc: urllib.error.HTTPError) -> str:
     if exc.code in (401, 403):
         if api_message:
             return f"LLM authentication failed (HTTP {exc.code}): {api_message}"
-        return (
-            f"LLM authentication failed (HTTP {exc.code}) — check "
-            "DIFFRAT_LLM_API_KEY"
-        )
+        return f"LLM authentication failed (HTTP {exc.code}) — check DIFFRAT_LLM_API_KEY"
 
     if exc.code == 404:
         if api_message:

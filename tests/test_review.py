@@ -317,9 +317,7 @@ def test_run_review_check_reports_failure(
             CheckSpec(
                 code="ci_validator",
                 argv=("python",),
-                display_command=(
-                    "python ci/validate-workflow-contracts.py --mode project"
-                ),
+                display_command=("python ci/validate-workflow-contracts.py --mode project"),
             )
         ],
     )
@@ -501,9 +499,7 @@ def test_run_review_fail_on_check_failure_precedence(
             CheckSpec(
                 code="ci_validator",
                 argv=("python",),
-                display_command=(
-                    "python ci/validate-workflow-contracts.py --mode project"
-                ),
+                display_command=("python ci/validate-workflow-contracts.py --mode project"),
             )
         ],
     )

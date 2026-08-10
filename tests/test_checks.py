@@ -58,9 +58,7 @@ def test_plan_checks_ci_validator_uses_config_override() -> None:
 
     specs = plan_checks(summary, config=config)
 
-    assert specs[0].display_command == (
-        "python ci/validate-workflow-contracts.py --mode strict"
-    )
+    assert specs[0].display_command == ("python ci/validate-workflow-contracts.py --mode strict")
     assert specs[0].argv == (
         sys.executable,
         "ci/validate-workflow-contracts.py",
@@ -71,9 +69,7 @@ def test_plan_checks_ci_validator_uses_config_override() -> None:
 
 def test_plan_checks_ignores_non_ci_validator_config_overrides() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),)
     )
     config = DiffratConfig(
         checks={"pytest": "custom-pytest"},
@@ -105,9 +101,7 @@ def test_pytest_targets_maps_source_to_test_module() -> None:
 
 
 def test_pytest_targets_maps_non_diffrat_src_package() -> None:
-    assert pytest_targets_for_paths(["src/otherpkg/widget.py"]) == [
-        "tests/test_widget.py"
-    ]
+    assert pytest_targets_for_paths(["src/otherpkg/widget.py"]) == ["tests/test_widget.py"]
 
 
 def test_pytest_targets_uses_test_module_directly() -> None:
@@ -147,9 +141,7 @@ def test_mypy_targets_maps_source_modules() -> None:
 
 
 def test_mypy_targets_maps_non_diffrat_src_package() -> None:
-    assert mypy_targets_for_paths(["src/otherpkg/widget.py"]) == [
-        "src/otherpkg/widget.py"
-    ]
+    assert mypy_targets_for_paths(["src/otherpkg/widget.py"]) == ["src/otherpkg/widget.py"]
 
 
 def test_mypy_targets_skips_tests_and_other_paths() -> None:
@@ -167,9 +159,7 @@ def test_mypy_targets_deduplicates_and_sorts() -> None:
 
 def test_plan_checks_selects_mypy_for_source_paths() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),)
     )
 
     specs = plan_checks(summary)
@@ -239,16 +229,12 @@ def test_plan_checks_selects_ci_validator_when_configured() -> None:
     specs = plan_checks(summary, config=config)
 
     assert [spec.code for spec in specs] == ["ci_validator"]
-    assert specs[0].display_command == (
-        "python ci/validate-workflow-contracts.py --mode project"
-    )
+    assert specs[0].display_command == ("python ci/validate-workflow-contracts.py --mode project")
 
 
 def test_plan_checks_selects_pytest_for_source_paths() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),)
     )
 
     specs = plan_checks(summary)
@@ -305,16 +291,12 @@ def test_plan_checks_ci_validator_with_python_paths_when_configured() -> None:
     specs = plan_checks(summary, config=config)
 
     assert [spec.code for spec in specs] == ["ci_validator", "pytest", "mypy", "bandit"]
-    assert specs[0].display_command == (
-        "python ci/validate-workflow-contracts.py --mode project"
-    )
+    assert specs[0].display_command == ("python ci/validate-workflow-contracts.py --mode project")
 
 
 def test_plan_checks_selects_ruff_for_pyproject() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),)
     )
 
     specs = plan_checks(summary)
@@ -325,9 +307,7 @@ def test_plan_checks_selects_ruff_for_pyproject() -> None:
 
 def test_plan_checks_skips_ruff_for_other_config() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="requirements.txt", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="requirements.txt", additions=1, deletions=0, binary=False),)
     )
 
     with patch("diffrat.checks.shutil.which", return_value=None):
@@ -382,9 +362,7 @@ def test_is_pip_audit_dependency_path() -> None:
 
 def test_plan_checks_selects_bandit_when_on_path() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),)
     )
 
     with patch("diffrat.checks.shutil.which", return_value="/usr/bin/bandit"):
@@ -422,9 +400,7 @@ def test_plan_checks_bandit_multi_file_single_r_flag() -> None:
         specs = plan_checks(summary)
 
     bandit_spec = next(spec for spec in specs if spec.code == "bandit")
-    assert bandit_spec.display_command == (
-        "bandit -r src/diffrat/review.py src/diffrat/scoring.py"
-    )
+    assert bandit_spec.display_command == ("bandit -r src/diffrat/review.py src/diffrat/scoring.py")
     assert bandit_spec.argv == (
         "/usr/bin/bandit",
         "-r",
@@ -435,9 +411,7 @@ def test_plan_checks_bandit_multi_file_single_r_flag() -> None:
 
 def test_plan_checks_skips_bandit_when_missing() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="src/diffrat/review.py", additions=1, deletions=0, binary=False),)
     )
 
     with patch("diffrat.checks.shutil.which", return_value=None):
@@ -449,9 +423,7 @@ def test_plan_checks_skips_bandit_when_missing() -> None:
 
 def test_plan_checks_selects_pip_audit_for_pyproject() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="pyproject.toml", additions=1, deletions=0, binary=False),)
     )
 
     with patch("diffrat.checks.shutil.which", return_value="/usr/bin/pip-audit"):
@@ -463,9 +435,7 @@ def test_plan_checks_selects_pip_audit_for_pyproject() -> None:
 
 def test_plan_checks_skips_pip_audit_when_missing() -> None:
     summary = DiffSummary(
-        files=(
-            FileChange(path="requirements.txt", additions=1, deletions=0, binary=False),
-        )
+        files=(FileChange(path="requirements.txt", additions=1, deletions=0, binary=False),)
     )
 
     with patch("diffrat.checks.shutil.which", return_value=None):

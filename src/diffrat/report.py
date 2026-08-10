@@ -25,11 +25,7 @@ def render_review_report(
     brief: bool = False,
 ) -> str:
     """Render a review-oriented text report for stdout."""
-    result = (
-        analysis
-        if analysis is not None
-        else run_analysis(summary, diff_content=diff_content)
-    )
+    result = analysis if analysis is not None else run_analysis(summary, diff_content=diff_content)
 
     lines = [
         "Review Report",
@@ -85,9 +81,7 @@ def render_review_report(
             review_order_entries(sorted_entries), start=1
         ):
             if file_change.binary:
-                lines.append(
-                    f"{rank}. {file_change.path}  [{category}]  (binary)"
-                )
+                lines.append(f"{rank}. {file_change.path}  [{category}]  (binary)")
             else:
                 lines.append(
                     f"{rank}. {file_change.path}  [{category}]  "
@@ -152,9 +146,7 @@ def _format_file_line(
     risk_score: int,
 ) -> str:
     if file_change.binary:
-        return (
-            f"  {file_change.path}  [{category}]  risk={risk_score}  (binary)"
-        )
+        return f"  {file_change.path}  [{category}]  risk={risk_score}  (binary)"
     return (
         f"  {file_change.path}  [{category}]  risk={risk_score}  "
         f"+{file_change.additions} -{file_change.deletions}"

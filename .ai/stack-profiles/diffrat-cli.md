@@ -16,6 +16,7 @@ README.md
 ```bash
 pip install -e ".[dev]"
 pytest
+ruff format --check src tests
 ruff check .
 mypy .
 python -m diffrat --help
