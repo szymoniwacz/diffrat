@@ -1,4 +1,4 @@
-# Feedback checklist (1.1.1)
+# Feedback checklist (1.1.2)
 
 Short session for external testers and dogfood. Goal: feedback on the **CLI
 product**, not on private AI workflow tooling.
@@ -14,7 +14,7 @@ pip install diffrat
 diffrat --version
 ```
 
-Expect `diffrat 1.1.1` (or newer).
+Expect `diffrat 1.1.2` (or newer).
 
 From source:
 
