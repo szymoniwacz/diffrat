@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  validate:
+  test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -60,3 +60,13 @@ jobs:
 
       - name: Pytest
         run: pytest tests/ -q
+
+  # Branch protection requires a check named exactly "validate". Matrix jobs
+  # report as "validate (Python X.Y)", so this aggregator satisfies the gate.
+  validate:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require matrix success
+        run: test "${{ needs.test.result }}" = "success"
