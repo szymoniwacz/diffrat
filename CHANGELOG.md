@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `--check` bandit false positives on Diffrat itself (`subprocess` import/run in
+  `checks.py`; pillar id `"maintainable"` in `review_quality.py`)
+
 ## [1.1.1] - 2026-08-09
 
 ### Fixed

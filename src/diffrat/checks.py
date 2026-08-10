@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import shlex
 import shutil
-import subprocess
+import subprocess  # nosec B404
 import sys
 from dataclasses import dataclass
 from pathlib import PurePosixPath
@@ -254,7 +254,7 @@ def run_checks(
                 )
             )
             continue
-        completed = subprocess.run(
+        completed = subprocess.run(  # nosec B603
             list(spec.argv),
             cwd=cwd,
             capture_output=True,

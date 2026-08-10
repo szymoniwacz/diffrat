@@ -12,7 +12,10 @@ from diffrat.scoring import HINT_SEVERITY_REGISTRY
 PillarId = Literal["understand", "focused", "maintainable"]
 PillarStatus = Literal["ok", "warn", "risk"]
 
-_DEFAULT_PILLAR: PillarId = "maintainable"
+# Pillar id label (JSON/API contract); not a credential.
+PILLAR_MAINTAINABLE: PillarId = "maintainable"  # nosec B105
+
+_DEFAULT_PILLAR: PillarId = PILLAR_MAINTAINABLE
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,7 +46,7 @@ REVIEW_QUALITY_PILLARS: tuple[ReviewQualityPillar, ...] = (
         label="One thing well",
     ),
     ReviewQualityPillar(
-        id="maintainable",
+        id=PILLAR_MAINTAINABLE,
         label="Safe to change in six months",
     ),
 )
@@ -66,22 +69,22 @@ CODE_TO_PILLAR: dict[str, PillarId] = {
     "wip_commits": "focused",
     "mixed_concerns": "focused",
     # maintainable — safety, tests, dependencies, fragile patterns
-    "security_sensitive_paths": "maintainable",
-    "ci_workflow_paths": "maintainable",
-    "possible_secret": "maintainable",
-    "dangerous_call": "maintainable",
-    "config_or_deps": "maintainable",
-    "suspicious_constant_change": "maintainable",
-    "tests_touched": "maintainable",
-    "source_without_tests": "maintainable",
-    "source_heavy_without_tests": "maintainable",
-    "ci_without_tests": "maintainable",
-    "missing_test_file": "maintainable",
-    "lockfile_without_manifest": "maintainable",
-    "manifest_without_lockfile": "maintainable",
-    "debug_leftover": "maintainable",
-    "broad_exception": "maintainable",
-    "hardcoded_url_or_ip": "maintainable",
+    "security_sensitive_paths": PILLAR_MAINTAINABLE,
+    "ci_workflow_paths": PILLAR_MAINTAINABLE,
+    "possible_secret": PILLAR_MAINTAINABLE,
+    "dangerous_call": PILLAR_MAINTAINABLE,
+    "config_or_deps": PILLAR_MAINTAINABLE,
+    "suspicious_constant_change": PILLAR_MAINTAINABLE,
+    "tests_touched": PILLAR_MAINTAINABLE,
+    "source_without_tests": PILLAR_MAINTAINABLE,
+    "source_heavy_without_tests": PILLAR_MAINTAINABLE,
+    "ci_without_tests": PILLAR_MAINTAINABLE,
+    "missing_test_file": PILLAR_MAINTAINABLE,
+    "lockfile_without_manifest": PILLAR_MAINTAINABLE,
+    "manifest_without_lockfile": PILLAR_MAINTAINABLE,
+    "debug_leftover": PILLAR_MAINTAINABLE,
+    "broad_exception": PILLAR_MAINTAINABLE,
+    "hardcoded_url_or_ip": PILLAR_MAINTAINABLE,
 }
 
 
